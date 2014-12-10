@@ -3,6 +3,9 @@ bsonsearch
 
 shared object to perform mongodb-like queries against raw bson rather than through a mongod
 
+
+
+
 compile
 ========
 
@@ -23,24 +26,23 @@ this example uses KeyValueBSONInput (https://github.com/bauman/python-bson-strea
 
 raw bson file containing 7GB of metadata from the enron data set
 
-This ammounts to nothing more than a full table scan through a single mongod but can be multiplexed across multiple bson files
+This ammounts to nothing more than a full table scan through a single mongod but can be multiplexed across multiple bson files with multiple processes using tools like xargs
 
 The spec parameter supports all query operators (http://docs.mongodb.org/manual/reference/operator/query/) supported by the mongo-c-driver
 
-``` python 
-    import ctypes
-    import bson
-    from bsonstream import KeyValueBSONInput
-    
-    bc = ctypes.CDLL("/home/dan/bson/bsoncompare.so")
-    
-    spec = bson.BSON.encode({"len" : { "$gt": 4153937}})    
-    matcher = bc.generate_matcher(spec, len(spec))
+Currently, that includes $in, $nin, $eq, $neq, $gt, $gte, $lt, and $lte. (See full documentation http://api.mongodb.org/c/current/mongoc_matcher_t.html)
 
-    f = open("/home/dan/enron/enron.bson", 'rb')
-    stream = KeyValueBSONInput(fh=f, decode=False)
-    for doc in stream:
-        print bc.matcher_compare(matcher, doc, len(doc))
-    f.close()
-    bc.matcher_destroy(matcher)
+
+
+``` python
+    from bsonsearch import bsoncompare
+    import bson
+    bc = bsoncompare()
+    b = {"a":{"$gte":1}}
+    c=[ {"a":0},{"a":1},{"a":2}]
+    c2=[bson.BSON.encode(x) for x in c]
+    matcher = bc.generate_matcher(b)
+    print [a.match(m, x) for x in c]
+    print [a.match(m, x) for x in c2]
+    bc.destroy_matcher(matcher)
 ```

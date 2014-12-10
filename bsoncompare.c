@@ -1,9 +1,8 @@
-#include <bcon.h>
+#include <stdio.h>
 #include <bson.h>
 #include <mongoc.h>
-#include <stdio.h>
 
-
+// gcc $(pkg-config --cflags --libs libbson-1.0 libmongoc-1.0) -shared -o bsoncompare.so -fPIC bsoncompare.c
 
 mongoc_matcher_t *
 generate_matcher(const uint8_t *buf_spec,
@@ -13,7 +12,7 @@ generate_matcher(const uint8_t *buf_spec,
   mongoc_matcher_t *matcher;
   spec = bson_new_from_data(buf_spec, (uint32_t)len_spec);
   matcher = mongoc_matcher_new (spec, NULL);
-  return matcher; 
+  return matcher;
 }
 
 int
@@ -24,7 +23,7 @@ matcher_destroy (mongoc_matcher_t       *matcher)
 }
 
 
-bool
+int
 matcher_compare(mongoc_matcher_t   *matcher,
                 const uint8_t      *buf_bson,
                 uint32_t           len_bson)
@@ -38,7 +37,7 @@ matcher_compare(mongoc_matcher_t   *matcher,
 }
 
 
-bool
+int
 compare(const uint8_t *buf_spec,
         uint32_t       len_spec,
         const uint8_t *buf_bson,
@@ -57,4 +56,6 @@ compare(const uint8_t *buf_spec,
   mongoc_matcher_destroy (matcher);
   return result;
 }
+
+
 
