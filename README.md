@@ -50,7 +50,7 @@ this example uses KeyValueBSONInput (https://github.com/bauman/python-bson-strea
 
 raw bson file containing 7GB of metadata from the enron data set
 
-This ammounts to nothing more than a full table scan through a single mongod but can be multiplexed across multiple bson files with multiple processes using tools like xargs
+This amounts to nothing more than a full table scan through a single mongod but can be multiplexed across multiple bson files with multiple processes using tools like xargs
 
 
 ``` python
