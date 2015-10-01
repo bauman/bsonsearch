@@ -2,7 +2,10 @@ import bson
 import ctypes
 from hashlib import md5
 
-LIBRARY_LOC="/usr/lib64/bsoncompare.so"
+
+#dropped by libbsoncompare rpm.
+# Install this from pkgs.bauman.in to get dep tree
+LIBRARY_LOC="/usr/lib64/libbsoncompare.so"
 
 class bsoncompare:
     def __init__(self):
@@ -10,10 +13,12 @@ class bsoncompare:
         self.matchers = {}
 
     def destroy_matcher(self, matcher_id):
-        if isinstance(matcher_id, list) or isinstance(matcher_id, list):
-            [self.destroy_matcher(self.matchers[x]) for x in matcher_id]
+        if isinstance(matcher_id, list) or isinstance(matcher_id, dict):
+            [self.destroy_matcher(matcher_id_) for matcher_id_ in matcher_id]
         elif isinstance(matcher_id, basestring):
-            self.bc.matcher_destroy(self.matchers[matcher_id])
+            if matcher_id in self.matchers:
+                self.bc.matcher_destroy(self.matchers[matcher_id])
+                del(self.matchers[matcher_id])
 
     def generate_matcher(self, spec):
         if isinstance(spec, dict):
