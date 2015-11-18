@@ -98,6 +98,7 @@ get_array_len(bson_t        *b,
     if (bson_iter_init (&iter, b) &&
         bson_iter_find_descendant (&iter, namespace, &baz) &&
         BSON_ITER_HOLDS_ARRAY (&baz)) {
+
         bson_iter_t right_array;
         bson_iter_recurse(&iter, &right_array);
         while (bson_iter_next(&right_array)) {

@@ -21,7 +21,6 @@ Requires: mongo-c-driver == %{version}, libbson == %{version}
 mkdir -p %{buildroot}
 gcc -I/usr/include/libbson-1.0 -I/usr/include/libmongoc-1.0  -lsasl2 -lssl -lcrypto -lrt -lmongoc-1.0 -lbson-1.0 -shared -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0}
 
-
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
 install -m 644 -p $RPM_BUILD_DIR/libbsoncompare.so $RPM_BUILD_ROOT/%{_usr}/%{_lib}/libbsoncompare.so
