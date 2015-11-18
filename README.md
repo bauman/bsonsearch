@@ -66,3 +66,28 @@ This amounts to nothing more than a full table scan through a single mongod but 
     f.close()
     bc.destroy_matcher(matcher)
 ```
+
+
+ipython notebook
+
+
+
+``` python
+    import bsonsearch
+    bc = bsonsearch.bsoncompare()
+    doc = {'a': [{'b': [1, 2]}, {'b': [3, 5]}],
+           "c":{"d":"dan"}}
+    doc_id = bc.generate_doc(doc)
+    spec = {"a.b":{"$in":[7, 6, 5]},
+            "c.d":"dan"}
+    query = bc.convert_to_and(spec, doc_id)
+    print query
+    matcher = bc.generate_matcher(query)
+    print bc.match_doc(matcher, doc_id)
+    bc.destroy_doc(doc_id)
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+
+    >>> {'$and': [{'$or': [{'c.d': 'dan'}]}, {'$or': [{'a.0.b.0': {'$in': [7, 6, 5]}}, {'a.0.b.1': {'$in': [7, 6, 5]}}, {'a.1.b.0': {'$in': [7, 6, 5]}}, {'a.1.b.1': {'$in': [7, 6, 5]}}]}]}
+    >>> True
+```
