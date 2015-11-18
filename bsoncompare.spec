@@ -1,6 +1,6 @@
 Name: libbsoncompare		
-Version: 1.1.11
-Release:	1%{?dist}.db
+Version: 1.2.1
+Release: 4%{?dist}.db
 Summary: compares bson docs	
 
 Group:	bauman	
@@ -20,7 +20,6 @@ Requires: mongo-c-driver == %{version}, libbson == %{version}
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
 gcc -I/usr/include/libbson-1.0 -I/usr/include/libmongoc-1.0  -lsasl2 -lssl -lcrypto -lrt -lmongoc-1.0 -lbson-1.0 -shared -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0}
-
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
