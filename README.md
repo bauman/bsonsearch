@@ -4,6 +4,24 @@ bsonsearch
 shared object to perform mongodb-like queries against raw bson rather than through a mongod
 
 
+install on centos (el7) with RPMs
+
+http://pkgs.bauman.in/el7/repoview/python-bsonsearch.html
+
+or add from repo
+
+
+```
+    [pkgs.bauman.in]
+    name=Packaged tools for RHEL7 (centos)
+    type=rpm-md
+    baseurl=http://pkgs.bauman.in/el7/
+    gpgcheck=1
+    gpgkey=http://pkgs.bauman.in/el7/repodata/RPM-GPG-KEY-Bauman
+    enabled=1
+```
+
+yum install python-bsonsearch
 
 
 compile
