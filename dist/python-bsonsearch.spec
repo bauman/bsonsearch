@@ -2,7 +2,7 @@
 %define version 1.2.1
 %define unmangled_version 1.2.1
 %define unmangled_version 1.2.1
-%define release 4
+%define release 5
 
 Summary: UNKNOWN
 Name: %{name}
