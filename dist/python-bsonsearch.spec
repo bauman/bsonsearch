@@ -1,8 +1,8 @@
 %define name python-bsonsearch
-%define version 1.1.11
-%define unmangled_version 1.1.11
-%define unmangled_version 1.1.11
-%define release 2
+%define version 1.2.1
+%define unmangled_version 1.2.1
+%define unmangled_version 1.2.1
+%define release 5
 
 Summary: UNKNOWN
 Name: %{name}
