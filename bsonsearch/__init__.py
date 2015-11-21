@@ -31,8 +31,10 @@ class bsoncompare:
             encoded_spec = bson.BSON.encode(spec)
         elif isinstance(spec, basestring):
             encoded_spec = spec
+        elif spec is None:
+            raise ValueError("SPEC must not be empty")
         else:
-            raise ValueError
+            raise ValueError("SPEC must be instance of DICT or bson string")
         matcher_id = md5(encoded_spec).hexdigest()
         if matcher_id not in self.matchers:
             self.matchers[matcher_id] = self.bc.generate_matcher(encoded_spec,
@@ -58,8 +60,10 @@ class bsoncompare:
             encoded_doc = bson.BSON.encode(doc)
         elif isinstance(doc, basestring):
             encoded_doc = doc
+        elif spec is None:
+            raise ValueError("DOC must not be empty")
         else:
-            raise ValueError
+            raise ValueError("DOC must be instance of DICT or bson string")
         doc_id = md5(encoded_doc).hexdigest()
         if doc_id not in self.docs:
             self.docs[doc_id] = self.bc.generate_doc(encoded_doc,
@@ -101,17 +105,22 @@ class bsoncompare:
             at_end = False
             current_ns = namespace[:curpos]
         else:
-            at_end=True
+            #mongo-c-driver handles items and lists at the end of namespace
+            #yield here and let the driver sort it out.
             current_ns =  namespace
-        array_len = self.bc.get_array_len(document, current_ns, len(current_ns))
-        if at_end and not array_len:
             yield current_ns
-        elif not at_end and not array_len:
+            raise StopIteration
+        #mongo c driver cannot figure out lists embedded in the namespace
+        array_len = self.bc.get_array_len(document, current_ns, len(current_ns))
+        if not array_len:
+            #not a list, move on to the next item in the namespace
             next_ns_prefix = "%s" %(current_ns)
             next_ns = "%s%s" %(next_ns_prefix, namespace[curpos:])
             for yield_ns in self.explode_namespace(len(next_ns_prefix), next_ns, doc_id):
                 yield yield_ns
         for x in xrange(array_len):
+            #embedded list within the namespace
+            #need generate all the prefixes because libbson bson_iter_find_descendant needs it.
             next_ns_prefix = "%s.%s" %(current_ns,x)
             if at_end:
                 next_ns = "%s%s" %(next_ns_prefix, "")
