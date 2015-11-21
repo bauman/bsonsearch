@@ -49,7 +49,7 @@ c libbson (https://github.com/mongodb/libbson)
 
 
 ```
-    gcc $(pkg-config --cflags --libs libbson-1.0) -shared -o bsoncompare.so -fPIC bsoncompare.c
+    gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
 ```
 
 
