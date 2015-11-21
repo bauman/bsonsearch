@@ -2,14 +2,14 @@
 %define version 1.2.1
 %define unmangled_version 1.2.1
 %define unmangled_version 1.2.1
-%define release 5
+%define release 7
 
-Summary: UNKNOWN
+Summary: Ctypes wrapper to libbsoncompare
 Name: %{name}
 Version: %{version}
 Release: %{release}%{?dist}
 Source0: %{name}-%{unmangled_version}.tar.gz
-License: UNKNOWN
+License: MIT
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
@@ -18,7 +18,7 @@ Requires: libbsoncompare == %{version}
 Vendor: Dan Bauman
 
 %description
-UNKNOWN
+Library wrapping libbsoncompare.  Also includes feature to convert a given spec to work on documents with lists embedded in the namespace.
 
 %prep
 %setup -n %{name}-%{unmangled_version} -n %{name}-%{unmangled_version}
