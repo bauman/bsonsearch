@@ -46,11 +46,10 @@ compile
 this requires 
 
 c libbson (https://github.com/mongodb/libbson)
-mongo-c-driver (https://github.com/mongodb/mongo-c-driver)
 
 
 ```
-    gcc $(pkg-config --cflags --libs libbson-1.0 libmongoc-1.0) -shared -o bsoncompare.so -fPIC bsoncompare.c
+    gcc $(pkg-config --cflags --libs libbson-1.0) -shared -o bsoncompare.so -fPIC bsoncompare.c
 ```
 
 
