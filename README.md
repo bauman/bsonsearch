@@ -1,3 +1,19 @@
+Acknowledgement
+===============
+
+Many thanks to Christian Hergert and A. Jesse Jiryu Davis from MongoDB Inc for creating and maintaining the minimized matcher code from the mongo-c-driver.
+
+
+I've moved the matcher codebase into this repo rather than link to the driver as MongoDB will rightly [no longer update the c matcher](https://jira.mongodb.org/browse/CDRIVER-701?focusedCommentId=1068466&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1068466).
+
+
+This repo continues the effort for a minimally functional and complimentary bson matching engine.
+
+
+The officially supported [server matching engine](https://github.com/mongodb/mongo/tree/master/src/mongo/db/matcher) will always be far superior option.
+
+
+
 bsonsearch
 ==========
 

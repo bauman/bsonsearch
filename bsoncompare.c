@@ -1,6 +1,7 @@
 #include <stdio.h>
 #include <bson.h>
-#include <mongoc.h>
+//#include <mongoc.h>
+#include "mongoc-matcher.h"
 #include <stdint.h>
 
 // gcc $(pkg-config --cflags --libs libbson-1.0 libmongoc-1.0) -shared -o libbsoncompare.so -fPIC bsoncompare.c
