@@ -558,6 +558,7 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
          return ((llen == rlen) && (0 == memcmp (ldoc, rdoc, llen)));
       }
       case _TYPE_CODE (BSON_TYPE_UTF8, BSON_TYPE_ARRAY):
+      case _TYPE_CODE (BSON_TYPE_REGEX, BSON_TYPE_ARRAY):
       case _TYPE_CODE (BSON_TYPE_OID, BSON_TYPE_ARRAY):
       case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
       case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
