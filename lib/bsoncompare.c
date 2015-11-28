@@ -1,10 +1,8 @@
 #include <stdio.h>
 #include <bson.h>
-//#include <mongoc.h>
 #include "mongoc-matcher.h"
-#include <stdint.h>
 
-// gcc $(pkg-config --cflags --libs libbson-1.0 libmongoc-1.0) -shared -o libbsoncompare.so -fPIC bsoncompare.c
+// gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
 
 mongoc_matcher_t *
 generate_matcher(const uint8_t *buf_spec,

@@ -17,6 +17,7 @@
 
 //#include "mongoc-log.h"
 #include "mongoc-matcher-op-private.h"
+#include <pcre.h>
 #include <bson.h>
 
 /*
@@ -434,7 +435,50 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
       return _EQ_COMPARE (_double, _int32);
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_INT64):
       return _EQ_COMPARE (_double, _int64);
+   case _TYPE_CODE(BSON_TYPE_REGEX, BSON_TYPE_UTF8):
+      {
+         uint32_t rlen;
+         const char * options = NULL;
+         const char * pattern = bson_iter_regex (compare_iter, &options);
+         const char *rstr;
+         rstr = bson_iter_utf8 (iter, &rlen);
+         pcre *re;
+         const char *error;
+         int erroffset;
+         int OVECCOUNT = 3;
+         int ovector[OVECCOUNT];
+         int rc, i;
 
+         int pcre_options = 0;
+         if (0 == memcmp (options, "i", 1)){
+            pcre_options = PCRE_CASELESS;
+         }
+
+
+         /* Compile the regular expression in the first argument */
+         re = pcre_compile( pattern,              /* the pattern */
+                            pcre_options,                    /* default options */
+                            &error,               /* for error message */
+                            &erroffset,           /* for error offset */
+                            NULL);                /* use default character tables */
+
+
+         if (re == NULL) {
+            return false;
+         }
+         rc = pcre_exec( re,                   /* the compiled pattern */
+                         NULL,                 /* no extra data - we didn't study the pattern */
+                         rstr,                 /* the subject string */
+                         rlen,                 /* the length of the subject */
+                         0,                    /* start at offset 0 in the subject */
+                         0,                    /* default options */
+                         ovector,              /* output vector for substring information */
+                         OVECCOUNT);           /* number of elements in the output vector */
+         bool match = false;
+         if (rc >= 0) { match = true; }
+         pcre_free(re); //TODO: Should make a way to persist these to not compile every time.
+         return match;
+      }
    /* UTF8 on Left Side */
    case _TYPE_CODE(BSON_TYPE_UTF8, BSON_TYPE_UTF8):
       {

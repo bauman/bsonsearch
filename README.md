@@ -4,7 +4,7 @@ Acknowledgement
 Many thanks to Christian Hergert and A. Jesse Jiryu Davis from MongoDB Inc for creating and maintaining the minimized matcher code from the mongo-c-driver.
 
 
-I've moved the matcher codebase into this repo rather than link to the driver as MongoDB will rightly [no longer update the c matcher](https://jira.mongodb.org/browse/CDRIVER-701?focusedCommentId=1068466&page=com.atlassian.jira.plugin.system.issuetabpanels:comment-tabpanel#comment-1068466).
+I've moved the matcher codebase into this repo rather than link to the driver as MongoDB will rightly [remove the c matcher](https://jira.mongodb.org/browse/CDRIVER-955).
 
 
 This repo continues the effort for a minimally functional and complimentary bson matching engine.
@@ -49,7 +49,7 @@ c libbson (https://github.com/mongodb/libbson)
 
 
 ```
-    gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
+    gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
 ```
 
 
