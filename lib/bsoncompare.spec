@@ -29,7 +29,7 @@ Group: Development/Libraries
 
 %description devel
 The %{Name}-devel package contains libraries and header files for
-developing applications that use %{DriverName}.
+developing applications that use %{Name}.
 
 
 %prep
@@ -65,6 +65,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{_usr}/%{_lib}/libbsoncompare.so
 %doc
+
 %files devel
 %{_includedir}/*.h
 
