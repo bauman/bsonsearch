@@ -116,10 +116,10 @@ int
 main (int   argc,
       char *argv[])
 {
-    //BSON_ASSERT(compare_good());
-    //BSON_ASSERT(!compare_bad());
-    //BSON_ASSERT(compare_rgx_good());
-    //BSON_ASSERT(!compare_rgx_bad());
-    //BSON_ASSERT(compare_rgx_good_case_insensitive());
-    compare_rgx_good_in_list();
+    BSON_ASSERT(compare_good());
+    BSON_ASSERT(!compare_bad());
+    BSON_ASSERT(compare_rgx_good());
+    BSON_ASSERT(!compare_rgx_bad());
+    BSON_ASSERT(compare_rgx_good_case_insensitive());
+    BSON_ASSERT(compare_rgx_good_in_list());
 }
