@@ -15,7 +15,7 @@ Source5: mongoc-matcher-op-private.h
 Source6: mongoc-matcher-private.h
 Source7: bsoncompare.h
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel
+BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel
 Requires: libbson == %{version}, pcre
 
 %description

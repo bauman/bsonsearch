@@ -15,9 +15,10 @@
  */
 
 
-//#include "mongoc-log.h"
+
 #include "mongoc-matcher-op-private.h"
 #include <pcre.h>
+#include "bsoncompare.h"
 #include <bson.h>
 
 /*
@@ -441,30 +442,44 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
          const char * options = NULL;
          const char * pattern = bson_iter_regex (compare_iter, &options);
          const char *rstr;
+         struct pattern_to_regex *s, *precompiled_check=NULL;
+
          rstr = bson_iter_utf8 (iter, &rlen);
          pcre *re;
+
          const char *error;
          int erroffset;
          int OVECCOUNT = 3;
          int ovector[OVECCOUNT];
-         int rc, i;
-
+         int rc;
          int pcre_options = 0;
-         if (0 == memcmp (options, "i", 1)){
+         if (0 == memcmp (options, "i", 1)){ //TODO: Not including the option in the cache!
             pcre_options = PCRE_CASELESS;
          }
-
-
-         /* Compile the regular expression in the first argument */
-         re = pcre_compile( pattern,              /* the pattern */
-                            pcre_options,                    /* default options */
-                            &error,               /* for error message */
-                            &erroffset,           /* for error offset */
-                            NULL);                /* use default character tables */
-
-
+         HASH_FIND_STR(global_compiled_regexes, pattern, precompiled_check);
+         if (precompiled_check == NULL) //compile it and add it to the cache
+         {
+            s = (struct pattern_to_regex *)malloc(sizeof(struct pattern_to_regex)); //this neeeds to be freed by bsoncompre.regex_destroy
+            if (s == NULL) {
+               return false; //TODO: Toss a warning?
+            }
+            const char *pattern_persist = bson_strdup(pattern);
+            /* Compile the regular expression in the first argument */
+            re = pcre_compile( pattern_persist,              /* the pattern */
+                               pcre_options,                    /* default options */
+                               &error,               /* for error message */
+                               &erroffset,           /* for error offset */
+                               NULL);                /* use default character tables */
+            s->pattern = pattern_persist;
+            s->re = re;
+            HASH_ADD_STR(global_compiled_regexes, pattern, s);
+         }
+         else
+         {
+            re = precompiled_check->re;
+         }
          if (re == NULL) {
-            return false;
+            return false;  //TODO: Throw a warning
          }
          rc = pcre_exec( re,                   /* the compiled pattern */
                          NULL,                 /* no extra data - we didn't study the pattern */
@@ -476,9 +491,9 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
                          OVECCOUNT);           /* number of elements in the output vector */
          bool match = false;
          if (rc >= 0) { match = true; }
-         pcre_free(re); //TODO: Should make a way to persist these to not compile every time.
          return match;
       }
+
    /* UTF8 on Left Side */
    case _TYPE_CODE(BSON_TYPE_UTF8, BSON_TYPE_UTF8):
       {

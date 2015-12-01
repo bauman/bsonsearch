@@ -1,8 +1,12 @@
 #include <stdio.h>
 #include <bson.h>
 #include "mongoc-matcher.h"
-
+#include "bsoncompare.h"
+#include <uthash.h>
 // gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
+
+
+struct pattern_to_regex *global_compiled_regexes = NULL;
 
 mongoc_matcher_t *
 generate_matcher(const uint8_t *buf_spec,
@@ -39,6 +43,26 @@ doc_destroy (bson_t *bson)
 {
   bson_destroy(bson);
   return 0;
+}
+
+int
+regex_destroy()
+{
+    struct pattern_to_regex *s, *tmp;
+    HASH_ITER(hh, global_compiled_regexes, s, tmp) {
+        HASH_DEL(global_compiled_regexes, s);
+        pcre_free(s->re);
+        free(s);
+    }
+}
+int
+regex_print()
+{
+    struct pattern_to_regex *s, *tmp;
+    HASH_ITER(hh, global_compiled_regexes, s, tmp) {
+        printf("The Pattern:(%s) \n", s->pattern);
+    }
+    return 0;
 }
 
 int
