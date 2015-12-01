@@ -54,6 +54,8 @@ class bsoncompare:
                 self.bc.doc_destroy(self.docs[doc_id])
                 del(self.docs[doc_id])
 
+    def destroy_regexes(self,):
+        self.bc.regex_destroy()
 
     def generate_doc(self, doc):
         if isinstance(doc, dict):
