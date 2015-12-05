@@ -9,7 +9,7 @@ LIBRARY_LOC="/usr/lib64/libbsoncompare.so"
 
 
 
-class bsoncompare:
+class bsoncompare(object):
     def __init__(self):
         self.bc = ctypes.CDLL(LIBRARY_LOC)
         self.matchers = {} #keys = string, value = c-pointers
