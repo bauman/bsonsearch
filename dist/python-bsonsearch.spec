@@ -1,8 +1,8 @@
 %define name python-bsonsearch
-%define version 1.2.1
-%define unmangled_version 1.2.1
-%define unmangled_version 1.2.1
-%define release 9
+%define version 1.3.0
+%define unmangled_version 1.3.0
+%define unmangled_version 1.3.0
+%define release 1
 
 Summary: Ctypes wrapper to libbsoncompare
 Name: %{name}
