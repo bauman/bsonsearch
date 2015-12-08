@@ -43,9 +43,20 @@ yum install python-bsonsearch
 compile
 ========
 
-this requires 
+runtime requires
 
-c libbson (https://github.com/mongodb/libbson)
+libbson (https://github.com/mongodb/libbson)
+
+libpcre
+
+compilation also requires
+
+libbson-devel
+
+pcre-devel
+
+uthash-devel
+
 
 
 ```
@@ -60,6 +71,7 @@ The spec parameter supports all query operators (http://docs.mongodb.org/manual/
 
 Currently, that includes $in, $nin, $eq, $neq, $gt, $gte, $lt, and $lte. (See full documentation http://api.mongodb.org/c/current/mongoc_matcher_t.html)
 
+comparison value in spec can be utf8 string, int/long, regex
 
 
 ``` python
@@ -76,7 +88,39 @@ Currently, that includes $in, $nin, $eq, $neq, $gt, $gte, $lt, and $lte. (See fu
 ```
 
 
-detailed example
+If the document contains lists within the namespace, libbson cannot handle queries like mongodb server.
+
+User needs to call the convert_to_and function to build an appropriate spec for the document.
+    convert_to_and(spec, doc_id)
+
+
+Optionally, the user may call destory_matcher following the match, or choose to wait and clear old matchers at a later time.
+
+ipython notebook
+
+``` python
+    import bsonsearch
+    bc = bsonsearch.bsoncompare()
+    doc = {'a': [{'b': [1, 2]}, {'b': [3, 5]}],
+           "c":{"d":"dan"}}
+    doc_id = bc.generate_doc(doc)
+    spec = {"a.b":{"$in":[7, 6, 5]},
+            "c.d":"dan"}
+    query = bc.convert_to_and(spec, doc_id)
+    print query
+    matcher = bc.generate_matcher(query)
+    print bc.match_doc(matcher, doc_id)
+    bc.destroy_doc(doc_id)
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+
+    >>> {'$and': [{'$or': [{'c.d': 'dan'}]}, {'$or': [{'a.0.b.0': {'$in': [7, 6, 5]}}, {'a.0.b.1': {'$in': [7, 6, 5]}}, {'a.1.b.0': {'$in': [7, 6, 5]}}, {'a.1.b.1': {'$in': [7, 6, 5]}}]}]}
+    >>> True
+```
+
+
+
+streaming example
 
 
 this example uses KeyValueBSONInput (https://github.com/bauman/python-bson-streaming)
@@ -101,26 +145,3 @@ This amounts to nothing more than a full table scan through a single mongod but 
 ```
 
 
-ipython notebook
-
-
-
-``` python
-    import bsonsearch
-    bc = bsonsearch.bsoncompare()
-    doc = {'a': [{'b': [1, 2]}, {'b': [3, 5]}],
-           "c":{"d":"dan"}}
-    doc_id = bc.generate_doc(doc)
-    spec = {"a.b":{"$in":[7, 6, 5]},
-            "c.d":"dan"}
-    query = bc.convert_to_and(spec, doc_id)
-    print query
-    matcher = bc.generate_matcher(query)
-    print bc.match_doc(matcher, doc_id)
-    bc.destroy_doc(doc_id)
-    bc.destroy_doc(bc.docs)
-    bc.destroy_matcher(bc.matchers)
-
-    >>> {'$and': [{'$or': [{'c.d': 'dan'}]}, {'$or': [{'a.0.b.0': {'$in': [7, 6, 5]}}, {'a.0.b.1': {'$in': [7, 6, 5]}}, {'a.1.b.0': {'$in': [7, 6, 5]}}, {'a.1.b.1': {'$in': [7, 6, 5]}}]}]}
-    >>> True
-```

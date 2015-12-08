@@ -449,8 +449,8 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
 
          const char *error;
          int erroffset;
-         int OVECCOUNT = 3;
-         int ovector[OVECCOUNT];
+         int OVECCOUNT = 3;   //this code does not support returning match groups to the user
+         int ovector[OVECCOUNT];  //this code does not support returning match groups to the user
          int rc;
          int pcre_options = 0;
          if (0 == memcmp (options, "i", 1)){ //TODO: Not including the option in the cache!

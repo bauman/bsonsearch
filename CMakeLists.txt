@@ -19,7 +19,6 @@ function(bsonsearch_add_test test_name)
 endfunction()
 
 bsonsearch_add_test(compare-equal lib/tests/bsoncompare_simple.c)
-
 bsonsearch_add_test(simple lib/tests/simple.c)
 bsonsearch_add_test(mongodbtests lib/tests/matchertest.c)
 bsonsearch_add_test(compare-regex-equal lib/tests/bsoncompare_regex.c)
