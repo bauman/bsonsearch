@@ -88,9 +88,36 @@ comparison value in spec can be utf8 string, int/long, regex
 ```
 
 
+Regex within SPEC
+
+bsonsearch supports the use of compiled regex using libpcre.  The only regex option allowed is re.IGNORECASE, and only that option. Adding other options seperately or in addition to ingnore case is undefined.
+
+
+``` python
+    import bsonsearch
+    import re
+
+    bc = bsonsearch.bsoncompare()
+    doc = {'a': "hello world"}
+    doc_id = bc.generate_doc(doc)
+    spec = {"a": re.compile("orl")}
+    matcher = bc.generate_matcher(spec)
+    print bc.match_doc(matcher, doc_id)
+    bc.destroy_doc(doc_id) #destroy the document
+    bc.destroy_matcher(matcher) #destroy the spec
+    bc.destroy_regexes() #BSONCOMPARE caches compiled regex (caller MUST explicitly destroy the cache)
+
+    >>> True
+```
+
+
+
+
+
 If the document contains lists within the namespace, libbson cannot handle queries like mongodb server.
 
 User needs to call the convert_to_and function to build an appropriate spec for the document.
+
     convert_to_and(spec, doc_id)
 
 
