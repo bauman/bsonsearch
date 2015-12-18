@@ -18,8 +18,8 @@
 
 #include "mongoc-matcher-op-private.h"
 #include <pcre.h>
-#include "bsoncompare.h"
 #include <bson.h>
+#include "bsoncompare.h"
 
 /*
  *--------------------------------------------------------------------------
@@ -507,6 +507,10 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
 
          return ((llen == rlen) && (0 == memcmp (lstr, rstr, llen)));
       }
+
+   /* bool on Left Side */
+   case _TYPE_CODE(BSON_TYPE_BOOL, BSON_TYPE_BOOL):
+      return _EQ_COMPARE (_bool, _bool);
 
    /* Int32 on Left Side */
    case _TYPE_CODE(BSON_TYPE_INT32, BSON_TYPE_DOUBLE):
