@@ -118,13 +118,14 @@ get_array_len(bson_t        *b,
               const uint8_t *namespace,
               uint32_t      len_namespace)
 {
+    //TODO: libbson uses const char * dotkey.  I use const uint8_t * namespace.
+    //      I believe libbson will be changing char*'s to uint8_t at some point.
     int result = 0;
     bson_iter_t iter;
     bson_iter_t baz;
     if (bson_iter_init (&iter, b) &&
         bson_iter_find_descendant (&iter, namespace, &baz) &&
         BSON_ITER_HOLDS_ARRAY (&baz)) {
-
         bson_iter_t right_array;
         bson_iter_recurse(&iter, &right_array);
         while (bson_iter_next(&right_array)) {
