@@ -54,6 +54,9 @@ regex_destroy()
         pcre_free(s->re);
         free(s);
     }
+    //TODO: slim chance s->re is Null?  Decided to let segfault for now to raise alarm
+    //      in future, return number of regexes had to free, or number of errors.  I don't know.
+    return 0;
 }
 int
 regex_print()
