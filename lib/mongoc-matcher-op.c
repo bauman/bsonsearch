@@ -471,7 +471,7 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
                                &erroffset,           /* for error offset */
                                NULL);                /* use default character tables */
             s->pattern = pattern_persist;
-            s->re = re;
+            s->re = re; //Even if the compile fails, cache it anyway so we're not recompiling, it'll pass below
             HASH_ADD_STR(global_compiled_regexes, pattern, s);
          }
          else
@@ -573,7 +573,8 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
 
          bson_iter_document (compare_iter, &llen, &ldoc);
          bson_iter_document (iter, &rlen, &rdoc);
-
+         //this compares if the subdocument is EXACTLY the same, list ordering will matter.
+         //TODO: generate a new matcher?  Allow list ordering differences.  Tough position here.
          return ((llen == rlen) && (0 == memcmp (ldoc, rdoc, llen)));
       }
       case _TYPE_CODE (BSON_TYPE_UTF8, BSON_TYPE_ARRAY):
@@ -697,6 +698,23 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
    case _TYPE_CODE(BSON_TYPE_INT64, BSON_TYPE_INT64):
       return _GT_COMPARE (_int64, _int64);
 
+   /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
+      bson_iter_t right_array;
+      bson_iter_recurse(iter, &right_array);
+      while (true) {
+         bool right_has_next = bson_iter_next(&right_array);
+         if (!right_has_next) {
+            return false;
+         }
+         if (_mongoc_matcher_op_gt_match(compare, &right_array)) {
+            return true;
+         }
+      }
+      return false;
+   }
    default:
       /*
        * Removed when extracted from driver
