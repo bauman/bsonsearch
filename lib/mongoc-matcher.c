@@ -105,10 +105,13 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
       } else if (strcmp(key, "$nin") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_NIN, path,
                                               &child);
+
       } else if (strcmp(key, "$exists") == 0) {
          op = _mongoc_matcher_op_exists_new (path, bson_iter_bool (&child));
       } else if (strcmp(key, "$type") == 0) {
          op = _mongoc_matcher_op_type_new (path, bson_iter_type (&child));
+      } else if (strcmp(key, "$size") == 0) {
+          op = _mongoc_matcher_op_size_new (path, bson_iter_int32 (&child));
       } else {
          bson_set_error (error,
                          MONGOC_ERROR_MATCHER,

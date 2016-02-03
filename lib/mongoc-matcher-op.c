@@ -89,7 +89,37 @@ _mongoc_matcher_op_type_new (const char  *path, /* IN */
    return op;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_size_new --
+ *
+ *       Create a new op for checking {$size: int}.
+ *
+ * Returns:
+ *       A newly allocated mongoc_matcher_op_t that should be freed with
+ *       _mongoc_matcher_op_destroy().
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 
+mongoc_matcher_op_t *
+_mongoc_matcher_op_size_new (const char  *path,   /* IN */
+                             u_int32_t size) /* IN */
+{
+   mongoc_matcher_op_t *op;
+
+   BSON_ASSERT (path);
+
+   op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
+   op->size.base.opcode = MONGOC_MATCHER_OPCODE_SIZE;
+   op->size.path = bson_strdup (path);
+   op->size.size = size;
+   return op;
+}
 /*
  *--------------------------------------------------------------------------
  *
@@ -260,6 +290,9 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_TYPE:
       bson_free (op->type.path);
       break;
+   case MONGOC_MATCHER_OPCODE_SIZE:
+      bson_free (op->size.path);
+      break;
    default:
       break;
    }
@@ -342,6 +375,51 @@ _mongoc_matcher_op_type_match (mongoc_matcher_op_type_t *type, /* IN */
    return false;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_size_match --
+ *
+ *       Checks if @bson matches the {$size: ...} op.
+ *
+ * Returns:
+ *       true if the array length matches the input size
+ *       the requested type.
+ *
+ * TODO: iterating every object in the array is slow
+ *       should be able to seek to the last record in the array
+ *       or the next object after the array and back
+ *       No luck so far
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+
+static bool
+_mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
+                               const bson_t             *bson) /* IN */
+{
+   bson_iter_t iter;
+   bson_iter_t desc;
+   u_int32_t right_array_size = 0;
+   BSON_ASSERT (size);
+   BSON_ASSERT (bson);
+
+   if (bson_iter_init (&iter, bson) &&
+       bson_iter_find_descendant (&iter, size->path, &desc) &&
+       BSON_ITER_HOLDS_ARRAY (&desc))
+   {
+      bson_iter_t right_array;
+      bson_iter_recurse(&iter, &right_array);
+      while (bson_iter_next(&right_array)) {
+         right_array_size++;
+      }
+      return (right_array_size == size->size);
+   }
+
+   return false;
+}
 
 /*
  *--------------------------------------------------------------------------
@@ -1246,6 +1324,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_exists_match (&op->exists, bson);
    case MONGOC_MATCHER_OPCODE_TYPE:
       return _mongoc_matcher_op_type_match (&op->type, bson);
+   case MONGOC_MATCHER_OPCODE_SIZE:
+      return _mongoc_matcher_op_size_match (&op->size, bson);
    default:
       break;
    }
