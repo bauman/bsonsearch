@@ -22,10 +22,13 @@ generate_matcher(const uint8_t *buf_spec,
 int
 matcher_destroy (mongoc_matcher_t       *matcher)
 {
-  mongoc_matcher_destroy (matcher);
+  if (matcher != NULL)
+  {
+      mongoc_matcher_destroy (matcher);
+  }
+
   return 0;
 }
-
 
 bson_t *
 generate_doc(const uint8_t *buf_doc,
@@ -106,9 +109,10 @@ compare(const uint8_t *buf_spec,
   bson = bson_new_from_data(buf_bson, (uint32_t)len_bson);
   matcher = mongoc_matcher_new (spec, NULL);
   result = mongoc_matcher_match (matcher, bson);
+  mongoc_matcher_destroy (matcher); //TODO: This will segfault on a spec that doesnt create a matcher
+                                    //      DESIRED! I want this thing to fail noisy for now, until I have a plan.
   bson_destroy(spec);
   bson_destroy(bson);
-  mongoc_matcher_destroy (matcher);
   return result;
 }
 
