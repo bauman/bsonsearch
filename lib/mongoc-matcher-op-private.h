@@ -30,7 +30,7 @@ typedef struct _mongoc_matcher_op_exists_t  mongoc_matcher_op_exists_t;
 typedef struct _mongoc_matcher_op_type_t    mongoc_matcher_op_type_t;
 typedef struct _mongoc_matcher_op_size_t    mongoc_matcher_op_size_t;
 typedef struct _mongoc_matcher_op_not_t     mongoc_matcher_op_not_t;
-
+typedef struct _mongoc_matcher_op_near_t    mongoc_matcher_op_near_t;
 
 typedef enum
 {
@@ -49,7 +49,17 @@ typedef enum
    MONGOC_MATCHER_OPCODE_EXISTS,
    MONGOC_MATCHER_OPCODE_TYPE,
    MONGOC_MATCHER_OPCODE_SIZE,
+   MONGOC_MATCHER_OPCODE_NEAR,
 } mongoc_matcher_opcode_t;
+
+
+
+typedef enum
+{
+    MONGOC_MATCHER_NEAR_UNDEFINED,
+    MONGOC_MATCHER_NEAR_2D,
+    MONGOC_MATCHER_NEAR_3D,
+} mongoc_matcher_near_t;
 
 
 struct _mongoc_matcher_op_base_t
@@ -103,6 +113,18 @@ struct _mongoc_matcher_op_not_t
    char *path;
 };
 
+struct _mongoc_matcher_op_near_t
+{
+    mongoc_matcher_op_base_t base;
+    bson_iter_t iter;
+    char *path;
+    mongoc_matcher_near_t near_type;
+    double x;
+    double y;
+    double z;
+    double maxd; //distance
+    double mind; //distance
+};
 
 union _mongoc_matcher_op_t
 {
@@ -112,6 +134,7 @@ union _mongoc_matcher_op_t
    mongoc_matcher_op_exists_t exists;
    mongoc_matcher_op_type_t type;
    mongoc_matcher_op_size_t size;
+   mongoc_matcher_op_near_t near;
    mongoc_matcher_op_not_t not_;
 };
 
@@ -130,8 +153,16 @@ mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (const char              *pa
                                                      u_int32_t               size);
 mongoc_matcher_op_t *_mongoc_matcher_op_not_new     (const char              *path,
                                                      mongoc_matcher_op_t     *child);
+mongoc_matcher_op_t *_mongoc_matcher_op_near_new    (mongoc_matcher_opcode_t  opcode,
+                                                     const char              *path,
+                                                     const bson_iter_t       *iter,
+                                                     double                  maxDistance);
 bool                 _mongoc_matcher_op_match       (mongoc_matcher_op_t     *op,
                                                      const bson_t            *bson);
+bool _mongoc_matcher_op_near_cast_number_to_double  (const bson_iter_t       *right_array,   /* IN */
+                                                     double                  *maxDistance);   /* OUT*/
+bool _mongoc_matcher_op_array_to_op_t               (const bson_iter_t       *iter,
+                                                     mongoc_matcher_op_t     *op);
 void                 _mongoc_matcher_op_destroy     (mongoc_matcher_op_t     *op);
 void                 _mongoc_matcher_op_to_bson     (mongoc_matcher_op_t     *op,
                                                      bson_t                  *bson);

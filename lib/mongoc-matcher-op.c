@@ -19,6 +19,7 @@
 #include "mongoc-matcher-op-private.h"
 #include <pcre.h>
 #include <bson.h>
+#include <math.h>
 #include "bsoncompare.h"
 
 /*
@@ -119,6 +120,91 @@ _mongoc_matcher_op_size_new (const char  *path,   /* IN */
    op->size.path = bson_strdup (path);
    op->size.size = size;
    return op;
+}
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_near_new --
+ *
+ *       Create a new op for checking {$near: [x,y], $maxDistance: n}.
+ *
+ * Returns:
+ *       A newly allocated mongoc_matcher_op_t that should be freed with
+ *       _mongoc_matcher_op_destroy().
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+
+mongoc_matcher_op_t *
+_mongoc_matcher_op_near_new     (mongoc_matcher_opcode_t  opcode, /* IN */
+                                 const char              *path,   /* IN */
+                                 const bson_iter_t       *iter,   /* IN */
+                                 double                  maxDistance)   /* IN */
+{
+   mongoc_matcher_op_t *op;
+
+   BSON_ASSERT (path);
+   BSON_ASSERT (iter);
+
+   op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
+   op->near.base.opcode = opcode;
+   op->near.near_type = MONGOC_MATCHER_NEAR_UNDEFINED;
+   op->near.path = bson_strdup (path);
+   op->near.maxd = maxDistance;
+   if (BSON_ITER_HOLDS_ARRAY (iter))
+   {
+      if (_mongoc_matcher_op_array_to_op_t(iter, op))
+         return op;
+   }
+   return NULL;
+}
+
+bool
+_mongoc_matcher_op_array_to_op_t                 (const bson_iter_t       *iter,   /* IN */
+                                                  mongoc_matcher_op_t     *op) {   /* OUT*/
+   bson_iter_t right_array;
+   bson_iter_recurse(iter, &right_array);
+   uint8_t i = 0;
+   while (bson_iter_next(&right_array)) {
+      i++;
+      if (i==1) {
+         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.x))
+            return false;
+      } else if (i==2){
+         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.y))
+            return false;
+         op->near.near_type = MONGOC_MATCHER_NEAR_2D;
+      } else if (i>=3){
+         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.z))
+            return false;
+         op->near.near_type = MONGOC_MATCHER_NEAR_3D;
+         break;
+      }//endif 3
+   }//endif iter next
+   return true;
+}
+
+bool
+_mongoc_matcher_op_near_cast_number_to_double    (const bson_iter_t       *right_array,   /* IN */
+                                                  double                  *maxDistance)   /* OUT*/
+{
+   switch (bson_iter_type ((right_array))){
+      case BSON_TYPE_INT32:
+         (*maxDistance) = (double)bson_iter_int32(right_array);
+           break;
+      case BSON_TYPE_INT64:
+         (*maxDistance) = (double)bson_iter_int64(right_array);
+           break;
+      case BSON_TYPE_DOUBLE:
+         (*maxDistance) = bson_iter_double(right_array);
+           break;
+      default:
+         return false;
+   }
+   return true;
 }
 /*
  *--------------------------------------------------------------------------
@@ -293,6 +379,9 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_SIZE:
       bson_free (op->size.path);
       break;
+   case MONGOC_MATCHER_OPCODE_NEAR:
+      bson_free (op->near.path);
+      break;
    default:
       break;
    }
@@ -419,6 +508,82 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
    }
 
    return false;
+}
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_near --
+ *
+ *       Checks if @bson matches the {$near: [x,y], $maxDistance: n} op.
+ *
+ * Returns:
+ *       true if the array length matches the input size
+ *       the requested type.
+
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+
+static bool
+_mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
+                         const bson_t                *bson) /* IN */
+{
+   bson_iter_t iter;
+   bson_iter_t desc;
+   bson_iter_t right_array;
+   mongoc_matcher_op_t *right_op;
+   double x_diff, y_diff, z_diff, inside, distance;
+   bool returnval = false;
+   BSON_ASSERT (near);
+   BSON_ASSERT (bson);
+
+   if (bson_iter_init (&iter, bson) &&
+       bson_iter_find_descendant (&iter, near->path, &desc) &&
+       BSON_ITER_HOLDS_ARRAY (&desc))
+   {
+      right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
+      right_op->base.opcode = MONGOC_MATCHER_OPCODE_NEAR;
+      if (!_mongoc_matcher_op_array_to_op_t(&desc, right_op))
+        goto cleanandfail;
+      if (near->near_type == right_op->near.near_type){
+         switch (near->near_type){
+            case MONGOC_MATCHER_NEAR_2D:
+               x_diff = near->x - right_op->near.x;
+               y_diff = near->y - right_op->near.y;
+               inside = x_diff*x_diff + y_diff*y_diff;
+               if (inside > 0)
+               {
+                  distance = sqrt(inside);
+                  if (distance < near->maxd)
+                     returnval = true;
+               } else {
+                  returnval = true;
+               }
+               break;
+            case MONGOC_MATCHER_NEAR_3D:
+               x_diff = near->x - right_op->near.x;
+               y_diff = near->y - right_op->near.y;
+               z_diff = near->z - right_op->near.z;
+               inside = x_diff*x_diff + y_diff*y_diff + z_diff*z_diff;
+               if (inside > 0)
+               {
+                  distance = sqrt(inside);
+                  if (distance < near->maxd)
+                     returnval = true;
+               } else {
+                  returnval = true;
+               }
+               break;
+         }
+
+      }
+   }
+cleanandfail:
+   _mongoc_matcher_op_destroy(right_op);
+   return returnval;
 }
 
 /*
@@ -1326,6 +1491,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_type_match (&op->type, bson);
    case MONGOC_MATCHER_OPCODE_SIZE:
       return _mongoc_matcher_op_size_match (&op->size, bson);
+   case MONGOC_MATCHER_OPCODE_NEAR:
+      return _mongoc_matcher_op_near (&op->near, bson);
    default:
       break;
    }
