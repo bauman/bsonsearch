@@ -89,6 +89,7 @@ comparison value in spec can be utf8 string, int/long, regex
 
 
 Regex within SPEC
+==================
 
 bsonsearch supports the use of compiled regex using libpcre.  The only regex option allowed is re.IGNORECASE, and only that option. Adding other options seperately or in addition to ingnore case is undefined.
 
