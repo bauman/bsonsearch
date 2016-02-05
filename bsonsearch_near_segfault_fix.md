@@ -19,8 +19,10 @@ Python dictionaries have no inherent organization.
 You have 2 options,
 1. Rely on undefined (but consistent) behavior. If you put the "near" after the
 "maxDistance", it should serialize it correctly.
+
 2. Use python OrderedDict to handle it. (slightly more challenging that what
 would be obvious)
+
 3. Build the BSON string yourself using SON.
 
 Obviously you should do 2 or 3, but most people are just here looking for 1.
