@@ -12,7 +12,16 @@ This repo continues the effort for a minimally functional and complimentary bson
 
 The officially supported [server matching engine](https://github.com/mongodb/mongo/tree/master/src/mongo/db/matcher) will always be far superior option.
 
+License
+================
+This code is licensed under permissive Apache 2 and MIT license.
 
+Linking to the official server matching engine falls under copyleft AGPL, this library provides minimal matching capability with permissive license
+
+
+Code contributed by MongoDB, Inc is licesned Apache 2
+
+Code contributed by bauman is licensed MIT
 
 bsonsearch
 ==========
