@@ -668,8 +668,11 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _EQ_COMPARE( _date_time, _date_time);
    case _TYPE_CODE(BSON_TYPE_OID, BSON_TYPE_OID):
-         return _EQ_COMPARE (_oid, _oid);
+      return _EQ_COMPARE (_oid, _oid);
+
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _EQ_COMPARE (_double, _double);
@@ -910,7 +913,8 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _GT_COMPARE( _date_time, _date_time);
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _GT_COMPARE (_double, _double);
@@ -942,6 +946,8 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _GT_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1004,7 +1010,8 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _GTE_COMPARE( _date_time, _date_time);
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _GTE_COMPARE (_double, _double);
@@ -1036,6 +1043,8 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _GTE_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1137,7 +1146,8 @@ _mongoc_matcher_op_lt_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _LT_COMPARE( _date_time, _date_time);
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _LT_COMPARE (_double, _double);
@@ -1169,6 +1179,8 @@ _mongoc_matcher_op_lt_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _LT_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1230,7 +1242,8 @@ _mongoc_matcher_op_lte_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _LTE_COMPARE( _date_time, _date_time);
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _LTE_COMPARE (_double, _double);
@@ -1262,6 +1275,8 @@ _mongoc_matcher_op_lte_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _LTE_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {

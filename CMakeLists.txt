@@ -26,6 +26,7 @@ bsonsearch_add_test(compare-leak-test lib/tests/bsoncompare_leak_test.c)
 bsonsearch_add_test(gte-compare lib/tests/bsoncompare_gte_lists.c)
 bsonsearch_add_test(size-compare lib/tests/bsoncompare_opcode_size.c)
 bsonsearch_add_test(near-compare lib/tests/bsoncompare_near.c)
+bsonsearch_add_test(dt-compare lib/tests/bsoncompare_datetime.c)
 
 
 
