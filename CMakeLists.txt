@@ -23,6 +23,9 @@ bsonsearch_add_test(simple lib/tests/simple.c)
 bsonsearch_add_test(mongodbtests lib/tests/matchertest.c)
 bsonsearch_add_test(compare-regex-equal lib/tests/bsoncompare_regex.c)
 bsonsearch_add_test(compare-leak-test lib/tests/bsoncompare_leak_test.c)
+bsonsearch_add_test(gte-compare lib/tests/bsoncompare_gte_lists.c)
+bsonsearch_add_test(size-compare lib/tests/bsoncompare_opcode_size.c)
+bsonsearch_add_test(near-compare lib/tests/bsoncompare_near.c)
 
 
 

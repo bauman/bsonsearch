@@ -22,10 +22,13 @@ generate_matcher(const uint8_t *buf_spec,
 int
 matcher_destroy (mongoc_matcher_t       *matcher)
 {
-  mongoc_matcher_destroy (matcher);
+  if (matcher != NULL)
+  {
+      mongoc_matcher_destroy (matcher);
+  }
+
   return 0;
 }
-
 
 bson_t *
 generate_doc(const uint8_t *buf_doc,
@@ -54,6 +57,9 @@ regex_destroy()
         pcre_free(s->re);
         free(s);
     }
+    //TODO: slim chance s->re is Null?  Decided to let segfault for now to raise alarm
+    //      in future, return number of regexes had to free, or number of errors.  I don't know.
+    return 0;
 }
 int
 regex_print()
@@ -103,9 +109,10 @@ compare(const uint8_t *buf_spec,
   bson = bson_new_from_data(buf_bson, (uint32_t)len_bson);
   matcher = mongoc_matcher_new (spec, NULL);
   result = mongoc_matcher_match (matcher, bson);
+  mongoc_matcher_destroy (matcher); //TODO: This will segfault on a spec that doesnt create a matcher
+                                    //      DESIRED! I want this thing to fail noisy for now, until I have a plan.
   bson_destroy(spec);
   bson_destroy(bson);
-  mongoc_matcher_destroy (matcher);
   return result;
 }
 
@@ -115,13 +122,14 @@ get_array_len(bson_t        *b,
               const uint8_t *namespace,
               uint32_t      len_namespace)
 {
+    //TODO: libbson uses const char * dotkey.  I use const uint8_t * namespace.
+    //      I believe libbson will be changing char*'s to uint8_t at some point.
     int result = 0;
     bson_iter_t iter;
     bson_iter_t baz;
     if (bson_iter_init (&iter, b) &&
         bson_iter_find_descendant (&iter, namespace, &baz) &&
         BSON_ITER_HOLDS_ARRAY (&baz)) {
-
         bson_iter_t right_array;
         bson_iter_recurse(&iter, &right_array);
         while (bson_iter_next(&right_array)) {

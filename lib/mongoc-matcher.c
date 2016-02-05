@@ -105,10 +105,33 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
       } else if (strcmp(key, "$nin") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_NIN, path,
                                               &child);
+
       } else if (strcmp(key, "$exists") == 0) {
          op = _mongoc_matcher_op_exists_new (path, bson_iter_bool (&child));
       } else if (strcmp(key, "$type") == 0) {
          op = _mongoc_matcher_op_type_new (path, bson_iter_type (&child));
+      } else if (strcmp(key, "$size") == 0) {
+          op = _mongoc_matcher_op_size_new (path, bson_iter_int32 (&child));
+      } else if (strcmp(key, "$near") == 0) {
+          if (BSON_ITER_HOLDS_ARRAY(&child))
+          {
+              bson_iter_t distance_iter;
+              if (!bson_iter_recurse (iter, &distance_iter) ||
+                  !bson_iter_next (&distance_iter) ||
+                  !bson_iter_next (&distance_iter)) {
+                  return NULL; //$near requires both near and maxDistance
+              }
+              const char * distance_key = bson_iter_key(&distance_iter);
+              if (strcmp(distance_key, "$maxDistance") == 0 &&
+                  BSON_ITER_HOLDS_INT32(&distance_iter)) {
+                  op = _mongoc_matcher_op_near_new(MONGOC_MATCHER_OPCODE_NEAR, path,
+                                                   &child,
+                                                   bson_iter_int32(&distance_iter));
+              }
+          } else if (BSON_ITER_HOLDS_DOCUMENT(&child)){
+              return NULL; //GeoJSON not implemented.
+          }
+
       } else {
          bson_set_error (error,
                          MONGOC_ERROR_MATCHER,

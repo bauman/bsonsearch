@@ -17,11 +17,6 @@
 #ifndef MONGOC_MATCHER_H
 #define MONGOC_MATCHER_H
 
-/*
-#if !defined (MONGOC_INSIDE) && !defined (MONGOC_COMPILATION)
-# error "Only <mongoc.h> can be included directly."
-#endif
-*/
 #include <bson.h>
 
 
