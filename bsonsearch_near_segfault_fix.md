@@ -16,7 +16,8 @@ operator must be the first object in the bson.
 
 Python dictionaries have no inherent organization.
 
-You have 2 options,
+You have 3 options,
+
 1. Rely on undefined (but consistent) behavior. If you put the "near" after the
 "maxDistance", it should serialize it correctly.
 
