@@ -21,6 +21,7 @@
 #include <bson.h>
 #include <math.h>
 #include "bsoncompare.h"
+#include "mongoc-matcher-op-geojson.h"
 
 /*
  *--------------------------------------------------------------------------
@@ -380,6 +381,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_NEAR:
+   case MONGOC_MATCHER_OPCODE_GEONEAR:
       bson_free (op->near.path);
       break;
    default:
@@ -533,7 +535,6 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
 {
    bson_iter_t iter;
    bson_iter_t desc;
-   bson_iter_t right_array;
    mongoc_matcher_op_t *right_op;
    double x_diff, y_diff, z_diff, inside, distance;
    bool returnval = false;
@@ -546,9 +547,9 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
    {
       right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
       right_op->base.opcode = MONGOC_MATCHER_OPCODE_NEAR;
-      if (!_mongoc_matcher_op_array_to_op_t(&desc, right_op))
-        goto cleanandfail;
-      if (near->near_type == right_op->near.near_type){
+      if (_mongoc_matcher_op_array_to_op_t(&desc, right_op) &&
+                 (near->near_type == right_op->near.near_type))
+      {
          switch (near->near_type){
             case MONGOC_MATCHER_NEAR_2D:
                x_diff = near->x - right_op->near.x;
@@ -578,11 +579,9 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
                }
                break;
          }
-
       }
+      _mongoc_matcher_op_destroy(right_op);
    }
-cleanandfail:
-   _mongoc_matcher_op_destroy(right_op);
    return returnval;
 }
 
@@ -1541,6 +1540,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_size_match (&op->size, bson);
    case MONGOC_MATCHER_OPCODE_NEAR:
       return _mongoc_matcher_op_near (&op->near, bson);
+   case MONGOC_MATCHER_OPCODE_GEONEAR:
+      return _mongoc_matcher_op_geonear (&op->near, bson);
    default:
       break;
    }

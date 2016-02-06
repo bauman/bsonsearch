@@ -19,6 +19,7 @@
 
 #include "mongoc-error.h"
 #include "mongoc-matcher.h"
+#include "mongoc-matcher-op-geojson.h"
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
 
@@ -129,7 +130,9 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
                                                    bson_iter_int32(&distance_iter));
               }
           } else if (BSON_ITER_HOLDS_DOCUMENT(&child)){
-              return NULL; //GeoJSON not implemented.
+              //pass the MongoC_MATCHER_OPCODE_GEONEAR, iter, child, and path
+              op = _mongoc_matcher_op_geonear_new(path, &child);
+
           }
 
       } else {

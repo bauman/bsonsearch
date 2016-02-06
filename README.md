@@ -154,6 +154,11 @@ ipython notebook
 
 $near example
 ==================
+Makes a flat grid distance calculation.
+
+Grid units are arbitrarily determined by the user.
+
+Currently supports 2D or 3D calculations.
 ``` python
     import bsonsearch
     from bson.son import SON
@@ -178,7 +183,48 @@ $near example
     bc.destroy_matcher(bc.matchers)
     
     >>>True
-```  
+```
+
+GeoNear $near example
+==================
+Uses GeoJSON (https://docs.mongodb.org/manual/reference/operator/query/near/#op._S_near)
+
+Only supports point difference
+
+Grid units are in meters
+
+``` python
+    import bsonsearch
+    from bson.son import SON
+    import bson
+
+    bc = bsonsearch.bsoncompare()
+    doc = {"loc": {
+                    "type": "Point" ,
+                    "coordinates": [ -61.08080307722216 , -9.057610600760512 ]
+                 }
+           }
+    doc_id = bc.generate_doc(doc)
+    #Test your luck using a python doc, but I'd recommend on using SON
+    spec = {  "loc":{
+              "$near": {
+                 "$geometry": {
+                    "type": "Point" ,
+                    "coordinates": [ -61.08080307722216 , -9.057610600760512 ]
+                 },
+                 "$maxDistance": 1.0,
+                 "$minDistance": 0.0
+              }
+            }
+           }
+    matcher = bc.generate_matcher(spec)
+    print bc.match_doc(matcher, doc_id) #Same coordinate, evaluates to 0
+
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+
+    >>>True
+```
 
 streaming example
 ==================
