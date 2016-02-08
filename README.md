@@ -1,3 +1,15 @@
+License
+================
+This code is licensed under permissive Apache 2 and MIT license.
+
+Linking to the official server matching engine falls under copyleft AGPL, this library provides minimal matching capability with permissive license
+
+
+Code contributed by MongoDB, Inc is licesned Apache 2
+
+Code contributed by bauman is licensed MIT
+
+
 Acknowledgement
 ===============
 
@@ -13,12 +25,10 @@ This repo continues the effort for a minimally functional and complimentary bson
 The officially supported [server matching engine](https://github.com/mongodb/mongo/tree/master/src/mongo/db/matcher) will always be far superior option.
 
 
-
 bsonsearch
 ==========
 
 shared object to perform mongodb-like queries against raw bson rather than through a mongod
-
 
 install on centos (el7) with RPMs
 
@@ -60,16 +70,16 @@ uthash-devel
 
 
 ```
-    gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
+    gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-matcher-op-geojson.c
 ```
 
 
 Usage
 ==========
 
-The spec parameter supports all query operators (http://docs.mongodb.org/manual/reference/operator/query/) supported by the mongo-c-driver
+The spec parameter supports a subset of MongoDB query operators (http://docs.mongodb.org/manual/reference/operator/query/) 
 
-Currently, that includes $in, $nin, $eq, $neq, $gt, $gte, $lt, and $lte. (See full documentation http://api.mongodb.org/c/current/mongoc_matcher_t.html)
+Currently, that includes $and, $or, $not, $in, $nin, $eq, $neq, $gt, $gte, $lt, $lte, and $near. (See full documentation http://api.mongodb.org/c/current/mongoc_matcher_t.html)
 
 comparison value in spec can be utf8 string, int/long, regex
 
@@ -89,6 +99,7 @@ comparison value in spec can be utf8 string, int/long, regex
 
 
 Regex within SPEC
+==================
 
 bsonsearch supports the use of compiled regex using libpcre.  The only regex option allowed is re.IGNORECASE, and only that option. Adding other options seperately or in addition to ingnore case is undefined.
 
@@ -109,9 +120,6 @@ bsonsearch supports the use of compiled regex using libpcre.  The only regex opt
 
     >>> True
 ```
-
-
-
 
 
 If the document contains lists within the namespace, libbson cannot handle queries like mongodb server.
@@ -145,10 +153,82 @@ ipython notebook
     >>> True
 ```
 
+$near example
+==================
+Makes a flat grid distance calculation.
 
+Grid units are arbitrarily determined by the user.
+
+Currently supports 2D or 3D calculations.
+``` python
+    import bsonsearch
+    from bson.son import SON
+    import bson
+    
+    bc = bsonsearch.bsoncompare()
+    doc = {'pos':[200, 150]} #Legacy Point format.
+    doc_id = bc.generate_doc(doc)
+    #Test your luck using a python doc, but I'd recommend on using SON
+    #spec = {"pos":{"$maxDistance":100, "$near":[200, 151] }} #putting $maxDistance first will serialize $near correctly in CPython
+    near_cmd = SON()
+    near_cmd["$near"] = [200, 151]
+    near_cmd["$maxDistance"] = 100
+    spec = SON()
+    spec['pos'] = near_cmd
+    spec = bson.BSON.encode(spec)
+    
+    matcher = bc.generate_matcher(spec)
+    print bc.match_doc(matcher, doc_id) #--True--
+    
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+    
+    >>>True
+```
+
+GeoNear $near example
+==================
+Uses GeoJSON (https://docs.mongodb.org/manual/reference/operator/query/near/#op._S_near)
+
+Only supports point difference
+
+Grid units are in meters
+
+``` python
+    import bsonsearch
+    from bson.son import SON
+    import bson
+
+    bc = bsonsearch.bsoncompare()
+    doc = {"loc": {
+                    "type": "Point" ,
+                    "coordinates": [ -61.08080307722216 , -9.057610600760512 ]
+                 }
+           }
+    doc_id = bc.generate_doc(doc)
+    #Test your luck using a python doc, but I'd recommend on using SON
+    spec = {  "loc":{
+              "$near": {
+                 "$geometry": {
+                    "type": "Point" ,
+                    "coordinates": [ -61.08080307722216 , -9.057610600760512 ]
+                 },
+                 "$maxDistance": 1.0,
+                 "$minDistance": 0.0
+              }
+            }
+           }
+    matcher = bc.generate_matcher(spec)
+    print bc.match_doc(matcher, doc_id) #Same coordinate, evaluates to 0
+
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+
+    >>>True
+```
 
 streaming example
-
+==================
 
 this example uses KeyValueBSONInput (https://github.com/bauman/python-bson-streaming)
 

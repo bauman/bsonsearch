@@ -21,6 +21,7 @@
 #include <bson.h>
 #include <math.h>
 #include "bsoncompare.h"
+#include "mongoc-matcher-op-geojson.h"
 
 /*
  *--------------------------------------------------------------------------
@@ -189,17 +190,17 @@ _mongoc_matcher_op_array_to_op_t                 (const bson_iter_t       *iter,
 
 bool
 _mongoc_matcher_op_near_cast_number_to_double    (const bson_iter_t       *right_array,   /* IN */
-                                                  double                  *maxDistance)   /* OUT*/
+                                                  double                  *ptrDouble)   /* OUT*/
 {
    switch (bson_iter_type ((right_array))){
       case BSON_TYPE_INT32:
-         (*maxDistance) = (double)bson_iter_int32(right_array);
+         (*ptrDouble) = (double)bson_iter_int32(right_array);
            break;
       case BSON_TYPE_INT64:
-         (*maxDistance) = (double)bson_iter_int64(right_array);
+         (*ptrDouble) = (double)bson_iter_int64(right_array);
            break;
       case BSON_TYPE_DOUBLE:
-         (*maxDistance) = bson_iter_double(right_array);
+         (*ptrDouble) = bson_iter_double(right_array);
            break;
       default:
          return false;
@@ -380,6 +381,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_NEAR:
+   case MONGOC_MATCHER_OPCODE_GEONEAR:
       bson_free (op->near.path);
       break;
    default:
@@ -533,7 +535,6 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
 {
    bson_iter_t iter;
    bson_iter_t desc;
-   bson_iter_t right_array;
    mongoc_matcher_op_t *right_op;
    double x_diff, y_diff, z_diff, inside, distance;
    bool returnval = false;
@@ -546,9 +547,9 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
    {
       right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
       right_op->base.opcode = MONGOC_MATCHER_OPCODE_NEAR;
-      if (!_mongoc_matcher_op_array_to_op_t(&desc, right_op))
-        goto cleanandfail;
-      if (near->near_type == right_op->near.near_type){
+      if (_mongoc_matcher_op_array_to_op_t(&desc, right_op) &&
+                 (near->near_type == right_op->near.near_type))
+      {
          switch (near->near_type){
             case MONGOC_MATCHER_NEAR_2D:
                x_diff = near->x - right_op->near.x;
@@ -578,11 +579,9 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
                }
                break;
          }
-
       }
+      _mongoc_matcher_op_destroy(right_op);
    }
-cleanandfail:
-   _mongoc_matcher_op_destroy(right_op);
    return returnval;
 }
 
@@ -668,8 +667,16 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _EQ_COMPARE( _date_time, _date_time);
    case _TYPE_CODE(BSON_TYPE_OID, BSON_TYPE_OID):
-         return _EQ_COMPARE (_oid, _oid);
+      {
+         const bson_oid_t *left = bson_iter_oid(compare_iter);
+         const bson_oid_t *right = bson_iter_oid(iter);
+         return (bson_oid_compare(right, left)==0);
+      }
+
+
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _EQ_COMPARE (_double, _double);
@@ -689,7 +696,6 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
 
          rstr = bson_iter_utf8 (iter, &rlen);
          pcre *re;
-
          const char *error;
          int erroffset;
          int OVECCOUNT = 3;   //this code does not support returning match groups to the user
@@ -910,7 +916,14 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _GT_COMPARE( _date_time, _date_time);
+   case _TYPE_CODE(BSON_TYPE_OID, BSON_TYPE_OID):
+      {
+         const bson_oid_t *left = bson_iter_oid(compare_iter);
+         const bson_oid_t * right = bson_iter_oid(iter);
+         return (bson_oid_compare(right, left)>0);
+      }
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _GT_COMPARE (_double, _double);
@@ -942,6 +955,9 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _GT_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_OID, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1004,8 +1020,16 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _GTE_COMPARE( _date_time, _date_time);
+   case _TYPE_CODE(BSON_TYPE_OID, BSON_TYPE_OID):
+   {
+      const bson_oid_t *left = bson_iter_oid(compare_iter);
+      const bson_oid_t * right = bson_iter_oid(iter);
+      return (bson_oid_compare(right, left)>=0);
+   }
 
-   /* Double on Left Side */
+     /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _GTE_COMPARE (_double, _double);
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_BOOL):
@@ -1036,6 +1060,9 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _GTE_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_OID, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1137,7 +1164,14 @@ _mongoc_matcher_op_lt_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _LT_COMPARE( _date_time, _date_time);
+   case _TYPE_CODE(BSON_TYPE_OID, BSON_TYPE_OID):
+      {
+         const bson_oid_t *left = bson_iter_oid(compare_iter);
+         const bson_oid_t * right = bson_iter_oid(iter);
+         return (bson_oid_compare(right, left)<0);
+      }
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _LT_COMPARE (_double, _double);
@@ -1169,6 +1203,9 @@ _mongoc_matcher_op_lt_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _LT_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_OID, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1230,7 +1267,14 @@ _mongoc_matcher_op_lte_match (mongoc_matcher_op_compare_t *compare, /* IN */
                       bson_iter_type (iter));
 
    switch (code) {
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_DATE_TIME):
+      return _LTE_COMPARE( _date_time, _date_time);
+   case _TYPE_CODE(BSON_TYPE_OID, BSON_TYPE_OID):
+      {
+         const bson_oid_t *left = bson_iter_oid(compare_iter);
+         const bson_oid_t * right = bson_iter_oid(iter);
+         return (bson_oid_compare(right, left)<=0);
+      }
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _LTE_COMPARE (_double, _double);
@@ -1262,6 +1306,9 @@ _mongoc_matcher_op_lte_match (mongoc_matcher_op_compare_t *compare, /* IN */
       return _LTE_COMPARE (_int64, _int64);
 
    /* Array on Right Side */
+   case _TYPE_CODE (BSON_TYPE_OID, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_DATE_TIME, BSON_TYPE_ARRAY):
+   case _TYPE_CODE (BSON_TYPE_TIMESTAMP, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT32, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_INT64, BSON_TYPE_ARRAY):
    case _TYPE_CODE (BSON_TYPE_DOUBLE, BSON_TYPE_ARRAY): {
@@ -1493,6 +1540,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_size_match (&op->size, bson);
    case MONGOC_MATCHER_OPCODE_NEAR:
       return _mongoc_matcher_op_near (&op->near, bson);
+   case MONGOC_MATCHER_OPCODE_GEONEAR:
+      return _mongoc_matcher_op_geonear (&op->near, bson);
    default:
       break;
    }
