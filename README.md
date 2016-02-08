@@ -24,6 +24,11 @@ This repo continues the effort for a minimally functional and complimentary bson
 
 The officially supported [server matching engine](https://github.com/mongodb/mongo/tree/master/src/mongo/db/matcher) will always be far superior option.
 
+speed comparison against json
+==========
+https://github.com/bauman/bsonsearch/blob/master/data/bsonsearch_vs_ujson_and_dict_search.ipynb
+
+
 
 bsonsearch
 ==========
