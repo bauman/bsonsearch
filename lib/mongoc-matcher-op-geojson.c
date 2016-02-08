@@ -81,7 +81,7 @@ _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
     {
         right_op = (mongoc_matcher_op_t *) bson_malloc0(sizeof *right_op);
         if (_mongoc_matcher_op_geonear_parse_geometry(desc, right_op) &&
-            haversign_distance(near->x, near->y, right_op->near.x, right_op->near.y, &distance) &&
+                haversine_distance(near->x, near->y, right_op->near.x, right_op->near.y, &distance) &&
             distance <= near->maxd)
             _mongoc_matcher_op_destroy(right_op);
         retval = true;
@@ -141,10 +141,10 @@ _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,
 //https://en.wikipedia.org/wiki/Haversine_formula
 // 0.5*(1-cos(2*x)) = sin^2(x) <-trig identity to replace sin^2 from formula
 bool
-haversign_distance(double lon1,      /* IN */
-                   double lat1,      /* IN */
-                   double lon2,      /* IN */
-                   double lat2,      /* IN */
+haversine_distance(double lon1,      /* IN  (radians)*/
+                   double lat1,      /* IN  (radians)*/
+                   double lon2,      /* IN  (radians)*/
+                   double lat2,      /* IN  (radians)*/
                    double *distance) /* OUT */
 {
     double lon_diff = lon2 - lon1;

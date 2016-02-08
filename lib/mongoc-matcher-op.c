@@ -190,17 +190,17 @@ _mongoc_matcher_op_array_to_op_t                 (const bson_iter_t       *iter,
 
 bool
 _mongoc_matcher_op_near_cast_number_to_double    (const bson_iter_t       *right_array,   /* IN */
-                                                  double                  *maxDistance)   /* OUT*/
+                                                  double                  *ptrDouble)   /* OUT*/
 {
    switch (bson_iter_type ((right_array))){
       case BSON_TYPE_INT32:
-         (*maxDistance) = (double)bson_iter_int32(right_array);
+         (*ptrDouble) = (double)bson_iter_int32(right_array);
            break;
       case BSON_TYPE_INT64:
-         (*maxDistance) = (double)bson_iter_int64(right_array);
+         (*ptrDouble) = (double)bson_iter_int64(right_array);
            break;
       case BSON_TYPE_DOUBLE:
-         (*maxDistance) = bson_iter_double(right_array);
+         (*ptrDouble) = bson_iter_double(right_array);
            break;
       default:
          return false;

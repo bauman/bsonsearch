@@ -38,7 +38,11 @@ bool  _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_it
                                                    mongoc_matcher_op_t   *op) ; /*OUT*/
 bool _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,  /* IN */
                                                      mongoc_matcher_op_t   *op) ; /*OUT*/
-bool haversign_distance(double lon1, double lat1, double lon2, double lat2, double *distance);
+bool haversine_distance(double lon1,  /* IN */
+                        double lat1,  /* IN */
+                        double lon2,  /* IN */
+                        double lat2,  /* IN */
+                        double *distance); /* OUT */
 bool _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
                                  const bson_t                *bson) ;/* IN */
 BSON_END_DECLS
