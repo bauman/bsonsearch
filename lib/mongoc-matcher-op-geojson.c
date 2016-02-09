@@ -71,7 +71,7 @@ _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
     bson_iter_t iter;
     bson_iter_t desc;
     mongoc_matcher_op_t *right_op;
-    double distance;
+    double distance = -1; //distance must be > 0 to pass the compare.
     BSON_ASSERT (near);
     BSON_ASSERT (bson);
 
@@ -83,8 +83,8 @@ _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
         if (_mongoc_matcher_op_geonear_parse_geometry(desc, right_op) &&
                 haversine_distance(near->x, near->y, right_op->near.x, right_op->near.y, &distance) &&
                 distance <= near->maxd)
-            _mongoc_matcher_op_destroy(right_op);
-        retval = true;
+            retval = true;
+        _mongoc_matcher_op_destroy(right_op);
     }
     return retval;
 }
