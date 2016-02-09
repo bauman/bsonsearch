@@ -95,14 +95,14 @@ _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_iter,  /
 {
     while (bson_iter_next (&near_iter)) {
         const char * key = bson_iter_key (&near_iter);
-        if (strcmp(key, "$minDistance")==0){
-            if (!_mongoc_matcher_op_near_cast_number_to_double(&near_iter, &op->near.mind))
+        if (strcmp(key, "$geometry")==0){
+            if (!_mongoc_matcher_op_geonear_parse_geometry(near_iter, op))
                 return false;
         } else if (strcmp(key, "$maxDistance")==0){
             if (!_mongoc_matcher_op_near_cast_number_to_double(&near_iter, &op->near.maxd))
                 return false;
-        } else if (strcmp(key, "$geometry")==0){
-            if (!_mongoc_matcher_op_geonear_parse_geometry(near_iter, op))
+        } else if (strcmp(key, "$minDistance")==0){
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&near_iter, &op->near.mind))
                 return false;
         }
     }
