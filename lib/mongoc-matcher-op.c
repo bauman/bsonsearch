@@ -171,23 +171,34 @@ _mongoc_matcher_op_array_to_op_t                 (const bson_iter_t       *iter,
    uint8_t i = 0;
    while (bson_iter_next(&right_array)) {
       i++;
-      if (i==1) {
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.x))
+      switch (i) {
+         case 1: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.x))
+               return false;
+            break;
+         }
+         case 2: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.y))
+               return false;
+            op->near.near_type = MONGOC_MATCHER_NEAR_2D;
+            break;
+         }
+         case 3: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.z))
+               return false;
+            op->near.near_type = MONGOC_MATCHER_NEAR_3D;
+            break;
+         }
+         case 4: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.t))
+               return false;
+            op->near.near_type = MONGOC_MATCHER_NEAR_4D;
+            return true;
+         }
+         default:
             return false;
-      } else if (i==2){
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.y))
-            return false;
-         op->near.near_type = MONGOC_MATCHER_NEAR_2D;
-      } else if (i==3){
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.z))
-            return false;
-         op->near.near_type = MONGOC_MATCHER_NEAR_3D;
-      } else if (i>=4){
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.t))
-            return false;
-         op->near.near_type = MONGOC_MATCHER_NEAR_4D;
-         break;
-      }//endif 3
+      }
+
    }//endif iter next
    return true;
 }
