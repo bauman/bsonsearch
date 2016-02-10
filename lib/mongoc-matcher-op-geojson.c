@@ -188,7 +188,8 @@ _mongoc_matcher_op_geowithin_new     ( const char              *path,   /* IN */
     op->near.path = bson_strdup (path);
 
     if (!bson_iter_recurse (child, &within_iter)){
-        return NULL; //TODO: fix op memory leak?  Going to segfault on return null anyway.
+        _mongoc_matcher_op_destroy(op);
+        return NULL;
     }
     while (bson_iter_next (&within_iter)) {
         const char * key = bson_iter_key (&within_iter);
@@ -243,8 +244,9 @@ _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
     {
         right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
         right_op->base.opcode = MONGOC_MATCHER_OPCODE_NEAR;
-        if (_mongoc_matcher_op_array_to_op_t(&desc, right_op) &&
-            (near->near_type == right_op->near.near_type))
+        if (BSON_ITER_HOLDS_ARRAY(&desc) &&
+                _mongoc_matcher_op_array_to_op_t(&desc, right_op) &&
+                (near->near_type == right_op->near.near_type))
         {
             switch (near->near_type){
                 case MONGOC_MATCHER_NEAR_2D:
