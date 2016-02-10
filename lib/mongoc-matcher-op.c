@@ -178,10 +178,14 @@ _mongoc_matcher_op_array_to_op_t                 (const bson_iter_t       *iter,
          if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.y))
             return false;
          op->near.near_type = MONGOC_MATCHER_NEAR_2D;
-      } else if (i>=3){
+      } else if (i==3){
          if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.z))
             return false;
          op->near.near_type = MONGOC_MATCHER_NEAR_3D;
+      } else if (i>=4){
+         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.t))
+            return false;
+         op->near.near_type = MONGOC_MATCHER_NEAR_4D;
          break;
       }//endif 3
    }//endif iter next
@@ -381,6 +385,8 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_NEAR:
+   case MONGOC_MATCHER_OPCODE_GEOWITHIN:
+   case MONGOC_MATCHER_OPCODE_GEOUNDEFINED:
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       bson_free (op->near.path);
       break;
@@ -536,7 +542,7 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
    bson_iter_t iter;
    bson_iter_t desc;
    mongoc_matcher_op_t *right_op;
-   double x_diff, y_diff, z_diff, inside, distance;
+   double x_diff, y_diff, z_diff, t_diff, inside, distance;
    bool returnval = false;
    BSON_ASSERT (near);
    BSON_ASSERT (bson);
@@ -555,29 +561,28 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
                x_diff = near->x - right_op->near.x;
                y_diff = near->y - right_op->near.y;
                inside = x_diff*x_diff + y_diff*y_diff;
-               if (inside > 0)
-               {
-                  distance = sqrt(inside);
-                  if (distance < near->maxd)
-                     returnval = true;
-               } else {
-                  returnval = true;
-               }
                break;
             case MONGOC_MATCHER_NEAR_3D:
                x_diff = near->x - right_op->near.x;
                y_diff = near->y - right_op->near.y;
                z_diff = near->z - right_op->near.z;
                inside = x_diff*x_diff + y_diff*y_diff + z_diff*z_diff;
-               if (inside > 0)
-               {
-                  distance = sqrt(inside);
-                  if (distance < near->maxd)
-                     returnval = true;
-               } else {
-                  returnval = true;
-               }
                break;
+            case MONGOC_MATCHER_NEAR_4D:
+                 t_diff = near->t - right_op->near.t;
+                 x_diff = near->x - right_op->near.x;
+                 y_diff = near->y - right_op->near.y;
+                 z_diff = near->z - right_op->near.z;
+                 inside = x_diff*x_diff + y_diff*y_diff + z_diff*z_diff + t_diff*t_diff;
+                 break;
+            default:
+               break;
+         }
+         if (inside > 0)
+         {
+            distance = sqrt(inside);
+            if (distance < near->maxd)
+               returnval = true;
          }
       }
       _mongoc_matcher_op_destroy(right_op);
@@ -1542,7 +1547,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_near (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       return _mongoc_matcher_op_geonear (&op->near, bson);
-   default:
+   case MONGOC_MATCHER_OPCODE_GEOWITHIN:
+      return _mongoc_matcher_op_geowithin (&op->near, bson);
+
+      default:
       break;
    }
 

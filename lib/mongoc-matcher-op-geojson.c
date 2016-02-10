@@ -157,3 +157,109 @@ haversine_distance(double lon1,      /* IN  (radians)*/
     (*distance) = pre_radius_unit * MONGOC_EARTH_RADIUS_M;
     return true;
 }
+
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geowithin_new --
+ *
+ *       Create a new op for checking {$near: [x,y], $maxDistance: n}.
+ *
+ * Returns:
+ *       A newly allocated mongoc_matcher_op_t that should be freed with
+ *       _mongoc_matcher_op_destroy().
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+
+mongoc_matcher_op_t *
+_mongoc_matcher_op_geowithin_new     ( const char              *path,   /* IN */
+                                       bson_iter_t             *child)   /* IN */
+{
+    mongoc_matcher_op_t *op;
+    bson_iter_t within_iter;
+    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
+    op->near.base.opcode = MONGOC_MATCHER_OPCODE_GEOUNDEFINED;
+    op->near.near_type = MONGOC_MATCHER_NEAR_UNDEFINED;
+    op->near.path = bson_strdup (path);
+
+    if (!bson_iter_recurse (child, &within_iter)){
+        return NULL; //TODO: fix op memory leak?  Going to segfault on return null anyway.
+    }
+    while (bson_iter_next (&within_iter)) {
+        const char * key = bson_iter_key (&within_iter);
+        if (strcmp(key, "$box")==0 &&
+                _mongoc_matcher_op_geowithin_box_iter_values(within_iter, op)) {
+            op->near.near_type = MONGOC_MATCHER_NEAR_2D;
+            op->base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHIN;
+            return op;
+        }
+    }
+    return NULL;
+}
+bool
+_mongoc_matcher_op_geowithin_box_iter_values     ( bson_iter_t           within_iter,  /* IN */
+                                                   mongoc_matcher_op_t   *op)  /*OUT*/
+{
+    bson_iter_t box_iter, top_left_iter, bottom_right_iter;
+    if (BSON_ITER_HOLDS_ARRAY(&within_iter) &&
+            bson_iter_recurse(&within_iter, &box_iter) &&
+            bson_iter_next(&box_iter) &&
+            BSON_ITER_HOLDS_ARRAY(&box_iter) &&
+            bson_iter_recurse(&box_iter, &top_left_iter) &&
+            bson_iter_next(&top_left_iter) &&
+            _mongoc_matcher_op_near_cast_number_to_double(&top_left_iter, &op->near.x) &&
+            bson_iter_next(&top_left_iter) &&
+            _mongoc_matcher_op_near_cast_number_to_double(&top_left_iter, &op->near.y) &&
+            bson_iter_next(&box_iter) &&
+            BSON_ITER_HOLDS_ARRAY(&box_iter) &&
+            bson_iter_recurse(&box_iter, &bottom_right_iter) &&
+            bson_iter_next(&bottom_right_iter) &&
+            _mongoc_matcher_op_near_cast_number_to_double(&bottom_right_iter, &op->near.z) &&
+            bson_iter_next(&bottom_right_iter) &&
+            _mongoc_matcher_op_near_cast_number_to_double(&bottom_right_iter, &op->near.t)){
+        return true;
+    }
+    return false;
+}
+bool
+_mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
+                              const bson_t                *bson) /* IN */
+{
+    bson_iter_t iter;
+    bson_iter_t desc;
+    mongoc_matcher_op_t *right_op;
+    bool return_val = false;
+    BSON_ASSERT (near);
+    BSON_ASSERT (bson);
+
+    if (bson_iter_init (&iter, bson) &&
+        bson_iter_find_descendant (&iter, near->path, &desc) &&
+        BSON_ITER_HOLDS_ARRAY (&desc))
+    {
+        right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
+        right_op->base.opcode = MONGOC_MATCHER_OPCODE_NEAR;
+        if (_mongoc_matcher_op_array_to_op_t(&desc, right_op) &&
+            (near->near_type == right_op->near.near_type))
+        {
+            switch (near->near_type){
+                case MONGOC_MATCHER_NEAR_2D:
+                    if (right_op->near.x >= near->x &&
+                            right_op->near.y >= near->y &&
+                            right_op->near.x <= near->z &&
+                            right_op->near.y <= near->t){
+                        return_val = true;
+                    }
+                    break;
+                default:
+                    break;
+            }
+        }
+        _mongoc_matcher_op_destroy(right_op);
+    }
+    return return_val;
+}

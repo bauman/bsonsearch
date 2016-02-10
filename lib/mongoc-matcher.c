@@ -135,7 +135,12 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
 
           }
 
-      } else {
+      } else if (strcmp(key, "$geoWithin") == 0) {
+          if (BSON_ITER_HOLDS_DOCUMENT(&child))
+          {
+              op = _mongoc_matcher_op_geowithin_new(path, &child);
+          }
+      }else {
          bson_set_error (error,
                          MONGOC_ERROR_MATCHER,
                          MONGOC_ERROR_MATCHER_INVALID,

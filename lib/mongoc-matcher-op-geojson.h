@@ -32,8 +32,15 @@ BSON_BEGIN_DECLS
 #define RADIAN_MAGIC_NUMBER 0.01745329251 //pi/180
 
 mongoc_matcher_op_t *
-_mongoc_matcher_op_geonear_new     ( const char              *path,   /* IN */
-                                     bson_iter_t       *child);   /* IN */
+_mongoc_matcher_op_geonear_new     ( const char      *path,   /* IN */
+                                     bson_iter_t     *child);   /* IN */
+mongoc_matcher_op_t *
+_mongoc_matcher_op_geowithin_new     ( const char      *path,   /* IN */
+                                       bson_iter_t     *child);   /* IN */
+
+bool
+_mongoc_matcher_op_geowithin_box_iter_values     ( bson_iter_t           box_iter,  /* IN */
+                                                   mongoc_matcher_op_t   *op) ; /*OUT*/
 bool  _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_iter,  /* IN */
                                                    mongoc_matcher_op_t   *op) ; /*OUT*/
 bool _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,  /* IN */
@@ -45,6 +52,8 @@ bool haversine_distance(double lon1,  /* IN */
                         double *distance); /* OUT */
 bool _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
                                  const bson_t                *bson) ;/* IN */
+bool _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
+                                   const bson_t                *bson); /* IN */
 BSON_END_DECLS
 
 

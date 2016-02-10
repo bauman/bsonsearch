@@ -51,6 +51,8 @@ typedef enum
    MONGOC_MATCHER_OPCODE_SIZE,
    MONGOC_MATCHER_OPCODE_NEAR,
    MONGOC_MATCHER_OPCODE_GEONEAR,
+   MONGOC_MATCHER_OPCODE_GEOWITHIN,
+   MONGOC_MATCHER_OPCODE_GEOUNDEFINED,
 } mongoc_matcher_opcode_t;
 
 
@@ -60,6 +62,7 @@ typedef enum
     MONGOC_MATCHER_NEAR_UNDEFINED,
     MONGOC_MATCHER_NEAR_2D,
     MONGOC_MATCHER_NEAR_3D,
+    MONGOC_MATCHER_NEAR_4D, //3D + Time
 } mongoc_matcher_near_t;
 
 
@@ -123,6 +126,7 @@ struct _mongoc_matcher_op_near_t
     double x;
     double y;
     double z;
+    double t; //normally for time, hijacked by some geo functions
     double maxd; //distance
     double mind; //distance
 };

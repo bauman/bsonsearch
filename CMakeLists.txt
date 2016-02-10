@@ -29,6 +29,7 @@ bsonsearch_add_test(near-compare lib/tests/bsoncompare_near.c)
 bsonsearch_add_test(dt-compare lib/tests/bsoncompare_datetime.c)
 bsonsearch_add_test(oid-compare lib/tests/bsoncompare_oid.c)
 bsonsearch_add_test(geonear-compare lib/tests/bsoncompare_geonear.c)
+bsonsearch_add_test(compare-box lib/tests/bsoncompare_box.c)
 
 
 
