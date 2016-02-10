@@ -30,6 +30,7 @@ BSON_BEGIN_DECLS
 
 #define MONGOC_EARTH_RADIUS_M 6371000
 #define RADIAN_MAGIC_NUMBER 0.01745329251 //pi/180
+#define MONGOC_MAX_POLYGON_POINTS 32
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_geonear_new     ( const char      *path,   /* IN */
@@ -45,11 +46,28 @@ bool  _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_it
                                                    mongoc_matcher_op_t   *op) ; /*OUT*/
 bool _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,  /* IN */
                                                      mongoc_matcher_op_t   *op) ; /*OUT*/
+bool
+_mongoc_matcher_op_geowithin_polygon_iter_values     ( bson_iter_t           within_iter,  /* IN */
+                                                       mongoc_matcher_op_t   *op) ; /*OUT*/
+bool
+_mongoc_matcher_op_geowithin_polygon_iter_point     ( bson_iter_t           within_iter,  /* IN */
+                                                      mongoc_matcher_op_t   *op) ; /*OUT*/
+
+bool
+_mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
+                                  const bson_t           *bson); /* IN */
+
+
 bool haversine_distance(double lon1,  /* IN */
                         double lat1,  /* IN */
                         double lon2,  /* IN */
                         double lat2,  /* IN */
                         double *distance); /* OUT */
+bool
+point_in_poly(double nvert,
+              mongoc_matcher_op_t *op,
+              double testx, double testy);
+
 bool _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
                                  const bson_t                *bson) ;/* IN */
 bool _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */

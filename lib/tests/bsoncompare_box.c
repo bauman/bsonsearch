@@ -23,8 +23,15 @@ main (int   argc,
       char *argv[])
 {
 
-    BSON_ASSERT(compare_json("{\"loc\": [1,3]}",
-                             "{\"loc\": { \"$geoWithin\": { \"$box\":  [ [ 0, 1 ], [ 100, 100 ] ] } } }"));
+    BSON_ASSERT(compare_json("{\"loc\": [1,1]}",
+                             "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 1 , 1 ], [ 3 , 6 ], [ 6 , 0 ] ] } } }"));
+
+    BSON_ASSERT(compare_json("{\"loc\": [2,3]}",
+                             "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 1 , 1 ], [ 3 , 6 ], [ 6 , 0 ] ] } } }"));
+
+    BSON_ASSERT(!compare_json("{\"loc\": [20,3]}",
+                             "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 1 , 1 ], [ 3 , 6 ], [ 6 , 0 ] ] } } }"));
+
     BSON_ASSERT(compare_json("{\"loc\": [0,3]}",
                              "{\"loc\": { \"$geoWithin\": { \"$box\":  [ [ 0, 0 ], [ 100, 101 ] ] } } }"));
     BSON_ASSERT(compare_json("{\"loc\": [3,0]}",

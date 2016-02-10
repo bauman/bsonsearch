@@ -395,6 +395,9 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_SIZE:
       bson_free (op->size.path);
       break;
+   case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
+      if (op->logical.left)
+         _mongoc_matcher_op_destroy (op->logical.left); //continue to clear near path
    case MONGOC_MATCHER_OPCODE_NEAR:
    case MONGOC_MATCHER_OPCODE_GEOWITHIN:
    case MONGOC_MATCHER_OPCODE_GEOUNDEFINED:
@@ -1560,8 +1563,9 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_geonear (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEOWITHIN:
       return _mongoc_matcher_op_geowithin (&op->near, bson);
-
-      default:
+   case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
+      return _mongoc_matcher_op_geowithinpoly (op, bson);
+   default:
       break;
    }
 
