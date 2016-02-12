@@ -3,7 +3,7 @@ project(bsonsearch)
 
 INCLUDE_DIRECTORIES(/usr/include/ /usr/include/libbson-1.0/ lib/)
 LINK_DIRECTORIES(/usr/lib64/)
-set(SOURCE_FILES lib/bsoncompare.c lib/mongoc-matcher.c lib/mongoc-matcher-op.c lib/mongoc-matcher-op-geojson.c)
+set(SOURCE_FILES lib/bsoncompare.c lib/mongoc-matcher.c lib/mongoc-matcher-op.c lib/mongoc-matcher-op-geojson.c lib/mongoc-bson-descendants.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
@@ -30,6 +30,9 @@ bsonsearch_add_test(dt-compare lib/tests/bsoncompare_datetime.c)
 bsonsearch_add_test(oid-compare lib/tests/bsoncompare_oid.c)
 bsonsearch_add_test(geonear-compare lib/tests/bsoncompare_geonear.c)
 bsonsearch_add_test(compare-box lib/tests/bsoncompare_box.c)
+bsonsearch_add_test(bson-fix lib/tests/bson_descendants.c)
+bsonsearch_add_test(big-doc lib/tests/bigdoctest.c)
+
 
 
 

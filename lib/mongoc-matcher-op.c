@@ -22,6 +22,7 @@
 #include <math.h>
 #include "bsoncompare.h"
 #include "mongoc-matcher-op-geojson.h"
+#include "mongoc-bson-descendants.h"
 
 /*
  *--------------------------------------------------------------------------
@@ -1407,6 +1408,37 @@ _mongoc_matcher_op_nin_match (mongoc_matcher_op_compare_t *compare, /* IN */
 }
 
 
+
+static bool
+_mongoc_matcher_op_compare_match_iter (mongoc_matcher_op_compare_t *compare, /* IN */
+                                       bson_iter_t iter)    /* IN */
+{
+   switch ((int)compare->base.opcode) {
+      case MONGOC_MATCHER_OPCODE_EQ:
+         return _mongoc_matcher_op_eq_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_GT:
+         return _mongoc_matcher_op_gt_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_GTE:
+         return _mongoc_matcher_op_gte_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_IN:
+         return _mongoc_matcher_op_in_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_LT:
+         return _mongoc_matcher_op_lt_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_LTE:
+         return _mongoc_matcher_op_lte_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_NE:
+         return _mongoc_matcher_op_ne_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_NIN:
+         return _mongoc_matcher_op_nin_match (compare, &iter);
+      default:
+         BSON_ASSERT (false);
+           break;
+   }
+
+   return false;
+}
+
+
 /*
  *--------------------------------------------------------------------------
  *
@@ -1430,42 +1462,26 @@ _mongoc_matcher_op_compare_match (mongoc_matcher_op_compare_t *compare, /* IN */
 {
    bson_iter_t tmp;
    bson_iter_t iter;
-
+   bool found_one = false;
+   int checked = 0, skip=0;
    BSON_ASSERT (compare);
    BSON_ASSERT (bson);
-
    if (strchr (compare->path, '.')) {
       if (!bson_iter_init (&tmp, bson) ||
-          !bson_iter_find_descendant (&tmp, compare->path, &iter)) {
-         return false;
+          !bson_iter_find_descendant (&tmp, compare->path, &iter)) { //try this way first
+         while (!found_one &&
+                 bson_iter_init (&tmp, bson) &&
+                 bson_iter_find_descendants (&tmp, compare->path, &skip, &iter)){
+            found_one |= _mongoc_matcher_op_compare_match_iter(compare, iter);
+            skip = ++checked;
+         }
+         return ((checked>0) && found_one);
       }
    } else if (!bson_iter_init_find (&iter, bson, compare->path)) {
       return false;
    }
+   return _mongoc_matcher_op_compare_match_iter(compare, iter);
 
-   switch ((int)compare->base.opcode) {
-   case MONGOC_MATCHER_OPCODE_EQ:
-      return _mongoc_matcher_op_eq_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_GT:
-      return _mongoc_matcher_op_gt_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_GTE:
-      return _mongoc_matcher_op_gte_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_IN:
-      return _mongoc_matcher_op_in_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_LT:
-      return _mongoc_matcher_op_lt_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_LTE:
-      return _mongoc_matcher_op_lte_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_NE:
-      return _mongoc_matcher_op_ne_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_NIN:
-      return _mongoc_matcher_op_nin_match (compare, &iter);
-   default:
-      BSON_ASSERT (false);
-      break;
-   }
-
-   return false;
 }
 
 
