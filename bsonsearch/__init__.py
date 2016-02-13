@@ -1,5 +1,6 @@
 import bson
 import ctypes
+from ctypes.util import find_library
 from hashlib import md5
 
 
@@ -11,7 +12,7 @@ LIBRARY_LOC="/usr/lib64/libbsoncompare.so"
 
 class bsoncompare(object):
     def __init__(self):
-        self.bc = ctypes.CDLL(LIBRARY_LOC)
+        self.bc = ctypes.CDLL(find_library("bsoncompare"))
         self.matchers = {} #keys = string, value = c-pointers
         self.docs = {} #keys = string, value = c-pointers
 
@@ -62,7 +63,7 @@ class bsoncompare(object):
             encoded_doc = bson.BSON.encode(doc)
         elif isinstance(doc, basestring):
             encoded_doc = doc
-        elif spec is None:
+        elif doc is None:
             raise ValueError("DOC must not be empty")
         else:
             raise ValueError("DOC must be instance of DICT or bson string")
