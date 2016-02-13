@@ -22,6 +22,7 @@
 #include <math.h>
 #include "bsoncompare.h"
 #include "mongoc-matcher-op-geojson.h"
+#include "mongoc-bson-descendants.h"
 
 /*
  *--------------------------------------------------------------------------
@@ -171,19 +172,34 @@ _mongoc_matcher_op_array_to_op_t                 (const bson_iter_t       *iter,
    uint8_t i = 0;
    while (bson_iter_next(&right_array)) {
       i++;
-      if (i==1) {
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.x))
+      switch (i) {
+         case 1: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.x))
+               return false;
+            break;
+         }
+         case 2: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.y))
+               return false;
+            op->near.near_type = MONGOC_MATCHER_NEAR_2D;
+            break;
+         }
+         case 3: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.z))
+               return false;
+            op->near.near_type = MONGOC_MATCHER_NEAR_3D;
+            break;
+         }
+         case 4: {
+            if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.t))
+               return false;
+            op->near.near_type = MONGOC_MATCHER_NEAR_4D;
+            return true;
+         }
+         default:
             return false;
-      } else if (i==2){
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.y))
-            return false;
-         op->near.near_type = MONGOC_MATCHER_NEAR_2D;
-      } else if (i>=3){
-         if (!_mongoc_matcher_op_near_cast_number_to_double(&right_array, &op->near.z))
-            return false;
-         op->near.near_type = MONGOC_MATCHER_NEAR_3D;
-         break;
-      }//endif 3
+      }
+
    }//endif iter next
    return true;
 }
@@ -380,7 +396,12 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_SIZE:
       bson_free (op->size.path);
       break;
+   case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
+      if (op->logical.left)
+         _mongoc_matcher_op_destroy (op->logical.left); //continue to clear near path
    case MONGOC_MATCHER_OPCODE_NEAR:
+   case MONGOC_MATCHER_OPCODE_GEOWITHIN:
+   case MONGOC_MATCHER_OPCODE_GEOUNDEFINED:
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       bson_free (op->near.path);
       break;
@@ -536,7 +557,7 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
    bson_iter_t iter;
    bson_iter_t desc;
    mongoc_matcher_op_t *right_op;
-   double x_diff, y_diff, z_diff, inside, distance;
+   double x_diff, y_diff, z_diff, t_diff, inside, distance;
    bool returnval = false;
    BSON_ASSERT (near);
    BSON_ASSERT (bson);
@@ -555,29 +576,28 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
                x_diff = near->x - right_op->near.x;
                y_diff = near->y - right_op->near.y;
                inside = x_diff*x_diff + y_diff*y_diff;
-               if (inside > 0)
-               {
-                  distance = sqrt(inside);
-                  if (distance < near->maxd)
-                     returnval = true;
-               } else {
-                  returnval = true;
-               }
                break;
             case MONGOC_MATCHER_NEAR_3D:
                x_diff = near->x - right_op->near.x;
                y_diff = near->y - right_op->near.y;
                z_diff = near->z - right_op->near.z;
                inside = x_diff*x_diff + y_diff*y_diff + z_diff*z_diff;
-               if (inside > 0)
-               {
-                  distance = sqrt(inside);
-                  if (distance < near->maxd)
-                     returnval = true;
-               } else {
-                  returnval = true;
-               }
                break;
+            case MONGOC_MATCHER_NEAR_4D:
+                 t_diff = near->t - right_op->near.t;
+                 x_diff = near->x - right_op->near.x;
+                 y_diff = near->y - right_op->near.y;
+                 z_diff = near->z - right_op->near.z;
+                 inside = x_diff*x_diff + y_diff*y_diff + z_diff*z_diff + t_diff*t_diff;
+                 break;
+            default:
+               break;
+         }
+         if (inside > 0)
+         {
+            distance = sqrt(inside);
+            if (distance < near->maxd)
+               returnval = true;
          }
       }
       _mongoc_matcher_op_destroy(right_op);
@@ -1388,6 +1408,37 @@ _mongoc_matcher_op_nin_match (mongoc_matcher_op_compare_t *compare, /* IN */
 }
 
 
+
+static bool
+_mongoc_matcher_op_compare_match_iter (mongoc_matcher_op_compare_t *compare, /* IN */
+                                       bson_iter_t iter)    /* IN */
+{
+   switch ((int)compare->base.opcode) {
+      case MONGOC_MATCHER_OPCODE_EQ:
+         return _mongoc_matcher_op_eq_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_GT:
+         return _mongoc_matcher_op_gt_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_GTE:
+         return _mongoc_matcher_op_gte_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_IN:
+         return _mongoc_matcher_op_in_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_LT:
+         return _mongoc_matcher_op_lt_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_LTE:
+         return _mongoc_matcher_op_lte_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_NE:
+         return _mongoc_matcher_op_ne_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_NIN:
+         return _mongoc_matcher_op_nin_match (compare, &iter);
+      default:
+         BSON_ASSERT (false);
+           break;
+   }
+
+   return false;
+}
+
+
 /*
  *--------------------------------------------------------------------------
  *
@@ -1411,42 +1462,26 @@ _mongoc_matcher_op_compare_match (mongoc_matcher_op_compare_t *compare, /* IN */
 {
    bson_iter_t tmp;
    bson_iter_t iter;
-
+   bool found_one = false;
+   int checked = 0, skip=0;
    BSON_ASSERT (compare);
    BSON_ASSERT (bson);
-
    if (strchr (compare->path, '.')) {
       if (!bson_iter_init (&tmp, bson) ||
-          !bson_iter_find_descendant (&tmp, compare->path, &iter)) {
-         return false;
+          !bson_iter_find_descendant (&tmp, compare->path, &iter)) { //try this way first
+         while (!found_one &&
+                 bson_iter_init (&tmp, bson) &&
+                 bson_iter_find_descendants (&tmp, compare->path, &skip, &iter)){
+            found_one |= _mongoc_matcher_op_compare_match_iter(compare, iter);
+            skip = ++checked;
+         }
+         return ((checked>0) && found_one);
       }
    } else if (!bson_iter_init_find (&iter, bson, compare->path)) {
       return false;
    }
+   return _mongoc_matcher_op_compare_match_iter(compare, iter);
 
-   switch ((int)compare->base.opcode) {
-   case MONGOC_MATCHER_OPCODE_EQ:
-      return _mongoc_matcher_op_eq_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_GT:
-      return _mongoc_matcher_op_gt_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_GTE:
-      return _mongoc_matcher_op_gte_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_IN:
-      return _mongoc_matcher_op_in_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_LT:
-      return _mongoc_matcher_op_lt_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_LTE:
-      return _mongoc_matcher_op_lte_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_NE:
-      return _mongoc_matcher_op_ne_match (compare, &iter);
-   case MONGOC_MATCHER_OPCODE_NIN:
-      return _mongoc_matcher_op_nin_match (compare, &iter);
-   default:
-      BSON_ASSERT (false);
-      break;
-   }
-
-   return false;
 }
 
 
@@ -1542,6 +1577,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_near (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       return _mongoc_matcher_op_geonear (&op->near, bson);
+   case MONGOC_MATCHER_OPCODE_GEOWITHIN:
+      return _mongoc_matcher_op_geowithin (&op->near, bson);
+   case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
+      return _mongoc_matcher_op_geowithinpoly (op, bson);
    default:
       break;
    }

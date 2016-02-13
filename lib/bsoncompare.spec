@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.0
-Release: 9%{?dist}.db
+Release: 11%{?dist}.db
 Summary: compares bson docs	
 
 Group:	bauman	
@@ -16,7 +16,8 @@ Source6: mongoc-matcher-private.h
 Source7: bsoncompare.h
 Source8: mongoc-matcher-op-geojson.h
 Source9: mongoc-matcher-op-geojson.c
-
+Source10: mongoc-bson-descendants.c
+Source11: mongoc-bson-descendants.h
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel
 Requires: libbson == %{version}, pcre
@@ -43,12 +44,14 @@ cp -fp %{SOURCE6} ./
 cp -fp %{SOURCE7} ./
 cp -fp %{SOURCE8} ./
 cp -fp %{SOURCE9} ./
+cp -fp %{SOURCE10} ./
+cp -fp %{SOURCE11} ./
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9}
+gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
@@ -61,6 +64,7 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher.h $RPM_BUILD_ROOT/%{_includedir}
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-private.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-private.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-private.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-private.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-geojson.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-geojson.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-geojson.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-bson-descendants.h
 
 %clean
 rm -rf %{buildroot}
