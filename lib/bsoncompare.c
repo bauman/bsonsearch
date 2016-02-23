@@ -54,7 +54,8 @@ regex_destroy()
     struct pattern_to_regex *s, *tmp;
     HASH_ITER(hh, global_compiled_regexes, s, tmp) {
         HASH_DEL(global_compiled_regexes, s);
-        pcre_free(s->re);
+        pcre_free(s->re);     //malloc in _mongoc_matcher_iter_eq_match
+        bson_free(s->pattern);//malloc in _mongoc_matcher_iter_eq_match
         free(s);
     }
     //TODO: slim chance s->re is Null?  Decided to let segfault for now to raise alarm
