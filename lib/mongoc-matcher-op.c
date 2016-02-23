@@ -732,7 +732,7 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
             if (s == NULL) {
                return false; //TODO: Toss a warning?
             }
-            const char *pattern_persist = bson_strdup(pattern);
+            char *pattern_persist = bson_strdup(pattern);
             /* Compile the regular expression in the first argument */
             re = pcre_compile( pattern_persist,              /* the pattern */
                                pcre_options,                    /* default options */
