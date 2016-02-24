@@ -4,17 +4,20 @@ from ctypes.util import find_library
 from hashlib import md5
 
 
-#dropped by libbsoncompare rpm.
-# Install this from pkgs.bauman.in to get dep tree
-LIBRARY_LOC="/usr/lib64/libbsoncompare.so"
-
-
-
 class bsoncompare(object):
     def __init__(self):
-        self.bc = ctypes.CDLL(find_library("bsoncompare"))
+        self.bc = ctypes.CDLL(find_library("bsoncompare")) #libbsoncompare rpm.
         self.matchers = {} #keys = string, value = c-pointers
         self.docs = {} #keys = string, value = c-pointers
+
+    def __enter__(self):
+        return self
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        self.destroy_regexes()
+        self.destroy_matcher(self.matchers)
+        self.destroy_doc(self.docs)
+        return
 
     def destroy_matcher(self, matcher_id):
         if isinstance(matcher_id, list) or isinstance(matcher_id, dict):
@@ -154,3 +157,30 @@ class bsoncompare(object):
         if not and_list:
             query=None
         return query
+
+
+#list_of_tuples = unroll("", [], highly_embedded_dict)
+def unroll(current_key, output_map, entry, keys_to_append=None):
+    def unroll_dict(current_key, output_map, entry, keys_to_append=None):
+        for key, value in entry.items():
+            unroll(".".join([current_key, key]).lstrip("."),
+                   output_map,
+                   value,
+                   keys_to_append=keys_to_append)
+
+    def unroll_list(current_key, output_map, entry, keys_to_append=None):
+        for item in entry:
+            unroll(current_key,
+                   output_map,
+                   item,
+                   keys_to_append=keys_to_append)
+
+    if isinstance(entry, dict):
+        unroll_dict(current_key, output_map, entry, keys_to_append=keys_to_append)
+    elif isinstance(entry, list):
+        unroll_list(current_key, output_map, entry, keys_to_append=keys_to_append)
+    else: #not iterable
+        if not keys_to_append or current_key in keys_to_append:
+            output_map.append((current_key, entry))
+    return output_map
+
