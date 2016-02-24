@@ -20,7 +20,7 @@ int                regex_destroy();
 int                regex_print();
 
 struct pattern_to_regex {
-    const char* pattern;            /* we'll use this field as the key */
+    char* pattern;            /* we'll use this field as the key */
     pcre * re;
     UT_hash_handle hh; /* makes this structure hashable */
 };
