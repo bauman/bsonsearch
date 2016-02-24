@@ -593,10 +593,10 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
             default:
                break;
          }
-         if (inside > 0)
+         if (inside >= 0)
          {
             distance = sqrt(inside);
-            if (distance < near->maxd)
+            if (distance <= near->maxd)
                returnval = true;
          }
       }
