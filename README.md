@@ -102,6 +102,28 @@ comparison value in spec can be utf8 string, int/long, regex
     bc.destroy_matcher(matcher)
 ```
 
+Inset operator
+==========
+
+Adds an operator not found in MongoDB ($inset).
+
+allows you to sepecify a set (hashtable) of strings to compare against.
+
+$inset uses a set/hashtable to perform O(1) lookups compared to $in which does a standard compare.
+
+
+``` python
+    from bsonsearch import bsoncompare
+    import bson
+    bc = bsoncompare()
+    # O(1) lookups in this list
+    # length of this spec list (converted to set) does not impact lookup time
+    spec = {"a":{"$inset":["test1", "test2"]}} #ideal for list of many (>100) things.
+    doc  = {"a":"test2"}
+    matcher = bc.generate_matcher(b) #list->set length impacts time it takes to convert to set during this call.
+    print [bc.match(matcher, x) for x in c]
+    bc.destroy_matcher(matcher)
+```
 
 Regex within SPEC
 ==================
