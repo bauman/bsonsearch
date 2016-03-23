@@ -32,7 +32,7 @@ bsonsearch_add_test(geonear-compare lib/tests/bsoncompare_geonear.c)
 bsonsearch_add_test(compare-box lib/tests/bsoncompare_box.c)
 bsonsearch_add_test(bson-fix lib/tests/bson_descendants.c)
 bsonsearch_add_test(big-doc lib/tests/bigdoctest.c)
-
+bsonsearch_add_test(inset lib/tests/bsoncompare_inset.c)
 
 
 

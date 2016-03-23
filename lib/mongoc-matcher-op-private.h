@@ -18,6 +18,7 @@
 #define MONGOC_MATCHER_OP_PRIVATE_H
 
 #include <bson.h>
+#include <uthash.h>
 
 BSON_BEGIN_DECLS
 
@@ -31,13 +32,14 @@ typedef struct _mongoc_matcher_op_type_t    mongoc_matcher_op_type_t;
 typedef struct _mongoc_matcher_op_size_t    mongoc_matcher_op_size_t;
 typedef struct _mongoc_matcher_op_not_t     mongoc_matcher_op_not_t;
 typedef struct _mongoc_matcher_op_near_t    mongoc_matcher_op_near_t;
-
+typedef struct _mongoc_matcher_op_str_hashtable_t mongoc_matcher_op_str_hashtable_t;
 typedef enum
 {
    MONGOC_MATCHER_OPCODE_EQ,
    MONGOC_MATCHER_OPCODE_GT,
    MONGOC_MATCHER_OPCODE_GTE,
    MONGOC_MATCHER_OPCODE_IN,
+   MONGOC_MATCHER_OPCODE_INSET,
    MONGOC_MATCHER_OPCODE_LT,
    MONGOC_MATCHER_OPCODE_LTE,
    MONGOC_MATCHER_OPCODE_NE,
@@ -86,6 +88,7 @@ struct _mongoc_matcher_op_compare_t
    mongoc_matcher_op_base_t base;
    char *path;
    bson_iter_t iter;
+   mongoc_matcher_op_str_hashtable_t *inset;
 };
 
 
@@ -145,6 +148,13 @@ union _mongoc_matcher_op_t
 };
 
 
+struct _mongoc_matcher_op_str_hashtable_t {
+    char* matcher_hash_key;
+    UT_hash_handle hh;
+};
+
+mongoc_matcher_op_t * _mongoc_matcher_op_inset_new (const char              *path,   /* IN */
+                                                    const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_logical_new (mongoc_matcher_opcode_t  opcode,
                                                      mongoc_matcher_op_t     *left,
                                                      mongoc_matcher_op_t     *right);
