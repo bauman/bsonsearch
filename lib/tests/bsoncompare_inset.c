@@ -26,6 +26,9 @@ main (int   argc,
 
 
     /* Direct Equal Compare */
+    BSON_ASSERT(!compare_json("{\"dt\": [\"2\"]}",
+                              "{\"dt\": {\"$inset\": [\"ok1\", 2, 4.44, \"ok3\"]}}"));
+
     BSON_ASSERT(!compare_json("{\"dt\": [\"ok0\"]}",
                              "{\"dt\": {\"$inset\": [\"ok1\", \"ok2\", \"ok3\"]}}"));
 

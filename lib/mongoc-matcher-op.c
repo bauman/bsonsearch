@@ -408,14 +408,16 @@ void
 _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
 {
    BSON_ASSERT (op);
-   mongoc_matcher_op_str_hashtable_t *s, *tmp;
+
    switch (op->base.opcode) {
-   case MONGOC_MATCHER_OPCODE_INSET:
-      HASH_ITER(hh, op->compare.inset, s, tmp) {
-         HASH_DEL(op->compare.inset, s);
-         bson_free(s->matcher_hash_key);
-         free(s);
-      }
+   case MONGOC_MATCHER_OPCODE_INSET: {
+        mongoc_matcher_op_str_hashtable_t *s, *tmp;
+        HASH_ITER(hh, op->compare.inset, s, tmp) {
+           HASH_DEL(op->compare.inset, s);
+           bson_free(s->matcher_hash_key);
+           free(s);
+        }
+   }
    case MONGOC_MATCHER_OPCODE_EQ:
    case MONGOC_MATCHER_OPCODE_GT:
    case MONGOC_MATCHER_OPCODE_GTE:
