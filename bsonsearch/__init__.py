@@ -11,12 +11,16 @@ class bsoncompare(object):
         self.docs = {} #keys = string, value = c-pointers
 
     def __enter__(self):
+        response = self.bc.startup()
+        assert(response == 0)
         return self
 
     def __exit__(self, exc_type, exc_value, traceback):
         self.destroy_regexes()
         self.destroy_matcher(self.matchers)
         self.destroy_doc(self.docs)
+        response = self.bc.shutdown()
+        assert(response == 0)
         return
 
     def destroy_matcher(self, matcher_id):
