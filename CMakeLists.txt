@@ -3,13 +3,14 @@ project(bsonsearch)
 
 INCLUDE_DIRECTORIES(/usr/include/ /usr/include/libbson-1.0/ lib/)
 LINK_DIRECTORIES(/usr/lib64/)
-set(SOURCE_FILES lib/bsoncompare.c lib/mongoc-matcher.c lib/mongoc-matcher-op.c lib/mongoc-matcher-op-geojson.c lib/mongoc-bson-descendants.c)
+add_definitions(-DWITH_YARA)
+set(SOURCE_FILES lib/bsoncompare.c lib/mongoc-matcher.c lib/mongoc-matcher-op.c lib/mongoc-matcher-op-geojson.c lib/mongoc-bson-descendants.c lib/mongoc-matcher-op-yara.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(libbsonsearch bson-1.0 pcre)
-
+TARGET_LINK_LIBRARIES(libbsonsearch yara)
 enable_testing()
 
 
@@ -33,7 +34,7 @@ bsonsearch_add_test(compare-box lib/tests/bsoncompare_box.c)
 bsonsearch_add_test(bson-fix lib/tests/bson_descendants.c)
 bsonsearch_add_test(big-doc lib/tests/bigdoctest.c)
 bsonsearch_add_test(inset lib/tests/bsoncompare_inset.c)
-
+bsonsearch_add_test(yara-test lib/tests/bsonsearch_yara.c)
 
 
 

@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.3
-Release: 2%{?dist}.db
+Release: 4%{?dist}.db
 Summary: compares bson docs	
 
 Group:	bauman	
@@ -18,9 +18,12 @@ Source8: mongoc-matcher-op-geojson.h
 Source9: mongoc-matcher-op-geojson.c
 Source10: mongoc-bson-descendants.c
 Source11: mongoc-bson-descendants.h
+Source12: mongoc-matcher-op-yara.c
+Source13: mongoc-matcher-op-yara.h
+
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel
-Requires: libbson == %{version}, pcre
+BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara
+Requires: libbson == %{version}, pcre, yara
 
 %description
 Provides a shared object which can be used to perform mongo-like queries against BSON data.
@@ -46,12 +49,14 @@ cp -fp %{SOURCE8} ./
 cp -fp %{SOURCE9} ./
 cp -fp %{SOURCE10} ./
 cp -fp %{SOURCE11} ./
+cp -fp %{SOURCE12} ./
+cp -fp %{SOURCE13} ./
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10}
+gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
@@ -64,7 +69,8 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher.h $RPM_BUILD_ROOT/%{_includedir}
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-private.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-private.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-private.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-private.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-geojson.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-geojson.h
-install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-geojson.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-bson-descendants.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-bson-descendants.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-bson-descendants.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-yara.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-yara.h
 
 %clean
 rm -rf %{buildroot}

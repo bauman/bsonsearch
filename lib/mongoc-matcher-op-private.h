@@ -20,6 +20,11 @@
 #include <bson.h>
 #include <uthash.h>
 
+#ifdef WITH_YARA
+#include <yara.h>
+#endif //WITH_YARA
+
+
 BSON_BEGIN_DECLS
 
 
@@ -40,6 +45,9 @@ typedef enum
    MONGOC_MATCHER_OPCODE_GTE,
    MONGOC_MATCHER_OPCODE_IN,
    MONGOC_MATCHER_OPCODE_INSET,
+#ifdef WITH_YARA
+    MONGOC_MATCHER_OPCODE_YARA,
+#endif //WITH_YARA
    MONGOC_MATCHER_OPCODE_LT,
    MONGOC_MATCHER_OPCODE_LTE,
    MONGOC_MATCHER_OPCODE_NE,
@@ -89,6 +97,11 @@ struct _mongoc_matcher_op_compare_t
    char *path;
    bson_iter_t iter;
    mongoc_matcher_op_str_hashtable_t *inset;
+#ifdef WITH_YARA
+   YR_RULES *rules;
+   uint32_t timout;
+   bool fast_mode;
+#endif //WITH_YARA
 };
 
 

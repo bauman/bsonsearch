@@ -24,6 +24,10 @@
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-bson-descendants.h"
 
+#ifdef WITH_YARA
+#include "mongoc-matcher-op-yara.h"
+#endif //WITH_YARA
+
 /*
  *--------------------------------------------------------------------------
  *
@@ -458,6 +462,11 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       bson_free (op->near.path);
       break;
+#ifdef WITH_YARA
+   case MONGOC_MATCHER_OPCODE_YARA:
+      bson_free (op->compare.path);
+      yr_rules_destroy(op->compare.rules);
+#endif //WITH_YARA
    default:
       break;
    }
@@ -1527,6 +1536,10 @@ _mongoc_matcher_op_compare_match_iter (mongoc_matcher_op_compare_t *compare, /* 
          return _mongoc_matcher_op_ne_match (compare, &iter);
       case MONGOC_MATCHER_OPCODE_NIN:
          return _mongoc_matcher_op_nin_match (compare, &iter);
+#ifdef WITH_YARA
+      case MONGOC_MATCHER_OPCODE_YARA:
+         return _mongoc_matcher_op_yara_match (compare, &iter);
+#endif //WITH_YARA
       default:
          BSON_ASSERT (false);
            break;
@@ -1658,6 +1671,9 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_LTE:
    case MONGOC_MATCHER_OPCODE_NE:
    case MONGOC_MATCHER_OPCODE_NIN:
+#ifdef WITH_YARA
+   case MONGOC_MATCHER_OPCODE_YARA:
+#endif //WITH_YARA
       return _mongoc_matcher_op_compare_match (&op->compare, bson);
    case MONGOC_MATCHER_OPCODE_OR:
    case MONGOC_MATCHER_OPCODE_AND:
