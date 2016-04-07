@@ -3,10 +3,36 @@
 #include "mongoc-matcher.h"
 #include "bsoncompare.h"
 #include <uthash.h>
-// gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c
+#ifdef WITH_YARA
+#include <yara.h>
+#endif //WITH_YARA
+
+// gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-matcher-op-geojson.c mongoc-matcher-op-yara.c
 
 
 struct pattern_to_regex *global_compiled_regexes = NULL;
+
+int
+startup()
+{
+    int result = 0;
+#ifdef WITH_YARA
+    result += yr_initialize();
+#endif //WITH_YARA
+    return result;
+}
+
+int
+shutdown()
+{
+    int result = 0;
+    result += regex_destroy();
+#ifdef WITH_YARA
+    result += yr_finalize();
+#endif //WITH_YARA
+    return result;
+}
+
 
 mongoc_matcher_t *
 generate_matcher(const uint8_t *buf_spec,

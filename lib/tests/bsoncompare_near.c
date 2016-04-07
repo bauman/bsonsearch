@@ -22,7 +22,14 @@ int
 main (int   argc,
       char *argv[])
 {
-
+    BSON_ASSERT(compare_json("{\"hello\": [1,3]}",
+                             "{\"hello\": {\"$near\":[1,3], \"$maxDistance\":0}}"));
+    BSON_ASSERT(compare_json("{\"hello\": [1,3,5]}",
+                             "{\"hello\": {\"$near\":[1,3,5], \"$maxDistance\":0}}"));
+    BSON_ASSERT(compare_json("{\"hello\": [1,3,5,7]}",
+                             "{\"hello\": {\"$near\":[1,3,5,7], \"$maxDistance\":0}}"));
+    BSON_ASSERT(!compare_json("{\"hello\": [1,3,5,7]}",
+                             "{\"hello\": {\"$near\":[1,3,5,8], \"$maxDistance\":0}}"));
     BSON_ASSERT(compare_json("{\"hello\": [1,3]}",
                              "{\"hello\": {\"$near\":[1,4], \"$maxDistance\":2}}"));
     BSON_ASSERT(!compare_json("{\"hello\": [1,3]}",

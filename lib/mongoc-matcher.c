@@ -20,6 +20,9 @@
 #include "mongoc-error.h"
 #include "mongoc-matcher.h"
 #include "mongoc-matcher-op-geojson.h"
+#ifdef WITH_YARA
+#include "mongoc-matcher-op-yara.h"
+#endif
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
 
@@ -91,6 +94,14 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
       } else if (strcmp(key, "$gte") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_GTE, path,
                                               &child);
+      } else if (strcmp(key, "$inset") == 0) {
+          op = _mongoc_matcher_op_inset_new (path,
+                                             &child);
+#ifdef WITH_YARA
+      } else if (strcmp(key, "$yara") == 0) {
+          op = _mongoc_matcher_op_yara_new (path,
+                                            &child);
+#endif //WITH_YARA
       } else if (strcmp(key, "$in") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_IN, path,
                                               &child);

@@ -1,0 +1,57 @@
+
+
+
+
+#ifdef WITH_YARA
+#ifndef MONGOC_MATCHER_OP_YARA_H
+#define MONGOC_MATCHER_OP_YARA_H
+
+#include <bson.h>
+#include "mongoc-matcher-op-private.h"
+
+BSON_BEGIN_DECLS
+#define MONGOC_MATCHER_YARA_TIMEOUT_DEFAULT 300
+#define MONGOC_MATCHER_YARA_FAST_MODE_DEFAULT false
+
+typedef struct _mongoc_matcher_op_binary_flo         mongoc_matcher_op_binary_flo;
+typedef struct _mongoc_matcher_op_yara_callback_data mongoc_matcher_op_yara_callback_data;
+typedef struct _mongoc_matcher_op_yara_callback_hits mongoc_matcher_op_yara_callback_hits;
+
+struct _mongoc_matcher_op_binary_flo
+{
+    const uint8_t * binary;
+    uint32_t binary_len;
+    uint32_t cursor_pos;
+};
+struct _mongoc_matcher_op_yara_callback_data
+{
+    int matches;
+    mongoc_matcher_op_yara_callback_hits *next_hit;
+
+};
+struct _mongoc_matcher_op_yara_callback_hits
+{
+    char *hit_name;
+    mongoc_matcher_op_yara_callback_hits *next_hit;
+};
+
+bool
+_mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
+                               bson_iter_t                 *iter)  ;  /* IN */
+
+mongoc_matcher_op_t *
+_mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
+                                  bson_iter_t             *child);   /* IN */
+
+static size_t
+binary_read(
+void* ptr,
+size_t size,
+size_t count,
+void* user_data);
+
+BSON_END_DECLS
+
+#endif //MONGOC_MATCHER_OP_YARA_H
+#endif //YARA
+

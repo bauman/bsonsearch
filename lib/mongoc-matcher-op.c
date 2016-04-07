@@ -24,6 +24,10 @@
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-bson-descendants.h"
 
+#ifdef WITH_YARA
+#include "mongoc-matcher-op-yara.h"
+#endif //WITH_YARA
+
 /*
  *--------------------------------------------------------------------------
  *
@@ -56,7 +60,52 @@ _mongoc_matcher_op_exists_new (const char  *path,   /* IN */
 
    return op;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_inset_new --
+ *
+ *       Create a new op for checking {$inset: ["str1",...]}.
+ *
+ * Returns:
+ *       A newly allocated mongoc_matcher_op_t that should be freed with
+ *       _mongoc_matcher_op_destroy().
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 
+mongoc_matcher_op_t *
+_mongoc_matcher_op_inset_new (const char              *path,   /* IN */
+                              const bson_iter_t       *iter)
+{
+   mongoc_matcher_op_t *op = _mongoc_matcher_op_compare_new(MONGOC_MATCHER_OPCODE_INSET,
+                                                            path,
+                                                            iter);
+   //populate the hash table.
+   mongoc_matcher_op_str_hashtable_t *s;
+
+   bson_iter_t right_array;
+   if (BSON_ITER_HOLDS_ARRAY(iter) &&
+              bson_iter_recurse(iter, &right_array)  )
+   {
+      while (bson_iter_next(&right_array))
+      {
+         if (BSON_ITER_HOLDS_UTF8(&right_array))
+         {
+            s = ( mongoc_matcher_op_str_hashtable_t *)malloc(sizeof( mongoc_matcher_op_str_hashtable_t ));
+            uint32_t str_len= 0;
+            const char * matcher_hash_key = bson_iter_utf8(&right_array, &str_len);
+            char *matcher_hash_key_persist = bson_strdup(matcher_hash_key);
+            s->matcher_hash_key = matcher_hash_key_persist;
+            HASH_ADD_STR(op->compare.inset, matcher_hash_key, s);
+         }
+      }
+   }
+   return op;
+}
 
 /*
  *--------------------------------------------------------------------------
@@ -365,6 +414,14 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    BSON_ASSERT (op);
 
    switch (op->base.opcode) {
+   case MONGOC_MATCHER_OPCODE_INSET: {
+        mongoc_matcher_op_str_hashtable_t *s, *tmp;
+        HASH_ITER(hh, op->compare.inset, s, tmp) {
+           HASH_DEL(op->compare.inset, s);
+           bson_free(s->matcher_hash_key);
+           free(s);
+        }
+   }
    case MONGOC_MATCHER_OPCODE_EQ:
    case MONGOC_MATCHER_OPCODE_GT:
    case MONGOC_MATCHER_OPCODE_GTE:
@@ -405,6 +462,11 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       bson_free (op->near.path);
       break;
+#ifdef WITH_YARA
+   case MONGOC_MATCHER_OPCODE_YARA:
+      bson_free (op->compare.path);
+      yr_rules_destroy(op->compare.rules);
+#endif //WITH_YARA
    default:
       break;
    }
@@ -593,10 +655,10 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
             default:
                break;
          }
-         if (inside > 0)
+         if (inside >= 0)
          {
             distance = sqrt(inside);
-            if (distance < near->maxd)
+            if (distance <= near->maxd)
                returnval = true;
          }
       }
@@ -1111,8 +1173,6 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
 
    return false;
 }
-
-
 /*
  *--------------------------------------------------------------------------
  *
@@ -1146,6 +1206,50 @@ _mongoc_matcher_op_in_match (mongoc_matcher_op_compare_t *compare, /* IN */
    while (bson_iter_next (&op.iter)) {
       if (_mongoc_matcher_op_eq_match (&op, iter)) {
          return true;
+      }
+   }
+
+   return false;
+}
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_inset_match --
+ *
+ *       Checks the spec {"path": {"$inset": ["str1", "str2", ...]}}.
+ *
+ * Returns:
+ *       true if the spec matched, otherwise false.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+
+static bool
+_mongoc_matcher_op_inset_match (mongoc_matcher_op_compare_t *compare, /* IN */
+                                bson_iter_t                 *iter)    /* IN */
+{
+   mongoc_matcher_op_str_hashtable_t *check=NULL;
+   bson_iter_t right_array;
+   if BSON_ITER_HOLDS_UTF8(iter){
+      uint32_t str_len = 0;
+      HASH_FIND_STR(compare->inset, bson_iter_utf8(iter, &str_len), check);
+      if (check == NULL)
+      {
+         return false;
+      }
+      else
+      {
+         return true;
+      }
+   } else if (BSON_ITER_HOLDS_ARRAY (iter) && bson_iter_recurse(iter, &right_array)) {
+      while (bson_iter_next (&right_array)) {
+         if (_mongoc_matcher_op_inset_match(compare, &right_array)) {
+            return true;
+         }
       }
    }
 
@@ -1422,6 +1526,8 @@ _mongoc_matcher_op_compare_match_iter (mongoc_matcher_op_compare_t *compare, /* 
          return _mongoc_matcher_op_gte_match (compare, &iter);
       case MONGOC_MATCHER_OPCODE_IN:
          return _mongoc_matcher_op_in_match (compare, &iter);
+      case MONGOC_MATCHER_OPCODE_INSET:
+         return _mongoc_matcher_op_inset_match (compare, &iter);
       case MONGOC_MATCHER_OPCODE_LT:
          return _mongoc_matcher_op_lt_match (compare, &iter);
       case MONGOC_MATCHER_OPCODE_LTE:
@@ -1430,6 +1536,10 @@ _mongoc_matcher_op_compare_match_iter (mongoc_matcher_op_compare_t *compare, /* 
          return _mongoc_matcher_op_ne_match (compare, &iter);
       case MONGOC_MATCHER_OPCODE_NIN:
          return _mongoc_matcher_op_nin_match (compare, &iter);
+#ifdef WITH_YARA
+      case MONGOC_MATCHER_OPCODE_YARA:
+         return _mongoc_matcher_op_yara_match (compare, &iter);
+#endif //WITH_YARA
       default:
          BSON_ASSERT (false);
            break;
@@ -1556,10 +1666,14 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_GT:
    case MONGOC_MATCHER_OPCODE_GTE:
    case MONGOC_MATCHER_OPCODE_IN:
+   case MONGOC_MATCHER_OPCODE_INSET:
    case MONGOC_MATCHER_OPCODE_LT:
    case MONGOC_MATCHER_OPCODE_LTE:
    case MONGOC_MATCHER_OPCODE_NE:
    case MONGOC_MATCHER_OPCODE_NIN:
+#ifdef WITH_YARA
+   case MONGOC_MATCHER_OPCODE_YARA:
+#endif //WITH_YARA
       return _mongoc_matcher_op_compare_match (&op->compare, bson);
    case MONGOC_MATCHER_OPCODE_OR:
    case MONGOC_MATCHER_OPCODE_AND:
