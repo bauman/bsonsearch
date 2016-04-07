@@ -102,6 +102,7 @@ comparison value in spec can be utf8 string, int/long, regex
     bc.destroy_matcher(matcher)
 ```
 
+
 Inset operator
 ==========
 
