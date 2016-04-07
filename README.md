@@ -170,6 +170,73 @@ libyara-devel is required at compile time and libbsonsearch must be compiled wit
     >>> True
 ```
 
+Inset operator
+==========
+
+Adds an operator not found in MongoDB ($inset).
+
+allows you to sepecify a set (hashtable) of strings to compare against.
+
+$inset uses a set/hashtable to perform O(1) lookups compared to $in which does a standard compare.
+
+
+``` python
+    from bsonsearch import bsoncompare
+    import bson
+    bc = bsoncompare()
+    # O(1) lookups in this list
+    # length of this spec list (converted to set) does not impact lookup time
+    spec = {"a":{"$inset":["test1", "test2"]}} #ideal for list of many (>100) things.
+    doc  = {"a":"test2"}
+    matcher = bc.generate_matcher(b) #list->set length impacts time it takes to convert to set during this call.
+    print [bc.match(matcher, x) for x in c]
+    bc.destroy_matcher(matcher)
+```
+
+YARA within SPEC
+==================
+
+bsonsearch supports the use of compiled yara signature using libyara.
+
+
+libyara-devel is required at compile time and libbsonsearch must be compiled with -lyara and passed -DWITH_YARA macro at compile time to enable.
+
+
+
+``` python
+    import bsonsearch
+    import bson
+    import yara
+    import io
+    rule = '''
+    rule example
+    {
+        strings:
+            $c = {6c 6f 20 77 6f  72} //"lo wor"
+        condition:
+            any of them
+    }
+
+    '''
+    compiled_rule = yara.compile(source=rule)
+    compiled_binary_rule = io.BytesIO()
+    compiled_rule.save(file=compiled_binary_rule)
+
+    bc = bsonsearch.bsoncompare()
+    bc.bc.startup() # handles yara initialization
+    doc = {'a': "hello world"}
+    doc_id = bc.generate_doc(doc)
+
+    spec = {"a": {"$yara":bson.Binary(compiled_binary_rule.getvalue())}}
+    matcher = bc.generate_matcher(spec)
+
+    print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
+    bc.destroy_doc(doc_id) #destroy the document
+    bc.destroy_matcher(matcher) #destroy the spec
+    bc.bc.shutdown() # handles yara shutdown
+    >>> True
+```
+
 Regex within SPEC
 ==================
 
