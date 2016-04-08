@@ -11,7 +11,7 @@ class bsoncompare(object):
         self.docs = {} #keys = string, value = c-pointers
 
     def __enter__(self):
-        response = self.bc.startup()
+        response = self.bc.bsonsearch_startup()
         assert(response == 0)
         return self
 
@@ -19,7 +19,7 @@ class bsoncompare(object):
         self.destroy_regexes()
         self.destroy_matcher(self.matchers)
         self.destroy_doc(self.docs)
-        response = self.bc.shutdown()
+        response = self.bc.bsonsearch_shutdown()
         assert(response == 0)
         return
 
