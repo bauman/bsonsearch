@@ -86,7 +86,8 @@ The spec parameter supports a subset of MongoDB query operators (http://docs.mon
 
 Currently, that includes $and, $or, $not, $in, $nin, $eq, $neq, $gt, $gte, $lt, $lte, and $near. (See full documentation http://api.mongodb.org/c/current/mongoc_matcher_t.html)
 
-comparison value in spec can be utf8 string, int/long, regex
+comparison value in spec can be utf8 string, int/long, regex, compiled yara (if compiled with yara support)
+
 
 
 ``` python
@@ -101,6 +102,22 @@ comparison value in spec can be utf8 string, int/long, regex
     print [bc.match(matcher, x) for x in c2]
     bc.destroy_matcher(matcher)
 ```
+
+generally, you should use the with operator to handle construction and destruction of the underlying objects
+
+You may still want to manage memory by cleaning up your own documents, mathers, and regexes, but the with operator will clean it up as it goes out of scope.
+
+``` python
+    with bsonsearch.bsoncompare() as bc:
+        doc = {'a': "hello world"}
+        doc_id = bc.generate_doc(doc)
+        spec = {"a": "hello world"}
+        matcher = bc.generate_matcher(spec)
+        print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
+        bc.destroy_doc(doc_id) #destroy the document (with/__exit__ will clean this up if you forget)
+        bc.destroy_matcher(matcher) #destroy the spec (with/__exit__ will clean this up if you forget)
+```
+
 
 
 Inset operator
