@@ -49,28 +49,36 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
     bin_flo = (mongoc_matcher_op_binary_flo *)bson_malloc (sizeof *bin_flo);
     bin_flo->cursor_pos = 0;
 
-
-
     switch (bson_iter_type ((iter))) {
         case BSON_TYPE_BINARY:
         {
             bson_subtype_t subtype;
             bson_iter_binary(iter, &subtype, &bin_flo->binary_len, &bin_flo->binary);
+            result = _mongoc_matcher_op_yara_compare(compare, bin_flo);
             break;
         }
         case BSON_TYPE_UTF8:
         {
             bin_flo->binary = bson_iter_utf8(iter, &bin_flo->binary_len);
+            result = _mongoc_matcher_op_yara_compare(compare, bin_flo);
             break;
         }
         case BSON_TYPE_ARRAY:
         {
-            //TODO: Unroll possible lists at this namespace
+            bson_iter_t right_array;
+            if (bson_iter_recurse(iter, &right_array))
+            {
+
+                while (bson_iter_next(&right_array)) {
+                    if (result){
+                        break; //don't keep scanning if we're going to return true anyway.
+                    }
+                    result |= _mongoc_matcher_op_yara_match(compare, &right_array);
+                }
+            }
             break;
         }
-
     }
-    result = _mongoc_matcher_op_yara_compare(compare, bin_flo);
     bson_free(bin_flo);
     return result;
 }
