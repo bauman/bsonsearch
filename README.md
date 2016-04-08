@@ -171,7 +171,7 @@ libyara-devel is required at compile time and libbsonsearch must be compiled wit
     compiled_rule.save(file=compiled_binary_rule)
 
     bc = bsonsearch.bsoncompare()
-    bc.bc.startup() # handles yara initialization
+    bc.bc.bsonsearch_startup() # handles yara initialization
     doc = {'a': "hello world"}
     doc_id = bc.generate_doc(doc)
 
@@ -181,7 +181,7 @@ libyara-devel is required at compile time and libbsonsearch must be compiled wit
     print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
     bc.destroy_doc(doc_id) #destroy the document
     bc.destroy_matcher(matcher) #destroy the spec
-    bc.bc.shutdown() # handles yara shutdown
+    bc.bc.bsonsearch_shutdown() # handles yara shutdown
     >>> True
 ```
 
