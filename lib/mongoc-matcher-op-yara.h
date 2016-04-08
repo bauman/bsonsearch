@@ -42,6 +42,9 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
 mongoc_matcher_op_t *
 _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
                                   bson_iter_t             *child);   /* IN */
+bool
+_mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
+                                mongoc_matcher_op_binary_flo *bin_flo);
 
 static size_t
 binary_read(

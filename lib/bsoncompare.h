@@ -18,8 +18,8 @@ int                compare(const uint8_t *buf_spec, uint32_t  len_spec, const ui
 int                get_array_len(bson_t *b, const uint8_t *namespace, uint32_t      len_namespace);
 int                regex_destroy();
 int                regex_print();
-int                startup();
-int                shutdown();
+int                bsonsearch_startup();
+int                bsonsearch_shutdown();
 
 struct pattern_to_regex {
     char* pattern;            /* we'll use this field as the key */

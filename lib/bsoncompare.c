@@ -13,7 +13,7 @@
 struct pattern_to_regex *global_compiled_regexes = NULL;
 
 int
-startup()
+bsonsearch_startup()
 {
     int result = 0;
 #ifdef WITH_YARA
@@ -23,7 +23,7 @@ startup()
 }
 
 int
-shutdown()
+bsonsearch_shutdown()
 {
     int result = 0;
     result += regex_destroy();

@@ -44,15 +44,12 @@ bool
 _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
                                bson_iter_t                 *iter)    /* IN */
 {
-    int error;
     bool result = false;
     mongoc_matcher_op_binary_flo *bin_flo;
     bin_flo = (mongoc_matcher_op_binary_flo *)bson_malloc (sizeof *bin_flo);
     bin_flo->cursor_pos = 0;
-    mongoc_matcher_op_yara_callback_data *user_data;
-    user_data = (mongoc_matcher_op_yara_callback_data *)bson_malloc (sizeof *user_data);
-    user_data->matches=0;
-    user_data->next_hit = NULL;
+
+
 
     switch (bson_iter_type ((iter))) {
         case BSON_TYPE_BINARY:
@@ -73,7 +70,21 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
         }
 
     }
+    result = _mongoc_matcher_op_yara_compare(compare, bin_flo);
+    bson_free(bin_flo);
+    return result;
+}
 
+bool
+_mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
+                                mongoc_matcher_op_binary_flo *bin_flo)
+{
+    int error;
+    bool result = false;
+    mongoc_matcher_op_yara_callback_data *user_data;
+    user_data = (mongoc_matcher_op_yara_callback_data *)bson_malloc (sizeof *user_data);
+    user_data->matches=0;
+    user_data->next_hit = NULL;
     error = yr_rules_scan_mem(
             compare->rules,
             (uint8_t *)bin_flo->binary, //TODO: removing const relies on the fact that yara does NOT modify memory
@@ -88,10 +99,8 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
         result = true;
     }
     bson_free(user_data);
-    bson_free(bin_flo);
     return result;
 }
-
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
