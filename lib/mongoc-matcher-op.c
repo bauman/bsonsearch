@@ -20,6 +20,7 @@
 #include <pcre.h>
 #include <bson.h>
 #include <math.h>
+#include <bson-types.h>
 #include "bsoncompare.h"
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-bson-descendants.h"
@@ -159,8 +160,8 @@ _mongoc_matcher_op_type_new (const char  *path, /* IN */
  */
 
 mongoc_matcher_op_t *
-_mongoc_matcher_op_size_new (const char  *path,   /* IN */
-                             u_int32_t size) /* IN */
+_mongoc_matcher_op_size_new (const char         *path,   /* IN */
+                             const bson_iter_t   *iter) /* IN */
 {
    mongoc_matcher_op_t *op;
 
@@ -169,7 +170,49 @@ _mongoc_matcher_op_size_new (const char  *path,   /* IN */
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
    op->size.base.opcode = MONGOC_MATCHER_OPCODE_SIZE;
    op->size.path = bson_strdup (path);
-   op->size.size = size;
+   switch (bson_iter_type ((iter))) {
+      case BSON_TYPE_DOCUMENT:
+      {
+         bson_iter_t size_iter;
+         if (!bson_iter_recurse (iter, &size_iter) ){
+            return NULL;//this will cause a segfault.  If this no longer returns null, clean the op leak.
+         }
+         if (bson_iter_next(&size_iter))
+         {
+            const char * key;
+            const bson_value_t * size_value;
+            key = bson_iter_key (&size_iter);
+            size_value = bson_iter_value (&size_iter);
+
+            if (size_value->value_type == BSON_TYPE_INT32 &&
+                    size_value->value.v_int32 >= 0 &&
+                    key[0] == '$'){
+               op->size.size = (uint32_t)size_value->value.v_int32;
+               if (strcmp(key, "$gte") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_GTE;
+               } else if (strcmp(key, "$lte") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_LTE;
+               } else if (strcmp(key, "$gt") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_GT;
+               } else if (strcmp(key, "$lt") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_LT;
+               }
+               else {
+                  op->size.compare_type == MONGOC_MATCHER_OPCODE_UNDEFINED;
+               }
+            }
+            else {
+               op->size.compare_type == MONGOC_MATCHER_OPCODE_UNDEFINED;
+            }
+         }
+         break;
+      }
+      case BSON_TYPE_INT32:
+      {
+         op->size.size = bson_iter_int32(iter);
+         op->size.compare_type = MONGOC_MATCHER_OPCODE_EQ;
+      }
+   }
    return op;
 }
 /*
@@ -589,7 +632,21 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
       while (bson_iter_next(&right_array)) {
          right_array_size++;
       }
-      return (right_array_size == size->size);
+      switch (size->compare_type){
+         case MONGOC_MATCHER_OPCODE_EQ:
+            return (right_array_size == size->size);
+         case MONGOC_MATCHER_OPCODE_GTE:
+            return (right_array_size >= size->size);
+         case MONGOC_MATCHER_OPCODE_GT:
+            return (right_array_size > size->size);
+         case MONGOC_MATCHER_OPCODE_LTE:
+            return (right_array_size <= size->size);
+         case MONGOC_MATCHER_OPCODE_LT:
+            return (right_array_size < size->size);
+         default:
+            break;
+      }
+
    }
 
    return false;

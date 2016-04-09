@@ -123,7 +123,7 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
       } else if (strcmp(key, "$type") == 0) {
          op = _mongoc_matcher_op_type_new (path, bson_iter_type (&child));
       } else if (strcmp(key, "$size") == 0) {
-          op = _mongoc_matcher_op_size_new (path, bson_iter_int32 (&child));
+          op = _mongoc_matcher_op_size_new (path, &child);
       } else if (strcmp(key, "$near") == 0) {
           if (BSON_ITER_HOLDS_ARRAY(&child))
           {

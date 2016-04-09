@@ -25,6 +25,26 @@ main (int   argc,
       char *argv[])
 {
 
+    BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\",3]}",
+                             "{\"hello\": {\"$size\":{\"$gte\":4}}}"));
+    BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\",3]}",
+                              "{\"hello\": {\"$size\":{\"$lte\":2}}}"));
+    BSON_ASSERT(compare_json("{\"hello\": [1,\"abc\",3]}",
+                              "{\"hello\": {\"$size\":{\"$lt\":4}}}"));
+    BSON_ASSERT(compare_json("{\"hello\": [1,\"abc\",3]}",
+                              "{\"hello\": {\"$size\":{\"$lte\":3}}}"));
+
+
+    BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\",3]}",
+                              "{\"hello\": {\"$size\":{\"$gte\":-1}}}"));
+
+    BSON_ASSERT(compare_json("{\"hello\": [1,\"abc\",3]}",
+                              "{\"hello\": {\"$size\":{\"$gt\":2}}}"));
+
+
+    BSON_ASSERT(compare_json("{\"hello\": [1,\"abc\",3]}",
+                             "{\"hello\": {\"$size\":{\"$gte\":3}}}"));
+
     BSON_ASSERT(compare_json("{\"hello\": [1,\"abc\",3]}",
                              "{\"hello\": {\"$size\":3}}"));
     BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\"]}",
@@ -33,5 +53,6 @@ main (int   argc,
                               "{\"hello\": {\"$size\":3}}"));
     BSON_ASSERT(!compare_json("{\"hello\": 1}",
                               "{\"hello\": {\"$size\":1}}"));
+
     return 0;
 }

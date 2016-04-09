@@ -64,6 +64,7 @@ typedef enum
    MONGOC_MATCHER_OPCODE_GEOWITHIN,
    MONGOC_MATCHER_OPCODE_GEOWITHINPOLY,
    MONGOC_MATCHER_OPCODE_GEOUNDEFINED,
+   MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
 
 
@@ -115,6 +116,7 @@ struct _mongoc_matcher_op_exists_t
 struct _mongoc_matcher_op_size_t
 {
     mongoc_matcher_op_base_t base;
+    mongoc_matcher_opcode_t compare_type;
     char *path;
     u_int32_t size;
 };
@@ -179,7 +181,7 @@ mongoc_matcher_op_t *_mongoc_matcher_op_exists_new  (const char              *pa
 mongoc_matcher_op_t *_mongoc_matcher_op_type_new    (const char              *path,
                                                      bson_type_t              type);
 mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (const char              *path,
-                                                     u_int32_t               size);
+                                                     const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_not_new     (const char              *path,
                                                      mongoc_matcher_op_t     *child);
 mongoc_matcher_op_t *_mongoc_matcher_op_near_new    (mongoc_matcher_opcode_t  opcode,
