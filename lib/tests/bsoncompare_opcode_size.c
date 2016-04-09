@@ -25,6 +25,13 @@ main (int   argc,
       char *argv[])
 {
 
+    BSON_ASSERT(compare_json("{\"hello\": [1,\"abc\",3]}",
+                             "{\"hello\": {\"$not\":{\"$size\":{\"$not\":3}}}}"));
+    BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\",3]}",
+                              "{\"hello\": {\"$size\":{\"$not\":3}}}"));
+
+
+
     BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\",3]}",
                              "{\"hello\": {\"$size\":{\"$gte\":4}}}"));
     BSON_ASSERT(!compare_json("{\"hello\": [1,\"abc\",3]}",
