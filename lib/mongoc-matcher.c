@@ -141,9 +141,7 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
                                                    bson_iter_int32(&distance_iter));
               }
           } else if (BSON_ITER_HOLDS_DOCUMENT(&child)){
-              //pass the MongoC_MATCHER_OPCODE_GEONEAR, iter, child, and path
               op = _mongoc_matcher_op_geonear_new(path, &child);
-
           }
 
       } else if (strcmp(key, "$geoWithin") == 0) {

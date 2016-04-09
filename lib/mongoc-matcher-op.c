@@ -196,8 +196,9 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_GT;
                } else if (strcmp(key, "$lt") == 0) {
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_LT;
-               }
-               else {
+               } else if (strcmp(key, "$not") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_NOT;
+               } else {
                   op->size.compare_type == MONGOC_MATCHER_OPCODE_UNDEFINED;
                }
             }
@@ -643,6 +644,8 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
             return (right_array_size <= size->size);
          case MONGOC_MATCHER_OPCODE_LT:
             return (right_array_size < size->size);
+         case MONGOC_MATCHER_OPCODE_NOT:
+            return (right_array_size != size->size);
          default:
             break;
       }
@@ -651,6 +654,7 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
 
    return false;
 }
+
 
 /*
  *--------------------------------------------------------------------------
