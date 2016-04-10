@@ -35,10 +35,10 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
                             int         *skip,
                             bson_iter_t *descendant) /* OUT */;
 
-static bool
-        _mongoc_bson_iter_find_with_len (bson_iter_t *iter,   /* INOUT */
-                                  const char  *key,    /* IN */
-                                  int          keylen) /* IN */;
+bool
+_mongoc_bson_iter_find_with_len (bson_iter_t *iter,   /* INOUT */
+                          const char  *key,    /* IN */
+                          int          keylen) /* IN */;
 
 BSON_END_DECLS
 

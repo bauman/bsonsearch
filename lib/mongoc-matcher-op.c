@@ -169,6 +169,7 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
 
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
    op->size.base.opcode = MONGOC_MATCHER_OPCODE_SIZE;
+   op->size.compare_type = MONGOC_MATCHER_OPCODE_UNDEFINED;
    op->size.path = bson_strdup (path);
    switch (bson_iter_type ((iter))) {
       case BSON_TYPE_DOCUMENT:
@@ -198,12 +199,7 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_LT;
                } else if (strcmp(key, "$not") == 0) {
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_NOT;
-               } else {
-                  op->size.compare_type == MONGOC_MATCHER_OPCODE_UNDEFINED;
                }
-            }
-            else {
-               op->size.compare_type == MONGOC_MATCHER_OPCODE_UNDEFINED;
             }
          }
          break;
@@ -212,7 +208,11 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
       {
          op->size.size = bson_iter_int32(iter);
          op->size.compare_type = MONGOC_MATCHER_OPCODE_EQ;
+         break;
       }
+      default:
+         break;
+
    }
    return op;
 }
@@ -680,7 +680,7 @@ _mongoc_matcher_op_near (mongoc_matcher_op_near_t    *near, /* IN */
    bson_iter_t iter;
    bson_iter_t desc;
    mongoc_matcher_op_t *right_op;
-   double x_diff, y_diff, z_diff, t_diff, inside, distance;
+   double x_diff, y_diff, z_diff, t_diff, inside=0, distance;
    bool returnval = false;
    BSON_ASSERT (near);
    BSON_ASSERT (bson);

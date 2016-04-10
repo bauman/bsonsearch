@@ -46,12 +46,11 @@ bool
 _mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
                                 mongoc_matcher_op_binary_flo *bin_flo);
 
-static size_t
-binary_read(
-void* ptr,
-size_t size,
-size_t count,
-void* user_data);
+size_t
+binary_read(void* ptr,
+            size_t size,
+            size_t count,
+            void* user_data);
 
 BSON_END_DECLS
 

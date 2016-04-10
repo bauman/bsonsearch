@@ -146,7 +146,7 @@ compare(const uint8_t *buf_spec,
 
 int
 get_array_len(bson_t        *b,
-              const uint8_t *namespace,
+              const char *namespace,
               uint32_t      len_namespace)
 {
     //TODO: libbson uses const char * dotkey.  I use const uint8_t * namespace.

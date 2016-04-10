@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.3
-Release: 8%{?dist}.db
+Release: 9%{?dist}.db
 Summary: compares bson docs	
 
 Group:	bauman	
@@ -56,7 +56,7 @@ cp -fp %{SOURCE13} ./
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}

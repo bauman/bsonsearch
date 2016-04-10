@@ -59,7 +59,7 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
         }
         case BSON_TYPE_UTF8:
         {
-            bin_flo->binary = bson_iter_utf8(iter, &bin_flo->binary_len);
+            bin_flo->binary = (uint8_t *)bson_iter_utf8(iter, &bin_flo->binary_len);
             result = _mongoc_matcher_op_yara_compare(compare, bin_flo);
             break;
         }
@@ -78,6 +78,8 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
             }
             break;
         }
+        default:
+            break;
     }
     bson_free(bin_flo);
     return result;
@@ -151,6 +153,8 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
             }
             break;
         }
+        default:
+            break;
     }
     if (op != NULL){
         op->compare.fast_mode = fast_mode;
@@ -160,7 +164,7 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
     return op; //is NULL if the spec isn't correct.  Will cause segfault later.
 }
 
-static size_t
+size_t
 binary_read(
         void* ptr,
         size_t size,

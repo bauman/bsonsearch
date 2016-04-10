@@ -225,7 +225,7 @@ _mongoc_matcher_op_geowithin_polygon_iter_values     ( bson_iter_t           wit
             next_point = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *next_point);
             next_point->near.base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHINPOLY;
             next_point->near.near_type = MONGOC_MATCHER_NEAR_UNDEFINED;
-            bool suc = _mongoc_matcher_op_geowithin_polygon_iter_point(box_iter, next_point);
+            _mongoc_matcher_op_geowithin_polygon_iter_point(box_iter, next_point);//todo: should check this response
             (*current_op)->logical.left = next_point;
             current_op = &(*current_op)->logical.left;
         }

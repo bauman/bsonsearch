@@ -139,7 +139,7 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
  *--------------------------------------------------------------------------
  */
 
-static bool
+bool
 _mongoc_bson_iter_find_with_len (bson_iter_t *iter,   /* INOUT */
                                 const char  *key,    /* IN */
                                 int          keylen) /* IN */
