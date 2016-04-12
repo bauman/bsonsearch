@@ -6,11 +6,25 @@
 #ifdef WITH_YARA
 #include <yara.h>
 #endif //WITH_YARA
+#ifdef WITH_PROJECTION
+#include "mongoc-projection.h"
+#endif //WITH_PROJECTION
 
 // gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-matcher-op-geojson.c mongoc-matcher-op-yara.c
 
 
 struct pattern_to_regex *global_compiled_regexes = NULL;
+
+#ifdef WITH_PROJECTION
+bool
+project_bson(mongoc_matcher_t *matcher,     //in
+             bson_t           *bson,        //in
+             bson_t           *projected)   //out
+{
+
+    return mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+}
+#endif //WITH_PROJECTION
 
 int
 bsonsearch_startup()
@@ -120,6 +134,7 @@ matcher_compare_doc(mongoc_matcher_t   *matcher,
   result = mongoc_matcher_match (matcher, bson);
   return result;
 }
+
 
 
 int

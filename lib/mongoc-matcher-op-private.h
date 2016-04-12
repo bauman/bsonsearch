@@ -64,6 +64,9 @@ typedef enum
    MONGOC_MATCHER_OPCODE_GEOWITHIN,
    MONGOC_MATCHER_OPCODE_GEOWITHINPOLY,
    MONGOC_MATCHER_OPCODE_GEOUNDEFINED,
+#ifdef WITH_PROJECTION
+   MONGOC_MATCHER_OPCODE_PROJECTION,
+#endif //WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
 
@@ -105,6 +108,15 @@ struct _mongoc_matcher_op_compare_t
 #endif //WITH_YARA
 };
 
+#ifdef WITH_PROJECTION
+typedef struct _mongoc_matcher_op_projection_t mongoc_matcher_op_projection_t;
+struct _mongoc_matcher_op_projection_t
+{
+    mongoc_matcher_op_base_t base;
+    char *path;
+    mongoc_matcher_op_t *next;
+};
+#endif //WITH_PROJECTION
 
 struct _mongoc_matcher_op_exists_t
 {
@@ -160,6 +172,9 @@ union _mongoc_matcher_op_t
    mongoc_matcher_op_size_t size;
    mongoc_matcher_op_near_t near;
    mongoc_matcher_op_not_t not_;
+#ifdef WITH_PROJECTION
+   mongoc_matcher_op_projection_t projection;
+#endif //WITH_PROJECTION
 };
 
 

@@ -20,6 +20,9 @@ int                regex_destroy();
 int                regex_print();
 int                bsonsearch_startup();
 int                bsonsearch_shutdown();
+#ifdef WITH_PROJECTION
+bool project_bson(mongoc_matcher_t *matcher, bson_t *bson, bson_t *projected);
+#endif //  WITH_PROJECTION
 
 struct pattern_to_regex {
     char* pattern;            /* we'll use this field as the key */

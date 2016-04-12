@@ -510,7 +510,17 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_YARA:
       bson_free (op->compare.path);
       yr_rules_destroy(op->compare.rules);
+      break;
 #endif //WITH_YARA
+#ifdef WITH_PROJECTION
+   case MONGOC_MATCHER_OPCODE_PROJECTION:
+   {
+      bson_free(op->projection.path);
+      if (op->projection.next)
+         _mongoc_matcher_op_destroy(op->projection.next);
+      break;
+   }
+#endif //WITH_PROJECTION
    default:
       break;
    }

@@ -22,7 +22,10 @@
 #include "mongoc-matcher-op-geojson.h"
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
-#endif
+#endif//YARA
+#ifdef WITH_PROJECTION
+#include "mongoc-projection.h"
+#endif//projection
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
 
@@ -198,27 +201,45 @@ _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
    if (*key != '$') {
       return _mongoc_matcher_parse_compare (iter, key, error);
    } else {
-      BSON_ASSERT (bson_iter_type(iter) == BSON_TYPE_ARRAY);
+       switch (bson_iter_type ((iter))) {
+           case BSON_TYPE_ARRAY:
+           {
+               if (!bson_iter_recurse (iter, &child)) {
+                   bson_set_error (error,
+                                   MONGOC_ERROR_MATCHER,
+                                   MONGOC_ERROR_MATCHER_INVALID,
+                                   "Invalid value for operator \"%s\"",
+                                   key);
+                   return NULL;
+               }
 
-      if (!bson_iter_recurse (iter, &child)) {
-         bson_set_error (error,
-                         MONGOC_ERROR_MATCHER,
-                         MONGOC_ERROR_MATCHER_INVALID,
-                         "Invalid value for operator \"%s\"",
-                         key);
-         return NULL;
-      }
+               if (strcmp (key, "$or") == 0) {
+                   return _mongoc_matcher_parse_logical (MONGOC_MATCHER_OPCODE_OR,
+                                                         &child, false, error);
+               } else if (strcmp(key, "$and") == 0) {
+                   return _mongoc_matcher_parse_logical (MONGOC_MATCHER_OPCODE_AND,
+                                                         &child, false, error);
+               } else if (strcmp(key, "$nor") == 0) {
+                   return _mongoc_matcher_parse_logical (MONGOC_MATCHER_OPCODE_NOR,
+                                                         &child, false, error);
+               }
+               break;
+           }
+#ifdef WITH_PROJECTION
+           case BSON_TYPE_DOCUMENT:
+           {
+               if (strcmp (key, "$project") == 0) {
+                   return _mongoc_matcher_parse_projection(MONGOC_MATCHER_OPCODE_PROJECTION,
+                                                           iter, false, error);
+               }
+               break;
+           }
+#endif //projection
+           default:
+               break;
+       }
 
-      if (strcmp (key, "$or") == 0) {
-         return _mongoc_matcher_parse_logical (MONGOC_MATCHER_OPCODE_OR,
-                                               &child, false, error);
-      } else if (strcmp(key, "$and") == 0) {
-         return _mongoc_matcher_parse_logical (MONGOC_MATCHER_OPCODE_AND,
-                                               &child, false, error);
-      } else if (strcmp(key, "$nor") == 0) {
-         return _mongoc_matcher_parse_logical (MONGOC_MATCHER_OPCODE_NOR,
-                                               &child, false, error);
-      }
+
    }
 
    bson_set_error (error,
