@@ -28,8 +28,9 @@ int
 main (int   argc,
       char *argv[])
 {
-
-    BSON_ASSERT(project_json("{\"a\":\"a\", \"b\":\"b\"}",
+    BSON_ASSERT(project_json("{\"a\":\"aa\", \"b\":\"b\"}",
                              "{\"$project\":{\"a\":1,\"c\":1}}}"));
+    BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
+                             "{\"$project\":{\"a.aa\":1,\"c\":1}}}"));
     return 0;
 }

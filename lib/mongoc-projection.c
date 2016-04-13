@@ -106,16 +106,87 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
                                   bson_t              *projected)   //out
 {
     assert(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION);
-    /*
-    bson_iter_t *iter;
-    int checked = 0, skip=0;
-    while (bson_iter_init (&iter, bson) &&
-           bson_iter_find_descendants (iter, op->projection.path, &skip, &iter)){
 
-        skip = ++checked;
+
+
+    bson_iter_t iter, tmp;
+    int checked = 0, skip=0;
+    bool result = false;
+    bson_t parent, arrlist;
+    char *str;
+
+    bson_init (&parent);
+    bson_append_array_begin (&parent, op->projection.path, -1, &arrlist);
+    //bson_append_int32 (&child, "0", 1, 1);
+    //bson_append_int32 (&child, "1", 1, 3);
+
+    uint32_t packed = 0;
+    if (strchr (op->projection.path, '.')) {
+        if (bson_iter_init (&tmp, bson) )
+        {
+            if (bson_iter_find_descendant (&tmp, op->projection.path, &iter))
+            {
+                mongoc_matcher_projection_value_into_array(iter, arrlist, checked);
+            } else {
+                while (bson_iter_init (&tmp, bson) &&
+                       bson_iter_find_descendants (&tmp, op->projection.path, &skip, &iter)){
+                    packed += mongoc_matcher_projection_value_into_array(iter, arrlist, packed);
+                    skip = ++checked;
+                }
+            }
+        }
+    } else if (bson_iter_init_find (&iter, bson, op->projection.path)) {
+        mongoc_matcher_projection_value_into_array(iter, arrlist, checked);
     }
-    */
-    return false;
+    bson_append_array_end (&parent, &arrlist);
+    bson_error_t *err;
+    str = bson_as_json (&parent, NULL);
+    //printf ("%s\n", str);
+    bson_free (str);
+    return result;
 }
+
+uint32_t
+mongoc_matcher_projection_value_into_array(bson_iter_t  iter, bson_t arrlist, uint32_t i)
+{
+    char STR_BUFFER[16];
+    const char *key;
+    size_t st = bson_uint32_to_string (i, &key, STR_BUFFER, sizeof STR_BUFFER);
+    switch (bson_iter_type ((&iter))) {
+        case BSON_TYPE_DOCUMENT:
+            i=0;
+            break;
+        case BSON_TYPE_ARRAY:
+        {
+            bson_iter_t right_array;
+            bson_iter_recurse(&iter, &right_array);
+            while (bson_iter_next(&right_array)) {
+                i += mongoc_matcher_projection_value_into_array( right_array, arrlist, i);
+            }
+            break;
+        }
+        case BSON_TYPE_UTF8:
+        {
+            uint32_t vlen=-1;
+            const char * value = bson_iter_utf8(&iter, &vlen);
+            bson_append_utf8(&arrlist, key, st, bson_strdup(value), vlen);
+            break;
+        }
+        case BSON_TYPE_BOOL:
+        case BSON_TYPE_BINARY:
+        case BSON_TYPE_DATE_TIME:
+        case BSON_TYPE_INT32:
+        case BSON_TYPE_INT64:
+        case BSON_TYPE_REGEX:
+        case BSON_TYPE_OID:
+        case BSON_TYPE_DOUBLE:
+        case BSON_TYPE_TIMESTAMP:
+        default:
+            i=0;
+            break;
+    }
+    return i;
+}
+
 
 #endif //WITH_PROJECTION

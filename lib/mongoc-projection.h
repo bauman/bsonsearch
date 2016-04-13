@@ -40,6 +40,8 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
                                   bson_t           *bson,        //in
                                   bson_t           *projected);  //out
 
+uint32_t
+mongoc_matcher_projection_value_into_array(bson_iter_t iter, bson_t arrlist, uint32_t i);
 
 #endif //MONGOC_MATCHER_PROJECTION
 #endif //WITH_PROJECTION
