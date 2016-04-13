@@ -516,6 +516,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_PROJECTION:
    {
       bson_free(op->projection.path);
+      bson_free(op->projection.as);
       if (op->projection.next)
          _mongoc_matcher_op_destroy(op->projection.next);
       break;

@@ -114,6 +114,7 @@ struct _mongoc_matcher_op_projection_t
 {
     mongoc_matcher_op_base_t base;
     char *path;
+    char* as;
     mongoc_matcher_op_t *next;
 };
 #endif //WITH_PROJECTION
