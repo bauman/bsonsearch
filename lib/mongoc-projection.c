@@ -149,9 +149,11 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
         bson_append_array_end (projected, &arrlist);
         current = current->projection.next;
     } while (current);
+    /*
     char * str;
     str = bson_as_json(projected, NULL);
     printf("%s\n", str);
+    */
     return result;
 }
 
@@ -163,8 +165,15 @@ mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, 
     size_t st = bson_uint32_to_string (i, &key, STR_BUFFER, sizeof STR_BUFFER);
     switch (bson_iter_type (iter)) {
         case BSON_TYPE_DOCUMENT:
-            i=0;
+        {
+            uint32_t          document_len;
+            const uint8_t     *document;
+            bson_iter_document(iter, &document_len, &document);
+            bson_t *doc_data = bson_new_from_data(document, document_len);
+            bson_append_document(arrlist, key, st, doc_data);//this performs a memcopy
+            bson_free(doc_data);
             break;
+        }
         case BSON_TYPE_ARRAY:
         {
             bson_iter_t right_array;

@@ -28,11 +28,15 @@ int
 main (int   argc,
       char *argv[])
 {
-    BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
-                             "{\"$project\":{\"a.aa\":\"a_aa\",\"c\":1}}}"));
+    BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", 33]}, \"b\":\"b\"}",
+                             "{\"$project\":{\"a\":1}}}"));
 
     BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"a\", 33]}, {\"aa\":999}], \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1,\"c\":1}}}"));
+
+    BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
+                             "{\"$project\":{\"a.aa\":\"a_aa\",\"c\":1}}}"));
+
 
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1,\"c\":1}}}"));
