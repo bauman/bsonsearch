@@ -189,6 +189,36 @@ libyara-devel is required at compile time and libbsonsearch must be compiled wit
     >>> True
 ```
 
+if you have yara-python installed on the system, you can use the bsoncompare helper functions
+
+
+``` python
+    import bsonsearch
+    import bson
+    rule = '''
+    rule example
+    {
+        strings:
+            $c = {6c 6f 20 77 6f 72} //"lo wor"
+        condition:
+            any of them
+    }
+    '''
+    bc = bsonsearch.bsoncompare()
+    bc.bc.bsonsearch_startup() # handles yara initialization
+    doc = {'msg': "hello world"}
+    doc_id = bc.generate_doc(doc)
+
+    spec = {"msg": bsonsearch.YARA_COMPILE_STR(rule)} #see __init__.py for yara helpers
+    matcher = bc.generate_matcher(spec)
+
+    print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
+    bc.destroy_doc(doc_id) #destroy the document
+    bc.destroy_matcher(matcher) #destroy the spec
+    bc.bc.bsonsearch_shutdown() # handles yara shutdown
+    >>> True
+```
+
 
 Regex within SPEC
 ==================
