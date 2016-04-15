@@ -25,10 +25,10 @@
 #define MONGOC_MATCHER_PROJECTION
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
-
+static
 mongoc_matcher_op_t *
-        _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
-                                               bson_error_t            *error) ;  /* OUT */
+_mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
+                                       bson_error_t            *error) ;  /* OUT */
 
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
@@ -36,12 +36,14 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
                                   bool                     is_root, /* IN */
                                   bson_error_t            *error);
 bool
-mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
-                                  bson_t           *bson,        //in
-                                  bson_t           *projected);  //out
+mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     /* IN */
+                                  bson_t           *bson,      /* IN */
+                                  bson_t           *projected); /* OUT */
 
 uint32_t
-mongoc_matcher_projection_value_into_array(bson_iter_t *iter, bson_t *arrlist, uint32_t i);
+mongoc_matcher_projection_value_into_array(bson_iter_t *iter,   /* IN */
+                                           bson_t *arrlist,     /* IN/OUT */
+                                           uint32_t i);         /* IN */
 
 #endif //MONGOC_MATCHER_PROJECTION
 #endif //WITH_PROJECTION

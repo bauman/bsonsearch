@@ -72,6 +72,7 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
     }
     return op;
 }
+static
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error)   /* OUT */
@@ -156,7 +157,28 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
     */
     return result;
 }
-
+/*
+ *--------------------------------------------------------------------------
+ *
+ * mongoc_matcher_projection_value_into_array --
+ *
+ *       appends the appropriate type given by iterator type to a bson_t
+ *
+ * Requires:
+ *          arrlist should be an array
+ *          calling function is responsible for
+ *              bson_init
+ *              bson_append_array_begin
+ *              bson_append_array_end
+ *
+ * Returns:
+ *       unsigned integer number of objects added to bson_t array
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 uint32_t
 mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, uint32_t i)
 {
@@ -237,6 +259,12 @@ mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, 
             break;
         }
         case BSON_TYPE_REGEX:
+        {
+            const char * regex_pattern, *regex_options;
+            regex_pattern = bson_iter_regex (iter, &regex_options);
+            bson_append_regex(arrlist, key, st, regex_pattern, regex_options);
+            break;
+        }
         default:
             i=0;
             break;
