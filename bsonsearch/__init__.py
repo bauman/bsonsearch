@@ -3,6 +3,25 @@ import ctypes
 from ctypes.util import find_library
 from hashlib import md5
 
+try:
+    import yara
+    import io
+    def YARA_DICT(compiled_rule):
+        compiled_binary_rule = io.BytesIO()
+        compiled_rule.save(file=compiled_binary_rule)
+        return {"$yara":bson.Binary(compiled_binary_rule.getvalue())}
+    def YARA_LOAD(fn):
+        compiled_rule = yara.load(fn)
+        return YARA_DICT(compiled_rule)
+    def YARA_COMPILE(fn):
+        compiled_rule = yara.compile(fn)
+        return YARA_DICT(compiled_rule)
+    def YARA_COMPILE_STR(source):
+        compiled_rule = yara.compile(source=source)
+        return YARA_DICT(compiled_rule)
+except ImportError:
+    yara = None
+
 
 class bsoncompare(object):
     def __init__(self):
