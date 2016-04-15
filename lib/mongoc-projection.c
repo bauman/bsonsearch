@@ -62,7 +62,6 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
                                   bson_error_t            *error)   /* OUT */
 {
     mongoc_matcher_op_t *op = NULL;
-    mongoc_matcher_op_t *left_op = NULL;
     BSON_ASSERT (opcode == MONGOC_MATCHER_OPCODE_PROJECTION);
     BSON_ASSERT (iter);
 
@@ -72,7 +71,7 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
     }
     return op;
 }
-static
+
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error)   /* OUT */

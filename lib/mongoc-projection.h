@@ -25,7 +25,7 @@
 #define MONGOC_MATCHER_PROJECTION
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
-static
+
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error) ;  /* OUT */
