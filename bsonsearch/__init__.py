@@ -1,8 +1,10 @@
 import bson
 import ctypes
 from ctypes import c_void_p, c_double, c_char_p, c_uint, c_bool
+from ctypes import cast as c_cast
 from ctypes.util import find_library
 from hashlib import md5
+from bson.json_util import loads
 
 try:
     import yara
@@ -35,9 +37,9 @@ class bsoncompare(object):
         self.bc.bsonsearch_yara_gte1_hit_raw.argtypes = [c_void_p, c_char_p, c_uint]
         self.bc.bsonsearch_yara_gte1_hit_raw.restype = c_bool
         self.bc.bsonsearch_bson_get_data.argtypes = [c_void_p]
-        self.bc.bsonsearch_bson_get_data = c_char_p
-        self.bc.bsonsearch_project_bson = [c_void_p, c_void_p]
-        self.bc.bsonsearch_project_bson = [c_void_p]
+        self.bc.bsonsearch_bson_get_data.restype = c_char_p
+        self.bc.bsonsearch_project_bson.argtypes = [c_void_p, c_void_p]
+        self.bc.bsonsearch_project_bson.restype = c_char_p
 
         #standard
         self.bc.bsonsearch_startup.argtypes = []
@@ -164,6 +166,12 @@ class bsoncompare(object):
                                           len(encoded_document))
         return bool(ismatch)
 
+    def project_bson(self, matcher_id, doc_id):
+        matcher  = self.matchers[matcher_id] #pointer
+        document = self.docs[doc_id] #pointer
+        projection_pointer = self.bc.bsonsearch_project_bson(matcher, document)
+        projection = loads(projection_pointer)
+        return projection
 
     def explode_namespace(self, prefix_len, namespace, doc_id):
         try:

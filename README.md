@@ -274,6 +274,45 @@ ipython notebook
     >>> {'$and': [{'$or': [{'c.d': 'dan'}]}, {'$or': [{'a.0.b.0': {'$in': [7, 6, 5]}}, {'a.0.b.1': {'$in': [7, 6, 5]}}, {'a.1.b.0': {'$in': [7, 6, 5]}}, {'a.1.b.1': {'$in': [7, 6, 5]}}]}]}
     >>> True
 ```
+$project command
+==================
+Similar support to the $project aggregation operator (https://docs.mongodb.org/manual/reference/operator/aggregation/project/)
+
+I've often wanted to take a hodgepodge of a json/bson document and strip out everything I'm not interested in.
+
+Of course, things get really complicated with nested documents and recursing sub documents are slow.
+
+the bsoncomare c library supports a $project operator which projects only the requested fields into the output dict.
+
+In this example,
+
+``` python
+    from bsonsearch import bsoncompare
+    bc = bsoncompare()
+    doc = {"a":{"aa":["ii", 33]}, "b":"b"}
+    doc_id = bc.generate_doc(doc)
+    spec = {"$project":{"a.aa":1}} #1/True as the value to the key you wish to project
+    query = bc.generate_matcher(spec)
+    bc.project_bson(query, doc_id) #returns a dict object
+    >>> {u'a.aa': [u'ii', 33]}
+
+```
+
+Sometimes the dot notation (.) in a key is not supported (if you were going to pass this dict back into MongoDB).
+
+You may use a <basestring> as the value of the $project key (a_aa will be the key in the returned dict)
+
+``` python
+    from bsonsearch import bsoncompare
+    bc = bsoncompare()
+    doc = {"a":{"aa":["ii", 33]}, "b":"b"}
+    doc_id = bc.generate_doc(doc)
+    spec = {"$project":{"a.aa":"a_aa"}} #<---- <str> as the value to the key you wish to project into
+    query = bc.generate_matcher(spec)
+    bc.project_bson(query, doc_id) #returns a dict object
+    >>> {u'a_aa': [u'ii', 33]}
+
+```
 
 $near example
 ==================
