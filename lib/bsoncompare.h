@@ -21,11 +21,25 @@ int                regex_print();
 int                bsonsearch_startup();
 int                bsonsearch_shutdown();
 #ifdef WITH_PROJECTION
-bool project_bson(mongoc_matcher_t *matcher, bson_t *bson, bson_t *projected);
+bool               project_bson(mongoc_matcher_t *matcher, bson_t *bson, bson_t *projected);
 #endif //  WITH_PROJECTION
 
+#ifdef WITH_UTILS
+double             bsonsearch_haversine_distance(double lon1, double lat1, double lon2, double lat2);
+double             bsonsearch_haversine_distance_degrees(double lon1, double lat1, double lon2, double lat2);
+#ifdef WITH_YARA //&& WITH_UTILS
+bool               bsonsearch_yara_gte1_hit_raw(mongoc_matcher_t *matcher, char * line, ssize_t line_len);
+#endif //WITH_YARA && WITH_UTILS
+#ifdef WITH_PROJECTION //&& UTILS
+char *             bsonsearch_bson_get_data(bson_t *input);
+bson_t *           bsonsearch_project_bson(mongoc_matcher_t *matcher,  bson_t  *bson);
+#endif //WITH_PROJECTION && UTILS
+
+
+#endif //WITH_UTILS
+
 struct pattern_to_regex {
-    char* pattern;            /* we'll use this field as the key */
+    char * pattern;            /* we'll use this field as the key */
     pcre * re;
     UT_hash_handle hh; /* makes this structure hashable */
 };

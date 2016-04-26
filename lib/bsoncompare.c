@@ -9,6 +9,13 @@
 #ifdef WITH_PROJECTION
 #include "mongoc-projection.h"
 #endif //WITH_PROJECTION
+#ifdef WITH_UTILS
+#include "mongoc-matcher-op-geojson.h"
+#include "mongoc-matcher-op-private.h"
+#ifdef WITH_YARA //&& WITH_UTILS
+#include <mongoc-matcher-op-yara.h>
+#endif //WITH_YARA && WITH_UTILS
+#endif //WITH_UTILS
 
 // gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-matcher-op-geojson.c mongoc-matcher-op-yara.c
 
@@ -25,6 +32,69 @@ project_bson(mongoc_matcher_t *matcher,     //in
     return mongoc_matcher_projection_execute(matcher->optree, bson, projected);
 }
 #endif //WITH_PROJECTION
+
+
+#ifdef WITH_UTILS
+#ifdef WITH_PROJECTION //&& UTILS
+bson_t *
+bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
+                        bson_t           *bson)   //out
+{
+    bson_t           *projected = NULL;
+    bson_init(projected);
+    mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+    return projected;
+}
+#endif //WITH_PROJECTION
+
+
+char *
+bsonsearch_bson_get_data(bson_t *input)
+{
+    char * result_bson;
+    const uint8_t * got_data;
+    got_data = bson_get_data(input);
+    result_bson = bson_strdup((char*)got_data);
+    return result_bson;
+}
+
+
+double bsonsearch_haversine_distance(double lon1, double lat1, double lon2, double lat2)
+{
+    double result;
+    if (!haversine_distance(lon1, lat1, lon2, lat2, &result)){
+        result = (double)-1;
+    }
+    return result;
+}
+
+double bsonsearch_haversine_distance_degrees(double lon1, double lat1, double lon2, double lat2)
+{
+    double result;
+    if (!haversine_distance(lon1*RADIAN_MAGIC_NUMBER, lat1*RADIAN_MAGIC_NUMBER, /*Defined in mongoc-matcher-op-geojson */
+                            lon2*RADIAN_MAGIC_NUMBER, lat2*RADIAN_MAGIC_NUMBER,
+                            &result)){
+        result = (double)-1;
+    }
+    return result;
+}
+#ifdef WITH_YARA //&& WITH_UTILS
+bool bsonsearch_yara_gte1_hit_raw(mongoc_matcher_t *matcher, char * line, ssize_t line_len)
+{
+    bool result;
+    mongoc_matcher_op_binary_flo *bin_flo;
+    bin_flo = (mongoc_matcher_op_binary_flo *)bson_malloc (sizeof *bin_flo);
+    bin_flo->cursor_pos = 0;
+    bin_flo->binary = (uint8_t*)line;
+    bin_flo->binary_len = (uint32_t)line_len;
+    result = _mongoc_matcher_op_yara_compare(&matcher->optree->compare, bin_flo);
+    bson_free(bin_flo);
+    return result;
+}
+#endif //WITH_YARA && WITH_UTILS
+#endif //WITH_UTILS
+
+
 
 int
 bsonsearch_startup()

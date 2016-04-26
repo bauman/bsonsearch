@@ -123,7 +123,10 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
         case BSON_TYPE_DOCUMENT:
         {
             //TODO: allow non-default config:
-            //          user specified {"$yara":{"compiled":Binary(), "timeout":<int>, "fast_mode":<bool>}}
+            //          user specified {"$yara":{"source":<Binary>/<utf8>, binary=load(), utf8=compile(),
+            //                                   "filename":<utf8>, compile the sig written to this file
+            //                                   "timeout":<int>,
+            //                                   "fast_mode":<bool>}}
             //          loop the keys, hold onto timeout/fastmode locally, pass binary to self recursive
             //          allow the recursive call to attempt to malloc op.
             //          if op is malloc'd, put the timeout/fastmode vars into op and pass it along.

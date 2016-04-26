@@ -19,7 +19,6 @@ project_json(const char *json,
 
     char * str;
     str = bson_as_json(out, NULL);
-
     same = (0 == strcmp(str, expected));
     matcher_destroy(matcher);
     doc_destroy(doc);
