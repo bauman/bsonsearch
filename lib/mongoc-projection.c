@@ -207,6 +207,9 @@ mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, 
             bson_iter_t right_array;
             bson_iter_recurse(iter, &right_array);
             while (bson_iter_next(&right_array)) {
+                /* this isnt going to work if it finds an array within an array.
+                 * Should probably pass i as a pointer so everyone can track the same i
+                 */
                 i += mongoc_matcher_projection_value_into_array( &right_array, arrlist, i);
             }
             break;
