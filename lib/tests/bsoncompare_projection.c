@@ -9,7 +9,7 @@ project_json(const char *json,
     bson_error_t error2;
     bson_t      *spec;
     bson_t      *doc;
-    bson_t      *out;
+    bson_t      *out = bson_new();
     doc = bson_new_from_json (json, -1, &error);
     spec = bson_new_from_json (jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
@@ -21,17 +21,46 @@ project_json(const char *json,
     str = bson_as_json(out, NULL);
     same = (0 == strcmp(str, expected));
     matcher_destroy(matcher);
+    doc_destroy(spec);
     doc_destroy(doc);
     doc_destroy(out);
     bson_free(str);
     return same;
 }
 
+bool
+test_api(const char *json,
+         const char *jsonspec,
+         const char *expected)
+{
+    bool same = false;
+    bson_error_t error;
+    bson_error_t error2;
+    bson_t      *spec;
+    bson_t      *doc;
+    doc = bson_new_from_json (json, -1, &error);
+    spec = bson_new_from_json (jsonspec, -1, &error2);
+    const uint8_t *spec_bson = bson_get_data(spec);
 
+    mongoc_matcher_t * matcher = generate_matcher(spec_bson, spec->len);
+    char * out = NULL;
+    out = bsonsearch_project_bson(matcher, doc);
+    same = (0 == strcmp(out, expected));
+    matcher_destroy(matcher);
+    doc_destroy(doc);
+    bson_free(out);
+    return same;
+}
 int
 main (int   argc,
       char *argv[])
 {
+    //test direct descent
+    BSON_ASSERT(test_api("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
+                         "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
+                         "{ \"a.aa\" : [ \"a\", 33 ], \"c\" : [  ] }"));
+
+
     //test regex
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", {\"$options\": \"\", \"$regex\": \"oRl\"}]}, \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1}}}",

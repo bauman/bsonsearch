@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.3
-Release: 15%{?dist}.db
+Release: 21%{?dist}.db
 Summary: compares bson docs	
 
 Group:	bauman	
@@ -33,7 +33,7 @@ Provides a shared object which can be used to perform mongo-like queries against
 
 %package devel
 Summary: Development files for libbsoncompare
-Requires: libbsoncompare == %{version}, uthash-devel
+Requires: libbsoncompare == %{version}-%{release}, uthash-devel
 Group: Development/Libraries
 
 

@@ -36,14 +36,16 @@ project_bson(mongoc_matcher_t *matcher,     //in
 
 #ifdef WITH_UTILS
 #ifdef WITH_PROJECTION //&& UTILS
-bson_t *
+char *
 bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
-                        bson_t           *bson)   //out
+                        bson_t           *bson)        //in
 {
-    bson_t           *projected = NULL;
-    bson_init(projected);
+    bson_t * projected = bson_new();
     mongoc_matcher_projection_execute(matcher->optree, bson, projected);
-    return projected;
+    char * str;
+    str = bson_as_json(projected, NULL);
+    bson_destroy(projected);
+    return str;
 }
 #endif //WITH_PROJECTION
 
@@ -53,6 +55,7 @@ bsonsearch_bson_get_data(bson_t *input)
 {
     char * result_bson;
     const uint8_t * got_data;
+    bson_init(input);
     got_data = bson_get_data(input);
     result_bson = bson_strdup((char*)got_data);
     return result_bson;
@@ -161,16 +164,17 @@ doc_destroy (bson_t *bson)
 int
 regex_destroy()
 {
+    int freed = 0;
     struct pattern_to_regex *s, *tmp;
     HASH_ITER(hh, global_compiled_regexes, s, tmp) {
         HASH_DEL(global_compiled_regexes, s);
         pcre_free(s->re);     //malloc in _mongoc_matcher_iter_eq_match
         bson_free(s->pattern);//malloc in _mongoc_matcher_iter_eq_match
         free(s);
+        freed++;
     }
     //TODO: slim chance s->re is Null?  Decided to let segfault for now to raise alarm
-    //      in future, return number of regexes had to free, or number of errors.  I don't know.
-    return 0;
+    return freed;
 }
 int
 regex_print()
