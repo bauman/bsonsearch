@@ -1,3 +1,8 @@
+'''
+this file performs a leak check on project bson function.
+python and c_char_p seem to have trouble freeing memory.
+had to force the free to not leak.
+'''
 from bsonsearch import bsoncompare
 bc = bsoncompare()
 doc = {"a":{"aa":[2, 33]}, "b":"b"}
