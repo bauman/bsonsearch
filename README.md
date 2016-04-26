@@ -284,7 +284,11 @@ Of course, things get really complicated with nested documents and recursing sub
 
 the bsoncomare c library supports a $project operator which projects only the requested fields into the output dict.
 
-In this example,
+In this example, grab a basic key (given using dot notation) and omit everything else.  If the value of they key is int(1)/bool(True), the resultant key after the projection will be the dot notation key used to define the projection.
+
+Output will always take the form of {key:[value1, value2,..., valueN]}
+
+
 
 ``` python
     from bsonsearch import bsoncompare
@@ -298,9 +302,9 @@ In this example,
 
 ```
 
-Sometimes the dot notation (.) in a key is not supported (if you were going to pass this dict back into MongoDB).
+Sometimes you may find the dot notation (.) in a key is not supported (if you were going to pass this dict back into MongoDB or this library)
 
-You may use a <basestring> as the value of the $project key (a_aa will be the key in the returned dict)
+You may use a type(basestring) as the value of the $project key (a_aa will be the key in the returned dict)
 
 ``` python
     from bsonsearch import bsoncompare
