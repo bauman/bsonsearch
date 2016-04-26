@@ -181,9 +181,16 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
 uint32_t
 mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, uint32_t i)
 {
-    char STR_BUFFER[16];
-    const char *key;
+    /*----------------------------------------------------------------------------
+     * Notes on Building Arrays.  Casting int to str is usually NOT optimized
+     * http://api.mongodb.org/libbson/current/performance.html  links to
+     * http://api.mongodb.org/libbson/current/bson_uint32_to_string.html
+     *
+     */
+    char STR_BUFFER[16]; //Temp space for bson_uint32_to_string
+    const char *key;  //key in array, because arrays are really documents with ascending string values in bson
     size_t st = bson_uint32_to_string (i, &key, STR_BUFFER, sizeof STR_BUFFER);
+    /* end recommended performance optimiaztion, have the string value of the int counter in "key" var */
     switch (bson_iter_type (iter)) {
         case BSON_TYPE_DOCUMENT:
         {
