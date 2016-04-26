@@ -465,6 +465,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
            bson_free(s->matcher_hash_key);
            free(s);
         }
+      /* Don't break, fall into freeing path */
    }
    case MONGOC_MATCHER_OPCODE_EQ:
    case MONGOC_MATCHER_OPCODE_GT:
