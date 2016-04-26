@@ -33,6 +33,7 @@ bool               bsonsearch_yara_gte1_hit_raw(mongoc_matcher_t *matcher, char 
 #ifdef WITH_PROJECTION //&& UTILS
 char *             bsonsearch_bson_get_data(bson_t *input);
 char *             bsonsearch_project_bson(mongoc_matcher_t *matcher,  bson_t  *bson);
+int                bsonsearch_free_project_str(void * ptr);
 #endif //WITH_PROJECTION && UTILS
 
 

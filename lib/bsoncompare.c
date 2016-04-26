@@ -45,10 +45,15 @@ bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
     char * str;
     str = bson_as_json(projected, NULL);
     bson_destroy(projected);
+    bson_free(projected);
     return str;
 }
-#endif //WITH_PROJECTION
-
+int
+bsonsearch_free_project_str(void * ptr)
+{
+    bson_free(ptr);
+    return 0;
+}
 
 char *
 bsonsearch_bson_get_data(bson_t *input)
@@ -60,6 +65,10 @@ bsonsearch_bson_get_data(bson_t *input)
     result_bson = bson_strdup((char*)got_data);
     return result_bson;
 }
+
+#endif //WITH_PROJECTION
+
+
 
 
 double bsonsearch_haversine_distance(double lon1, double lat1, double lon2, double lat2)
@@ -129,6 +138,7 @@ generate_matcher(const uint8_t *buf_spec,
   mongoc_matcher_t *matcher;
   spec = bson_new_from_data(buf_spec, (uint32_t)len_spec);
   matcher = mongoc_matcher_new (spec, NULL);
+  bson_free(spec);
   return matcher;
 }
 

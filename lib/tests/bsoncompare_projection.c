@@ -47,8 +47,9 @@ test_api(const char *json,
     out = bsonsearch_project_bson(matcher, doc);
     same = (0 == strcmp(out, expected));
     matcher_destroy(matcher);
-    doc_destroy(doc);
-    bson_free(out);
+    bson_destroy(doc);
+    bson_destroy(spec);
+    bsonsearch_free_project_str(out);
     return same;
 }
 int
@@ -56,10 +57,12 @@ main (int   argc,
       char *argv[])
 {
     //test direct descent
-    BSON_ASSERT(test_api("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
-                         "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
-                         "{ \"a.aa\" : [ \"a\", 33 ], \"c\" : [  ] }"));
-
+    do
+    {
+        BSON_ASSERT(test_api("{\"a\":{\"aa\":[2, 33]}, \"b\":\"b\"}",
+                             "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
+                             "{ \"a.aa\" : [ 2, 33 ], \"c\" : [  ] }"));
+    }while(false); //true to leak test
 
     //test regex
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", {\"$options\": \"\", \"$regex\": \"oRl\"}]}, \"b\":\"b\"}",
@@ -102,6 +105,7 @@ main (int   argc,
 
     //test bool
 
-    //test binary
+    //test binary  */
+
     return 0;
 }

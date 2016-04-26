@@ -45,5 +45,5 @@ main (int   argc,
 {
     BSON_ASSERT(compare_good());
     BSON_ASSERT(!compare_bad());
-
+    return 0;
 }
