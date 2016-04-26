@@ -1,5 +1,6 @@
 import bson
 import ctypes
+from ctypes import c_void_p, c_double, c_char_p, c_uint, c_bool
 from ctypes.util import find_library
 from hashlib import md5
 
@@ -26,6 +27,47 @@ except ImportError:
 class bsoncompare(object):
     def __init__(self):
         self.bc = ctypes.CDLL(find_library("bsoncompare")) #libbsoncompare rpm.
+        #utils
+        self.bc.bsonsearch_haversine_distance.argtypes = [c_double, c_double, c_double, c_double]
+        self.bc.bsonsearch_haversine_distance.restype = c_double
+        self.bc.bsonsearch_haversine_distance_degrees.argtypes = [c_double, c_double, c_double, c_double]
+        self.bc.bsonsearch_haversine_distance_degrees.restype = c_double
+        self.bc.bsonsearch_yara_gte1_hit_raw.argtypes = [c_void_p, c_char_p, c_uint]
+        self.bc.bsonsearch_yara_gte1_hit_raw.restype = c_bool
+        self.bc.bsonsearch_bson_get_data.argtypes = [c_void_p]
+        self.bc.bsonsearch_bson_get_data = c_char_p
+        self.bc.bsonsearch_project_bson = [c_void_p, c_void_p]
+        self.bc.bsonsearch_project_bson = [c_void_p]
+
+        #standard
+        self.bc.bsonsearch_startup.argtypes = []
+        self.bc.bsonsearch_startup.restype = c_uint
+        self.bc.bsonsearch_shutdown.argtypes = []
+        self.bc.bsonsearch_shutdown.restype = c_uint
+        self.bc.generate_matcher.argtypes = [c_void_p, c_uint]
+        self.bc.generate_matcher.restype = c_void_p
+        self.bc.matcher_destroy.argtypes = [c_void_p]
+        self.bc.matcher_destroy.restype = c_uint
+        self.bc.generate_doc.argtypes = [c_void_p, c_uint]
+        self.bc.generate_doc.restype = c_void_p
+        self.bc.doc_destroy.argtypes = [c_void_p]
+        self.bc.doc_destroy.restype = c_uint
+        self.bc.regex_destroy.argtypes = []
+        self.bc.regex_destroy.restype = c_uint
+
+        self.bc.matcher_compare.argtypes = [c_void_p, c_void_p,  c_uint]
+        self.bc.matcher_compare.restype = c_uint
+
+        self.bc.matcher_compare_doc.argtypes = [c_void_p, c_void_p]
+        self.bc.matcher_compare_doc.restype = c_uint
+
+
+
+
+
+
+
+
         self.matchers = {} #keys = string, value = c-pointers
         self.docs = {} #keys = string, value = c-pointers
 
