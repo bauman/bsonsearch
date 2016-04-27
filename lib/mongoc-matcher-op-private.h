@@ -109,11 +109,13 @@ struct _mongoc_matcher_op_compare_t
 };
 
 #ifdef WITH_PROJECTION
+
 typedef struct _mongoc_matcher_op_projection_t mongoc_matcher_op_projection_t;
 struct _mongoc_matcher_op_projection_t
 {
     mongoc_matcher_op_base_t base;
     char *path;
+    mongoc_matcher_op_str_hashtable_t *pathlist;
     char* as;
     mongoc_matcher_op_t *next;
 };

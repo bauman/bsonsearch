@@ -15,7 +15,7 @@
  */
 
 
-
+#include <stddef.h>
 #include "mongoc-matcher-op-private.h"
 #include <pcre.h>
 #include <bson.h>
@@ -520,6 +520,16 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free(op->projection.as);
       if (op->projection.next)
          _mongoc_matcher_op_destroy(op->projection.next);
+      mongoc_matcher_op_str_hashtable_t *s, *tmp;
+      if (op->projection.pathlist != NULL)
+      {
+         HASH_ITER(hh, op->projection.pathlist, s, tmp)
+         {
+            HASH_DEL(op->projection.pathlist, s);
+            bson_free(s->matcher_hash_key);
+            free(s);
+         }
+      }
       break;
    }
 #endif //WITH_PROJECTION

@@ -29,7 +29,9 @@
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error) ;  /* OUT */
-
+mongoc_matcher_op_str_hashtable_t *
+_mongoc_matcher_parse_projection_complex (bson_iter_t             *iter,    /* IN */
+                                          bson_error_t            *error);   /* OUT */
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
                                   bson_iter_t             *iter,    /* IN */

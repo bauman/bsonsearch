@@ -1,11 +1,11 @@
 Name: libbsoncompare		
 Version: 1.3.3
-Release: 24%{?dist}.db
+Release: 25%{?dist}.db
 Summary: compares bson docs	
 
-Group:	bauman	
+Group:	 bauman
 License: MIT	
-URL:	TBD	
+URL:	 https://github.com/bauman/bsonsearch
 Source0: bsoncompare.c
 Source1: mongoc-matcher.c
 Source2: mongoc-matcher-op.c
@@ -30,6 +30,7 @@ Requires: libbson == %{version}, pcre, yara
 
 %description
 Provides a shared object which can be used to perform mongo-like queries against BSON data.
+See website for examples.
 
 %package devel
 Summary: Development files for libbsoncompare
