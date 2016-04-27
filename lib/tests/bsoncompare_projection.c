@@ -58,10 +58,11 @@ main (int   argc,
 {
 
     //test foundin command with deep doc
-    BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
-                             "{\"$project\":{\"zzz\":{\"foundin\":[\"a.aa\", \"c\", \"b\"]}}}",
-                             "{ \"zzz\" : [ \"ii\", 33, \"33\", 44, \"b\" ] }"));
-
+    do {
+        BSON_ASSERT(test_api("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
+                                 "{\"$project\":{\"zzz\":{\"foundin\":[\"a.aa\", \"c\", \"b\"]}}}",
+                                 "{ \"zzz\" : [ \"ii\", 33, \"33\", 44, \"b\" ] }"));
+    }while(false);
 
     //test foundin command with deep doc
     BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",

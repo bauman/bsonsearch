@@ -301,8 +301,7 @@ mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, 
         {
             uint32_t vlen=-1;
             const char * value = bson_iter_utf8(iter, &vlen);
-            char * d_value = bson_strdup(value);
-            bson_append_utf8(arrlist, key, st, d_value, vlen);
+            bson_append_utf8(arrlist, key, st, value, vlen);
             objects_added += 1;
             break;
         }
