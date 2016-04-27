@@ -318,6 +318,31 @@ You may use a type(basestring) as the value of the $project key (a_aa will be th
 
 ```
 
+sometimes you're interested in information that is inside multiple keys, but for the sake of presentation to a user, would like to condense multiple keys/namespaces down into one for clarity
+
+enter, the project-field-foundin-multiple_namespaces
+
+notice, the key "contact_info" is used in the out (contrast with previous command where the value became the output key if present)
+
+``` python
+    from bsonsearch import bsoncompare
+    bc = bsoncompare()
+    player = {"real_name":"Dick Cheney",
+              "email":"theRealDeal@example.com",
+              "alias":"RightInTheKisser",
+              "skype":"powpowpow",
+              "twitter":"@bestofthebestofthebest",
+              "dob":datetime(year=1941, month=1, day=30)}
+    doc_id = bc.generate_doc(player)
+    aliases = {"$project":{"contact_info":{"foundin":["email",
+                                                      "skype",
+                                                      "twitter"]}}}
+    alias_matcher = bc.generate_matcher(aliases)
+    bc.project_bson(alias_matcher, doc_id)
+    >>>{u'contact_info': [u'theRealDeal@example.com', u'powpowpow', u'@bestofthebestofthebest']}
+```
+
+
 $near example
 ==================
 Makes a flat grid distance calculation.
