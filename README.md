@@ -334,7 +334,7 @@ notice, the key "contact_info" is used in the out (contrast with previous comman
               "twitter":"@bestofthebestofthebest",
               "dob":datetime(year=1941, month=1, day=30)}
     doc_id = bc.generate_doc(player)
-    aliases = {"$project":{"contact_info":{"foundin":["email",
+    aliases = {"$project":{"contact_info":{"$foundin":["email",
                                                       "skype",
                                                       "twitter"]}}}
     alias_matcher = bc.generate_matcher(aliases)
