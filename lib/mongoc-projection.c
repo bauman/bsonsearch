@@ -138,8 +138,8 @@ _mongoc_matcher_parse_projection_complex (bson_iter_t             *iter,    /* I
         {
             key = bson_iter_key (&child);
             bson_iter_t found_list;
-            if (strcmp (key, "foundin") == 0 &&
-                    BSON_ITER_HOLDS_ARRAY(&child)&&
+            if (BSON_ITER_HOLDS_ARRAY(&child)&&
+                    strcmp (key, "$foundin") == 0 &&
                     bson_iter_recurse(&child, &found_list))
             {
                 while (bson_iter_next(&found_list)){
