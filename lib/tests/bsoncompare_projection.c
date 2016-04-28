@@ -60,32 +60,32 @@ main (int   argc,
     //test foundin command with deep doc
     do {
         BSON_ASSERT(test_api("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
-                                 "{\"$project\":{\"zzz\":{\"foundin\":[\"a.aa\", \"c\", \"b\"]}}}",
+                                 "{\"$project\":{\"zzz\":{\"$foundin\":[\"a.aa\", \"c\", \"b\"]}}}",
                                  "{ \"zzz\" : [ \"ii\", 33, \"33\", 44, \"b\" ] }"));
     }while(false);
 
     //test foundin command with deep doc
     BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
-                             "{\"$project\":{\"zzz\":{\"foundin\":[\"c\",\"a.aa\"]}}}",
+                             "{\"$project\":{\"zzz\":{\"$foundin\":[\"c\",\"a.aa\"]}}}",
                              "{ \"zzz\" : [ \"33\", 44, \"ii\", 33 ] }"));
 
 
 
     //test foundin command
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", 33]}, \"b\":\"b\", \"c\":[\"33\",44]}",
-                             "{\"$project\":{\"zzz\":{\"foundin\":[\"c\",\"a.aa\"]}}}",
+                             "{\"$project\":{\"zzz\":{\"$foundin\":[\"c\",\"a.aa\"]}}}",
                              "{ \"zzz\" : [ \"33\", 44, \"ii\", 33 ] }"));
 
 
     //test foundin command
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", 33]}, \"b\":\"b\", \"c\":[\"b\",44]}",
-                             "{\"$project\":{\"zz\":{\"foundin\":[\"c\",\"a.aa\"]}}}",
+                             "{\"$project\":{\"zz\":{\"$foundin\":[\"c\",\"a.aa\"]}}}",
                              "{ \"zz\" : [ \"b\", 44, \"ii\", 33 ] }"));
 
 
     //test document
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", 33]}, \"b\":\"b\", \"c\":[\"b\",44]}",
-                             "{\"$project\":{\"zz\":{\"foundin\":[\"b\",\"c\"]}}}",
+                             "{\"$project\":{\"zz\":{\"$foundin\":[\"b\",\"c\"]}}}",
                              "{ \"zz\" : [ \"b\", \"b\", 44 ] }"));
 
     //test direct descent
