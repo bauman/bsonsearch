@@ -38,6 +38,18 @@
  * Returns:
  *       true if the descendant was found and @descendant was initialized.
  *
+ * Notes:
+ *       this function needs to be wrapped by the caller.
+ *
+ *       you should ONLY call this function if the dotkey conains a dot(.)
+ *
+ *       you should first call bson_iter_find_descendant (from libbson)
+ *              this MAY be skipped, but you risk crippling legitimate
+ *              case of "a.0.b" for {a:[{b:x}]
+ *
+ *       only then should you attempt to call this function.
+ *             case of "a.b" for {a:[{b:x}]
+ *
  * Side effects:
  *       @descendant may be initialized.
  *
@@ -103,6 +115,9 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
 /*
  * The code below this message is subject to the following copyright notice
  * License (ASL)
+ *
+ * This function is copied in it's entirety as a static function from
+ *      libbson as it is needed here.
  *
  * https://github.com/mongodb/libbson/blob/50342ca0810910629709e7d86fefe5a7d5f7394a/src/bson/bson-iter.c
  *

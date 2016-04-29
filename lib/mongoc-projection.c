@@ -45,9 +45,14 @@
  *       Differences, this does not support the 0 value to omit a single field.
  *       If the key is present, it will do it's best to include it in the output
  *
+ *       bson_iter_t should be pointing AT the $project key.
+ *       The only valid value for $project is a DOCUMENT type.
+ *       Any other value type will segfault here.
  *
- * Requires:
- *       iter MUST Be a document type, otherwise, outcome undefined.
+ *       { "$project" : {<key>:<value> }}
+ *             ^
+ *       ------^
+ *
  *
  * Returns:
  *       A newly allocated mongoc_matcher_op_t if successful; otherwise
@@ -75,6 +80,35 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
     return op;
 }
 
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_parse_projection_loop --
+ *
+ *       parses the geojson spec containing geoJSON
+ *
+ *       bson_iter_t should be pointing inside (recursed into) the document
+ *                  but not yet pointed to the first key
+ *
+ *       example bson_iter_t pointer:
+ *          {$project :  {   <key>:<value>  }}
+ *                         ^
+ *          ---------------^
+ * Returns:
+ *       allocates, populates and returns mongoc_matcher_op_t
+ *       may update bson_error_t error
+ *
+ * Notes:
+ *      return object is acted upon depending on value's type:
+ *      type(value) = bool/int/string. Simple 1->1 projection
+ *      type(value) = document.  Complex Many->1 projection
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error)   /* OUT */
@@ -126,6 +160,44 @@ _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN *
     return on_the_left;
 
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_parse_projection_loop --
+ *
+ *       parses the geojson spec containing geoJSON
+ *
+ *       bson_iter_t should be pointing outside the document
+ *
+ *       the document must have a "$foundin" key at minimum
+ *
+ *       the value type of the foundin command must be
+ *              a list containing unlimited strings.
+ *              (duplicate strings will be ignored)
+ *
+ *       example bson_iter_t pointer:
+ *          {$project :  {   <key>:   { $foundin : [...], $othercmd:<v>}}}
+ *                                  ^
+ *          ------------------------^
+ * Returns:
+ *       mongoc_matcher_op_str_hashtable_t
+ *              (found in mongoc-matcher-op-private.h)
+ *
+ *       hashtable containing the namespaces
+ *
+ *       MAY BE NULL!!
+ *
+ * Notes:
+ *      Recursive Function
+ *
+ *      foundin command is NOT a mongodb function.
+ *      the idea is to project multiple fields into one key.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 mongoc_matcher_op_str_hashtable_t *
 _mongoc_matcher_parse_projection_complex (bson_iter_t             *iter,    /* IN */
                                           bson_error_t            *error)   /* OUT */
@@ -159,14 +231,44 @@ _mongoc_matcher_parse_projection_complex (bson_iter_t             *iter,    /* I
     }
     return found_in_set;
 }
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * mongoc_matcher_projection_execute_find --
+ *
+ *      (static for now: don't want api users calling this directly)
+ *      performs the magic to fly around the bson_iter and pulls out a
+ *      unique list of values.
+ *
+ *      There are currently too many stupid counter variables and
+ *      it'll be too easy to mess up this function.
+ *
+ * Requires:
+ *     magic - just don't call this function anywhere but mongoc_matcher_projection_execute
+ *
+ * Returns:
+ *      bool: true if able to perform the projection
+ *              false otherwise.
+ *
+ *              either way, projected will need freed
+ *
+ * Notes:
+ *      magic
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 static
 bool
-mongoc_matcher_projection_execute_find(mongoc_matcher_op_t *current,
-                                       bson_t              *bson,
-                                       bson_t              *arrlist,
-                                       int                  *checked,
-                                       int                  *skip,
-                                       uint32_t             *packed)
+mongoc_matcher_projection_execute_find(mongoc_matcher_op_t *current, /*in*/
+                                       bson_t              *bson,    /*in*/
+                                       bson_t              *arrlist, /*out*/
+                                       int                  *checked,/*in/out*/
+                                       int                  *skip,   /*in/out*/
+                                       uint32_t             *packed) /*in/out*/
 {
     bson_iter_t iter, tmp;
     if (strchr (current->projection.path, '.')) {
@@ -193,10 +295,40 @@ mongoc_matcher_projection_execute_find(mongoc_matcher_op_t *current,
 }
 
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * mongoc_matcher_projection_execute --
+ *
+ *      this function loops through the projections generated op
+ *
+ *      for each requested projection, it finds the value (if exists)
+ *          at the requested namespace, and appends the value to *projected
+ *
+ * Requires:
+ *     *projeted must already be initialized
+ *     upstream must call bson_new() and bson_init()
+ *
+ *     upstream is required to free the *projected allocations
+ *
+ * Returns:
+ *      bool: true if able to perform the projection
+ *              false otherwise.
+ *
+ *              either way, projected will need freed
+ *
+ * Notes:
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+
 bool
-mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
-                                  bson_t              *bson,        //in
-                                  bson_t              *projected)
+mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,        /*in */
+                                  bson_t              *bson,      /*in */
+                                  bson_t              *projected) /*in/out */
 {
     assert(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION);
     bson_t arrlist;
@@ -243,6 +375,15 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
  *
  *       appends the appropriate type given by iterator type to a bson_t
  *
+ *
+ *       bson_iter_t should be pointing to a value
+ *              (therefore iter doesn't know the key anymore)
+ *
+ *       example bson_iter_t pointer:
+ *          {...,  key : value, ... }
+ *                         ^
+ *          ---------------^
+ *
  * Requires:
  *          arrlist should be an array
  *          calling function is responsible for
@@ -252,6 +393,10 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,     //in
  *
  * Returns:
  *       unsigned integer number of objects added to bson_t array
+ *
+ * Notes:
+ *      May be recusive if type(value) is list/array
+ *
  *
  * Side effects:
  *       None.

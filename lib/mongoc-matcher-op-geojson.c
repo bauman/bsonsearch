@@ -63,6 +63,23 @@ _mongoc_matcher_op_geonear_new     ( const char              *path,   /* IN */
     return op;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geonear --
+ *
+ *      called by the mongoc-matcher to determine if 2 points are within
+ *      maxDistance of eachother
+ *
+ * Returns:
+ *      bool: true if the points are within maxDistance ofeachother
+ *            false otherwise
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
                             const bson_t                *bson) /* IN */
@@ -89,9 +106,36 @@ _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
     return retval;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geonear_iter_values --
+ *
+ *       parses the geojson spec containing geoJSON
+ *
+ *       bson_iter_t should be pointing inside (recursed into) the document
+ *                  but not yet pointed to the first key
+ *
+ *       example bson_iter_t pointer:
+ *          {key: {  $geometry: {"coordinates": [...],"$maxDistance": number  }}
+ *                 ^
+ *          -------^
+ * Returns:
+ *       *op is updated with coordnates and min/max distances
+ *       bool if op's coordinates & distances are to be trusted
+ *
+ * Notes:
+ *      GeoJSON query container information can be found
+ *      https://docs.mongodb.org/manual/reference/command/geoNear/
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_iter,  /* IN */
-                                              mongoc_matcher_op_t   *op)  /*OUT*/
+                                              mongoc_matcher_op_t   *op)  /*IN/OUT*/
 {
     while (bson_iter_next (&near_iter)) {
         const char * key = bson_iter_key (&near_iter);
@@ -108,9 +152,34 @@ _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_iter,  /
     }
     return true;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geonear_parse_geometry --
+ *
+ *       parses the geojson coordinates.
+ *
+ *
+ *
+ *       bson_iter_t should be pointing just before the outside list
+ *          prior to this call.
+ *
+ *       example bson_iter_t pointer:
+ *          {$geometry: {...,"coordinates": [[x1,y1],[x2,y2],...,[xN, yN]]}}
+ *                     ^
+ *          -----------^
+ * Returns:
+ *          *op is updated with coordnates
+ *          bool if op's coordinates are to be trusted
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,  /* IN */
-                                                mongoc_matcher_op_t   *op)  /*OUT*/
+                                                mongoc_matcher_op_t   *op)  /*IN/OUT*/
 {
     bson_iter_t geometry_iter;
     if (!bson_iter_recurse (&near_iter, &geometry_iter)) {
@@ -137,7 +206,31 @@ _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,
     }
     return true;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * haversine_distance --
+ *
+ *       Compute the distance using the haversine formula given the
+ *       latritude and longitude (IN RADIANS!!!)
 
+ *
+ * Returns:
+ *       resultant distance placed in double *distance
+ *       bool (true if could be computed and *distance should be trusted
+ *              false if the distance could not be computed)
+ *
+ * Notes:
+ *      This function is currently applicable ONLY to the EARTH sphere
+ *      MONGOC_EARTH_RADIUS_M is defined in mongoc-matcher-op-geojson
+ *      This variable cannot be overridden at runtime to work on other
+ *      spherical bodies
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 //https://en.wikipedia.org/wiki/Haversine_formula
 // 0.5*(1-cos(2*x)) = sin^2(x) <-trig identity to replace sin^2 from formula
 bool
@@ -164,7 +257,7 @@ haversine_distance(double lon1,      /* IN  (radians)*/
  *
  * _mongoc_matcher_op_geowithin_new --
  *
- *       Create a new op for checking {$near: [x,y], $maxDistance: n}.
+ *       Create a new op for checking {$near: <GeoJSON>, $maxDistance: n}.
  *
  * Returns:
  *       A newly allocated mongoc_matcher_op_t that should be freed with
@@ -208,7 +301,37 @@ _mongoc_matcher_op_geowithin_new     ( const char              *path,   /* IN */
     }
     return NULL;
 }
-
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geowithin_polygon_iter_values --
+ *
+ *       iterates through the list of points that would make a polygon
+ *       bson_iter_t should be pointint to a list of unlimited lists
+ *          each inside list should contain exactly 2 numbers
+ *
+ *
+ *       bson_iter_t should be pointing just before the outside list
+ *          prior to this call.
+ *
+ *       example bson_iter_t pointer:
+ *          {...,"coordinates": [[x1,y1],[x2,y2],...,[xN, yN]]}
+ *                             ^
+ *          -------------------^
+ *
+ * Returns:
+ *       mongoc_matcher_op_t which has the box values populated in op->near
+ *       bool:  true (op is correctly populated)
+ *              false (the numbers in op should not be trusted)
+ *
+ * Notes:
+ *      see http://geojson.org/geojson-spec.html#examples forr example
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 //iterate through the list of lists
 bool
 _mongoc_matcher_op_geowithin_polygon_iter_values     ( bson_iter_t           within_iter,  /* IN */
@@ -232,7 +355,35 @@ _mongoc_matcher_op_geowithin_polygon_iter_values     ( bson_iter_t           wit
     }
     return true;
 }
-
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geowithin_polygon_iter_point --
+ *
+ *       extracts the coordinate values and implicity casts to double
+ *
+ *       bson_iter_t should be pointing just before the list item prior
+ *       to this call.
+ *
+ *       example bson_iter_t pointer:
+ *          "coordinates": [102.0, 0.5]}
+ *                        ^
+ *          --------------^
+ *
+ * Returns:
+ *       mongoc_matcher_op_t which has the box values populated in op->near
+ *       bool:  true (op is correctly populated)
+ *              false (the numbers in op should not be trusted)
+ *
+ * Notes:
+ *      calls _mongoc_matcher_op_near_cast_number_to_double from
+ *              mongoc-matcher-op.c for cast to double
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geowithin_polygon_iter_point    ( bson_iter_t           within_iter,  /* IN */
                                                      mongoc_matcher_op_t   *op)  /*OUT*/
@@ -248,6 +399,34 @@ _mongoc_matcher_op_geowithin_polygon_iter_point    ( bson_iter_t           withi
     }
     return false;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geowithin_box_iter_values --
+ *
+ *       function extracts the lower left coordinate
+ *       and the upper right coordinate
+ *       from bson_iter_t which should contain a list of exactly 2 lists
+ *                        each should contain exactly 2 values.
+ *
+ *                        example: [[x,y],[x,y]]
+ *
+ *       implicitly casts these numbers into a (double) type and stores them
+ *       in the mongoc_matcher_op_t output
+ *
+ * Returns:
+ *       mongoc_matcher_op_t which has the box values populated in op->near
+ *       bool:  true (op is correctly populated)
+ *              false (the numbers in op should not be trusted)
+ *
+ * Notes:
+ *      calls _mongoc_matcher_op_near_cast_number_to_double from
+ *              mongoc-matcher-op.c for cast to double
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geowithin_box_iter_values     ( bson_iter_t           within_iter,  /* IN */
                                                    mongoc_matcher_op_t   *op)  /*OUT*/
@@ -273,6 +452,35 @@ _mongoc_matcher_op_geowithin_box_iter_values     ( bson_iter_t           within_
     }
     return false;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geowithin --
+ *
+ *       Compares the defined spec which is a polygon with exactly sides
+ *       and is defined by the $box key containing the coordinates
+ *       of the bottom left and upper right corners of the box
+ *
+ * Returns:
+ *       A newly allocated mongoc_matcher_op_t that should be freed with
+ *       _mongoc_matcher_op_destroy().
+ *
+ * Notes:
+ *       This function is faster compared to the polygon spec
+ *       because it does not need to call a recursive function based
+ *       on the number of sides to the polygon for every document.
+ *
+ *       However,the $box query is not supported by GeoJSON spec and is
+ *       MongoDB specific command.
+ *
+ *       More info found here:
+ *       https://docs.mongodb.org/manual/reference/operator/query/box/
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
                               const bson_t                *bson) /* IN */
@@ -311,6 +519,31 @@ _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
     return return_val;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_geowithinpoly --
+ *
+ *       Compares the defined spec which is a polygon with unlimited sides
+ *           limited by systems max recursion depth (generally stack size)
+ *           to the bson document.
+ *
+ *       This function must only be called if mongoc_matcher_op is a
+ *           geojson compare type in op.base.type
+ *
+ * Returns:
+ *       bool: true if the bson document matches the spec,
+ *             false otherwise
+ *
+ * Notes:  False can mean the point is NOT within the spec,
+ *                        the bson document did not contain a point
+ *                        the bson doc was invalid.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
                                   const bson_t           *bson) /* IN */
@@ -343,6 +576,27 @@ _mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
  * The below section of code is in great need of optimization
  * ---------------------------------------------------------------
  */
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * get_near_poly --
+ *
+ *       pulls the requested point out of the mongoc_matcher_op_t tree
+ *
+ * Returns:
+ *       double * output places the value found to this pointer's value
+ *       bool (true if the requested point is found and output is populated
+ *             false otherwise)
+ *
+ * Notes:
+ *      Recursive Function
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 static bool
 get_near_poly(mongoc_matcher_op_t *op,      //in
               int depth,                    //in
@@ -374,6 +628,21 @@ get_near_poly(mongoc_matcher_op_t *op,      //in
                 return false;
     }
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * point_in_poly --
+ *
+ *       Determine whether or not a point is within a given bounding box
+ *
+ * Returns:
+ *       bool: True if point within box, false if point not within box.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 /*
  * The code below this message is subject to the following copyright notice
  * License (BSD)
