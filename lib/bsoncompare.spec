@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.3
-Release: 27%{?dist}.db
+Release: 28%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -22,6 +22,7 @@ Source12: mongoc-matcher-op-yara.c
 Source13: mongoc-matcher-op-yara.h
 Source14: mongoc-projection.c
 Source15: mongoc-projection.h
+Source16: BSONSEARCH_LICENSING.txt
 
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -57,6 +58,8 @@ cp -fp %{SOURCE12} ./
 cp -fp %{SOURCE13} ./
 cp -fp %{SOURCE14} ./
 cp -fp %{SOURCE15} ./
+cp -fp %{SOURCE16} ./
+
 #%setup -q
 
 %build
@@ -79,6 +82,10 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-bson-descendants.h $RPM_BUILD_ROOT/%{_in
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-yara.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-yara.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-projection.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-projection.h
 
+
+mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
+install -m 644 -p $RPM_BUILD_DIR/BSONSEARCH_LICENSING.txt $RPM_BUILD_ROOT/%{_docdir}/%{name}/LICENSING.txt
+
 %clean
 rm -rf %{buildroot}
 
@@ -87,7 +94,7 @@ rm -rf %{buildroot}
 %defattr(-,root,root,-)
 %{_usr}/%{_lib}/libbsoncompare.so
 %doc
-
+%{_docdir}/%{name}/LICENSING.txt
 %files devel
 %{_includedir}/*.h
 
