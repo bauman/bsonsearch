@@ -9,6 +9,8 @@ Code contributed by MongoDB, Inc is licesned Apache 2
 
 Code contributed by bauman is licensed MIT
 
+Code developed by Wm. Randolph Franklin is licensed BSD Simplified
+
 
 Acknowledgement
 ===============
