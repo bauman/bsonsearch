@@ -17,7 +17,7 @@
 from distutils.core import setup, Extension
 
 
-module1 = Extension('bsonhelper',
+module1 = Extension('bsonhelper', #TODO: Figure out how to deploy this lib inside bsonsearch package
                     sources = ['bsonsearch/bsonhelpermodule.c'],
                     libraries=['bson-1.0'],
                     include_dirs=["/usr/include/libbson-1.0/"])

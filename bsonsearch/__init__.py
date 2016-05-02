@@ -178,6 +178,12 @@ class bsoncompare(object):
 
 
     def project_bson(self, matcher_id, doc_id):
+        '''
+
+        :param matcher_id: <basestring> id for the matcher pointer
+        :param doc_id:
+        :return: <basestring> bson representation of the requested projection
+        '''
         matcher  = self.matchers[matcher_id] #pointer
         document = self.docs[doc_id] #pointer
         projection_pointer = self.bc.bsonsearch_project_bson(matcher, document) #void_p
@@ -194,9 +200,6 @@ class bsoncompare(object):
         '''
         This function is used to project JSON fields into a CSV style object.
 
-        It's generally built to be used by a webservice API.
-
-        decoder defaults to false (uncallable) will pass the raw json string back to caller.
         :param matcher_id:
         :param doc_id:
         :return: <basestring> json representation of the requested projection
@@ -210,6 +213,14 @@ class bsoncompare(object):
         return projection_value
 
     def explode_namespace(self, prefix_len, namespace, doc_id):
+        '''
+        DEPRECATED!!  Start throwing warning soon.
+
+        :param prefix_len:
+        :param namespace:
+        :param doc_id:
+        :return:
+        '''
         try:
             document = self.docs[doc_id]
         except KeyError:
@@ -270,6 +281,14 @@ class bsoncompare(object):
 
 #list_of_tuples = unroll("", [], highly_embedded_dict)
 def unroll(current_key, output_map, entry, keys_to_append=None):
+    '''
+
+    :param current_key:
+    :param output_map:
+    :param entry:
+    :param keys_to_append:
+    :return:
+    '''
     def unroll_dict(current_key, output_map, entry, keys_to_append=None):
         for key, value in entry.items():
             unroll(".".join([current_key, key]).lstrip("."),
