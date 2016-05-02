@@ -1,4 +1,5 @@
 #include <bsoncompare.h>
+#include <bson.h>
 
 bool
 project_json(const char *json,
@@ -29,7 +30,7 @@ project_json(const char *json,
 }
 
 bool
-test_api(const char *json,
+test_json_api(const char *json,
          const char *jsonspec,
          const char *expected)
 {
@@ -44,7 +45,34 @@ test_api(const char *json,
 
     mongoc_matcher_t * matcher = generate_matcher(spec_bson, spec->len);
     char * out = NULL;
-    out = bsonsearch_project_bson(matcher, doc);
+    out = bsonsearch_project_json(matcher, doc);
+    same = (0 == strcmp(out, expected));
+    matcher_destroy(matcher);
+    bson_destroy(doc);
+    bson_destroy(spec);
+    bsonsearch_free_project_str(out);
+    return same;
+}
+bool
+test_bson_api(const char *json,
+              const char *jsonspec,
+              const char *expected)
+{
+    bool same = false;
+    bson_error_t error;
+    bson_error_t error2;
+    bson_t      *spec;
+    bson_t      *doc;
+    doc = bson_new_from_json (json, -1, &error);
+    spec = bson_new_from_json (jsonspec, -1, &error2);
+    const uint8_t *spec_bson = bson_get_data(spec);
+
+    mongoc_matcher_t * matcher = generate_matcher(spec_bson, spec->len);
+    bson_t * bson_out = NULL;
+    bson_out = bsonsearch_project_bson(matcher, doc);
+
+    size_t json_len;
+    char * out = bson_as_json(bson_out, &json_len);
     same = (0 == strcmp(out, expected));
     matcher_destroy(matcher);
     bson_destroy(doc);
@@ -59,10 +87,18 @@ main (int   argc,
 
     //test foundin command with deep doc
     do {
-        BSON_ASSERT(test_api("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
+        BSON_ASSERT(test_bson_api("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
+                                  "{\"$project\":{\"zzz\":{\"$foundin\":[\"a.aa\", \"c\", \"b\"]}}}",
+                                  "{ \"zzz\" : [ \"ii\", 33, \"33\", 44, \"b\" ] }"));
+    }while(false);
+
+    //test foundin command with deep doc
+    do {
+        BSON_ASSERT(test_json_api("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
                                  "{\"$project\":{\"zzz\":{\"$foundin\":[\"a.aa\", \"c\", \"b\"]}}}",
                                  "{ \"zzz\" : [ \"ii\", 33, \"33\", 44, \"b\" ] }"));
     }while(false);
+
 
     //test foundin command with deep doc
     BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"ii\", 33]}], \"b\":\"b\", \"c\":[\"33\",44]}",
@@ -91,7 +127,7 @@ main (int   argc,
     //test direct descent
     do
     {
-        BSON_ASSERT(test_api("{\"a\":{\"aa\":[2, 33]}, \"b\":\"b\"}",
+        BSON_ASSERT(test_json_api("{\"a\":{\"aa\":[2, 33]}, \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
                              "{ \"a.aa\" : [ 2, 33 ], \"c\" : [  ] }"));
     }while(false); //true to leak test

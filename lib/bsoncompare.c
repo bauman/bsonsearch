@@ -37,7 +37,7 @@ project_bson(mongoc_matcher_t *matcher,     //in
 #ifdef WITH_UTILS
 #ifdef WITH_PROJECTION //&& UTILS
 char *
-bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
+bsonsearch_project_json(mongoc_matcher_t *matcher,     //in
                         bson_t           *bson)        //in
 {
     bson_t * projected = bson_new();
@@ -48,6 +48,16 @@ bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
     bson_free(projected);
     return str;
 }
+
+bson_t *
+bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
+                        bson_t           *bson)        //in
+{
+    bson_t * projected = bson_new();
+    mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+    return projected;
+}
+
 int
 bsonsearch_free_project_str(void * ptr)
 {
@@ -55,16 +65,6 @@ bsonsearch_free_project_str(void * ptr)
     return 0;
 }
 
-char *
-bsonsearch_bson_get_data(bson_t *input)
-{
-    char * result_bson;
-    const uint8_t * got_data;
-    bson_init(input);
-    got_data = bson_get_data(input);
-    result_bson = bson_strdup((char*)got_data);
-    return result_bson;
-}
 
 #endif //WITH_PROJECTION
 
