@@ -1,8 +1,8 @@
 %define name python-bsonsearch
-%define version 1.3.0
-%define unmangled_version 1.3.0
-%define unmangled_version 1.3.0
-%define release 1
+%define version 1.3.3
+%define unmangled_version 1.3.3
+%define unmangled_version 1.3.3
+%define release 35
 
 Summary: Ctypes wrapper to libbsoncompare
 Name: %{name}
@@ -13,7 +13,7 @@ License: MIT
 Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
-BuildArch: noarch
+BuildArch: x86_64
 Requires: libbsoncompare == %{version}
 Vendor: Dan Bauman
 
@@ -27,7 +27,7 @@ Library wrapping libbsoncompare.  Also includes feature to convert a given spec 
 python setup.py build
 
 %install
-python setup.py install --single-version-externally-managed -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
+python setup.py install -O1 --root=$RPM_BUILD_ROOT --record=INSTALLED_FILES
 
 %clean
 rm -rf $RPM_BUILD_ROOT

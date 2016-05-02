@@ -1,7 +1,4 @@
 #!/usr/bin/python
-from setuptools import setup, find_packages
-
-
 
 #building requires update to mongo-c-driver/libbson.  Probably have to remove/build/update on build machine
 
@@ -16,8 +13,19 @@ from setuptools import setup, find_packages
 #   3. python setup.py bdist_rpm
 #   4. ln -s the tarball over to build area
 #   5. rpmbuild -ba --sign python-bsonsearch.spec to add the appropriate requires to the rpm
-setup(
-    name = "python-bsonsearch",
-    version = "1.3.0",
-    maintainer = "Dan Bauman",
-    packages=find_packages())
+
+from distutils.core import setup, Extension
+
+
+module1 = Extension('bsonhelper',
+                    sources = ['bsonsearch/bsonhelpermodule.c'],
+                    libraries=['bson-1.0'],
+                    include_dirs=["/usr/include/libbson-1.0/"])
+
+setup (name = 'python-bsonsearch',
+        version = '1.3.3',
+        description = 'compare bson documents',
+        maintainer = "Dan Bauman",
+        packages=["bsonsearch"],
+        ext_modules = [module1]
+       )
