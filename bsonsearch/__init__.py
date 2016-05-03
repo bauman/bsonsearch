@@ -83,17 +83,25 @@ class bsoncompare(object):
         self.docs = {} #keys = string, value = c-pointers
 
     def __enter__(self):
+        return self.startup()
+
+    def __exit__(self, exc_type, exc_value, traceback):
+        response = self.shutdown()
+        assert(response == 0)
+        return
+
+    def startup(self):
         response = self.bc.bsonsearch_startup()
         assert(response == 0)
         return self
 
-    def __exit__(self, exc_type, exc_value, traceback):
+
+    def shutdown(self):
         self.destroy_regexes()
         self.destroy_matcher(self.matchers)
         self.destroy_doc(self.docs)
         response = self.bc.bsonsearch_shutdown()
-        assert(response == 0)
-        return
+        return response
 
     def destroy_matcher(self, matcher_id):
         if isinstance(matcher_id, list) or isinstance(matcher_id, dict):
