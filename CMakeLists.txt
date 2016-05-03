@@ -39,6 +39,8 @@ bsonsearch_add_test(big-doc lib/tests/bigdoctest.c)
 bsonsearch_add_test(inset lib/tests/bsoncompare_inset.c)
 bsonsearch_add_test(yara-test lib/tests/bsonsearch_yara.c)
 bsonsearch_add_test(projection-test lib/tests/bsoncompare_projection.c)
+bsonsearch_add_test(and-bail-test lib/tests/bsoncompare_and_bailout.c)
+bsonsearch_add_test(json_decode lib/tests/bsoncompare_json_input.c)
 
 
 
