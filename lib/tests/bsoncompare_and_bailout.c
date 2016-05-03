@@ -43,5 +43,23 @@ main (int   argc,
     BSON_ASSERT(!compare_json("{\"a\": [3, 4]}",
                              "{\"$and\": [{\"a\": 4}, {\"a\": 3}, {\"a\": 1}]}"));
 
+    //----------------------------------------------------------------------------------------------
+    /*
+     * first function will pass fast.  a:3 may be most likely to exist
+     * therefore will not perform the a:1 a:4
+     *
+     * Important query optimization for the user to write $or to succeed
+     * as quickly as possible
+     *
+     * See 6.5.14 Item 4:Semantics
+     * "...  If the first operand compares unequal to 0,
+     *       the second operand is not evaluated"
+     *
+     */
+    BSON_ASSERT(compare_json("{\"a\": [3, 4]}",
+                             "{\"$or\": [{\"a\": 3}, {\"a\": 1}, {\"a\": 4}]}"));
+
+    BSON_ASSERT(compare_json("{\"a\": [3, 4]}",
+                             "{\"$or\": [{\"a\": 7}, {\"a\": 1}, {\"a\": 4}]}"));
     return 0;
 }
