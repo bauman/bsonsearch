@@ -142,6 +142,18 @@ generate_matcher(const uint8_t *buf_spec,
   return matcher;
 }
 
+mongoc_matcher_t *
+generate_matcher_from_json(const uint8_t *buf_spec,
+                            uint32_t       len_spec)
+{
+    bson_t *spec;
+    mongoc_matcher_t *matcher;
+    spec = bson_new_from_json(buf_spec, (uint32_t)len_spec, NULL);
+    matcher = mongoc_matcher_new (spec, NULL);
+    bson_free(spec);
+    return matcher;
+}
+
 int
 matcher_destroy (mongoc_matcher_t       *matcher)
 {
@@ -161,7 +173,14 @@ generate_doc(const uint8_t *buf_doc,
   doc = bson_new_from_data(buf_doc, (uint32_t)len_doc);
   return doc;
 }
-
+bson_t *
+generate_doc_from_json(const uint8_t *buf_doc,
+                       uint32_t       len_doc)
+{
+    bson_t *doc;
+    doc = bson_new_from_json (buf_doc, (uint32_t)len_doc, NULL);
+    return doc;
+}
 
 
 int
