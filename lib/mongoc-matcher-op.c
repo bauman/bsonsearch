@@ -651,7 +651,7 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
        BSON_ITER_HOLDS_ARRAY (&desc))
    {
       bson_iter_t right_array;
-      bson_iter_recurse(&iter, &right_array);
+      bson_iter_recurse(&desc, &right_array);
       while (bson_iter_next(&right_array)) {
          right_array_size++;
       }
