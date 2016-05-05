@@ -158,6 +158,7 @@ YARA can be used as a fast pattern matcher to outsource complex logic to a more 
 Note that ANY yara rule that fires causes the compare to come back is true.  Chances are, you want to make heavy use of private rules and have a single public rule that returns on the correct combination of private rules.
 
 The cost of outsourcing the logic is only offset if:
+
     * the source data is very big (meaning mutiple regex passes through source data is cumbersome)
     * the logic is very complex
     * you don't want to move yara rules into bsoncompare logic
