@@ -159,9 +159,9 @@ Note that ANY yara rule that fires causes the compare to come back is true.  Cha
 
 The cost of outsourcing the logic is only offset if:
 
-    * the source data is very big (meaning mutiple regex passes through source data is cumbersome)
-    * the logic is very complex
-    * you don't want to move yara rules into bsoncompare logic
+* the source data is very big (meaning mutiple regex passes through source data is cumbersome)
+* the logic is very complex
+* you don't want to move yara rules into bsoncompare logic
 
 
 
