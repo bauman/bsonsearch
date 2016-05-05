@@ -163,7 +163,7 @@ The cost of outsourcing the logic is only offset if:
 * the logic is very complex
 * you don't want to move yara rules into bsoncompare logic
 
-
+see [comparing yara logic to bsoncompare regex logic](compare_with_yara_vs_regex.ipynb)
 
 libyara-devel is required at compile time and libbsonsearch must be compiled with -lyara and passed -DWITH_YARA macro at compile time to enable.
 
