@@ -71,8 +71,8 @@ class bsoncompare(object):
         self.bc.matcher_compare_doc.argtypes = [c_void_p, c_void_p]
         self.bc.matcher_compare_doc.restype = c_uint
 
-        self.bc.bsonsearch_bson_as_pystring.argtypes = [c_void_p]
-        self.bc.bsonsearch_bson_as_pystring.restype = py_object
+        #self.bc.bsonsearch_bson_as_pystring.argtypes = [c_void_p]
+        #self.bc.bsonsearch_bson_as_pystring.restype = py_object
 
 
 

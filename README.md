@@ -153,6 +153,17 @@ YARA within SPEC
 bsonsearch supports the use of compiled yara signature using libyara.
 
 
+YARA can be used as a fast pattern matcher to outsource complex logic to a more appropriate library.  Compiled yara rule will generate a finite state machine that traverses the source data at most once.  While YARA does not feature match regex, it will be a quicker alternative to a very complex set of bsoncompare specifications.
+
+Note that ANY yara rule that fires causes the compare to come back is true.  Chances are, you want to make heavy use of private rules and have a single public rule that returns on the correct combination of private rules.
+
+The cost of outsourcing the logic is only offset if:
+    * the source data is very big (meaning mutiple regex passes through source data is cumbersome)
+    * the logic is very complex
+    * you don't want to move yara rules into bsoncompare logic
+
+
+
 libyara-devel is required at compile time and libbsonsearch must be compiled with -lyara and passed -DWITH_YARA macro at compile time to enable.
 
 
