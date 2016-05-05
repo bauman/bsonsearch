@@ -641,42 +641,111 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
                                const bson_t             *bson) /* IN */
 {
    bson_iter_t iter;
-   bson_iter_t desc;
-   u_int32_t right_array_size = 0;
+   int32_t right_array_size = 0; //NOT AN ARRAY
    BSON_ASSERT (size);
    BSON_ASSERT (bson);
 
-   if (bson_iter_init (&iter, bson) &&
-       bson_iter_find_descendant (&iter, size->path, &desc) &&
-       BSON_ITER_HOLDS_ARRAY (&desc))
-   {
-      bson_iter_t right_array;
-      bson_iter_recurse(&desc, &right_array);
-      while (bson_iter_next(&right_array)) {
-         right_array_size++;
-      }
-      switch (size->compare_type){
-         case MONGOC_MATCHER_OPCODE_EQ:
-            return (right_array_size == size->size);
-         case MONGOC_MATCHER_OPCODE_GTE:
-            return (right_array_size >= size->size);
-         case MONGOC_MATCHER_OPCODE_GT:
-            return (right_array_size > size->size);
-         case MONGOC_MATCHER_OPCODE_LTE:
-            return (right_array_size <= size->size);
-         case MONGOC_MATCHER_OPCODE_LT:
-            return (right_array_size < size->size);
-         case MONGOC_MATCHER_OPCODE_NOT:
-            return (right_array_size != size->size);
-         default:
-            break;
-      }
+   bson_iter_t tmp;
+   int checked = 0, skip=0;
 
+
+   if (strchr (size->path, '.')) {
+      if (bson_iter_init (&tmp, bson) )
+      {
+         if (bson_iter_find_descendant (&tmp, size->path, &iter))
+         {
+            right_array_size = _mongoc_matcher_op_size_get_iter_len(&iter);
+         } else {
+            while (bson_iter_init (&tmp, bson) &&
+                   bson_iter_find_descendants (&tmp, size->path, &skip, &iter) ){
+               right_array_size += _mongoc_matcher_op_size_get_iter_len(&iter);
+               checked = checked + 1;
+               skip = checked;
+            }
+         }
+      }
+   } else if (bson_iter_init_find (&iter, bson, size->path)) {
+      right_array_size += _mongoc_matcher_op_size_get_iter_len(&iter);
    }
 
+   switch (size->compare_type){
+      case MONGOC_MATCHER_OPCODE_EQ:
+         return (right_array_size == size->size);
+      case MONGOC_MATCHER_OPCODE_GTE:
+         return (right_array_size >= size->size);
+      case MONGOC_MATCHER_OPCODE_GT:
+         return (right_array_size > size->size);
+      case MONGOC_MATCHER_OPCODE_LTE:
+         return (right_array_size <= size->size);
+      case MONGOC_MATCHER_OPCODE_LT:
+         return (right_array_size < size->size);
+      case MONGOC_MATCHER_OPCODE_NOT:
+         return (right_array_size != size->size);
+      default:
+         break;
+   }
    return false;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_size_get_iter_len --
+ *
+ *    This is a helper to the $size command responisble for counting
+ *    "items" in a specified iterator.
+ *
+ *       Checks the "length" of whatever is in the iterator.
+ *       If the iterator is an array      : return n = array length
+ *       If the iterator is NULL          : return 0 (not considered an item)
+ *       If the iterator is anything else : return 1 (single item)
+ *
+ *    Input Iter should be recursed in front of the value item.
+ *       example bson_iter_t pointer 1:
+ *          {<key>: [ <item1>, <item2> ]}
+ *                  ^
+ *         ---------^
+ *
+ *       example bson_iter_t pointer 2:
+ *          {<key>:    <value>}
+ *                    ^
+ *         -----------^
+ * Returns:
+ *       true if the array length matches the input size
+ *       the requested type.
 
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+uint32_t
+_mongoc_matcher_op_size_get_iter_len(bson_iter_t  *iter)
+{
+   uint32_t result = 0;
+   switch (bson_iter_type(iter))
+   {
+      case BSON_TYPE_ARRAY:
+      {
+         bson_iter_t right_array;
+         bson_iter_recurse(iter, &right_array);
+         while (bson_iter_next(&right_array)) {
+            result++;
+         }
+         break;
+      }
+      case BSON_TYPE_NULL:
+      {
+         result = 0;
+         break;
+      }
+      default:
+      {
+         result = 1;
+         break;
+      }
+   }
+   return result;
+}
 
 /*
  *--------------------------------------------------------------------------

@@ -215,6 +215,7 @@ bool _mongoc_matcher_op_array_to_op_t               (const bson_iter_t       *it
 void                 _mongoc_matcher_op_destroy     (mongoc_matcher_op_t     *op);
 void                 _mongoc_matcher_op_to_bson     (mongoc_matcher_op_t     *op,
                                                      bson_t                  *bson);
+uint32_t _mongoc_matcher_op_size_get_iter_len       (bson_iter_t  *iter);
 
 
 BSON_END_DECLS

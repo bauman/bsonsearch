@@ -25,6 +25,17 @@ main (int   argc,
       char *argv[])
 {
 
+    BSON_ASSERT(compare_json("{\"hello\": {\"world\": [{\"a\":[1]},{\"a\":\"two\"},{\"a\":3}, {\"a\":null}]}}",
+                             "{\"hello.world.a\": {\"$size\":3}}"));
+
+
+
+    BSON_ASSERT(compare_json("{\"hello\": {\"world\": [{\"a\":[1]},{\"a\":[2,3]},{\"a\":[4,5,6]}]}}",
+                             "{\"hello.world.a\": {\"$size\":6}}"));
+
+    BSON_ASSERT(compare_json("{\"hello\": {\"world\": [{\"a\":[1]},{\"a\":[2,3]},{\"a\":[4,5,6]}]}}",
+                             "{\"hello.world.a\": {\"$size\":{\"$gte\":6}}}"));
+
     BSON_ASSERT(compare_json("{\"hello\": {\"world\": [{\"a\":1},{\"b\":2},{\"b\":2}]}}",
                              "{\"hello.world\": {\"$not\":{\"$size\":{\"$not\":3}}}}"));
 
@@ -66,7 +77,7 @@ main (int   argc,
                              "{\"hello\": {\"$size\":3}}"));
     BSON_ASSERT(!compare_json("{\"hello\": 1}",
                               "{\"hello\": {\"$size\":3}}"));
-    BSON_ASSERT(!compare_json("{\"hello\": 1}",
+    BSON_ASSERT(compare_json("{\"hello\": 1}",
                               "{\"hello\": {\"$size\":1}}"));
 
     return 0;
