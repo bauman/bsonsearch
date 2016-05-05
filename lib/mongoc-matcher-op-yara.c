@@ -127,33 +127,52 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
             //                                   "filename":<utf8>, compile the sig written to this file
             //                                   "timeout":<int>,
             //                                   "fast_mode":<bool>}}
-            //          loop the keys, hold onto timeout/fastmode locally, pass binary to self recursive
-            //          allow the recursive call to attempt to malloc op.
-            //          if op is malloc'd, put the timeout/fastmode vars into op and pass it along.
+            bson_iter_t yara_config_iter;
+            if (bson_iter_recurse (child, &yara_config_iter)) {
+                while (bson_iter_next (&yara_config_iter)) {
+                    const char * key = bson_iter_key (&yara_config_iter);
+                    switch (bson_iter_type ((&yara_config_iter))) {
+                        case BSON_TYPE_BINARY:
+                        {
+                            if (strcmp(key, "source")==0){
+                                op = _mongoc_matcher_op_yara_new(path, &yara_config_iter);
+                            }
+                            break;
+                        }
+                        case BSON_TYPE_BOOL:
+                        {
+                            if (strcmp(key, "fastmode")==0 ) {
+                                fast_mode = bson_iter_bool(&yara_config_iter);
+                            }
+                            break;
+                        }
+                        case BSON_TYPE_INT32:
+                        {
+                            if (strcmp(key, "timeout")==0 ) {
+                                timeout = bson_iter_int32(&yara_config_iter);
+                            }
+                            break;
+                        }
+                        case BSON_TYPE_UTF8:
+                        {
+                            //this should be eaten by the compiler.
+                            if (strcmp(key, "source")==0 ) {
+                                //call yara.compile on the source string
+                            } else if ( strcmp(key, "filename")==0 ) {
+                                //call yara.compile on the source string file handle
+                            }
+                            break;
+                        }
+                        default:
+                            break;
+                    }
+                }
+            }
             break;
         }
         case BSON_TYPE_BINARY:
         {
-            op = (mongoc_matcher_op_t *)bson_malloc (sizeof *op);
-            op->compare.base.opcode = MONGOC_MATCHER_OPCODE_YARA;
-            op->compare.path = bson_strdup (path);
-            mongoc_matcher_op_binary_flo *bin_flo;
-            bin_flo = (mongoc_matcher_op_binary_flo *)bson_malloc (sizeof *bin_flo);
-            bin_flo->cursor_pos = 0;
-            bson_subtype_t subtype;
-            bson_iter_binary(child, &subtype, &bin_flo->binary_len, &bin_flo->binary);
-
-            YR_STREAM stream;
-            stream.user_data = bin_flo;
-            stream.read = binary_read;
-
-            int error;
-            error = yr_rules_load_stream(&stream, &op->compare.rules);
-            bson_free(bin_flo);
-            if (error > 0 )
-            {
-                return NULL; //Cause a segfault- easy to trace error.  Didn't clean up op malloc
-            }
+            op = _mongoc_matcher_op_yara_new_op_from_bin(path, child);
             break;
         }
         default:
@@ -165,6 +184,34 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
     }
 
     return op; //is NULL if the spec isn't correct.  Will cause segfault later.
+}
+
+mongoc_matcher_op_t *
+_mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,   /* IN */
+                                              bson_iter_t             *child)   /* IN */
+{
+    mongoc_matcher_op_t *op = NULL;
+    op = (mongoc_matcher_op_t *)bson_malloc (sizeof *op);
+    op->compare.base.opcode = MONGOC_MATCHER_OPCODE_YARA;
+    op->compare.path = bson_strdup (path);
+    mongoc_matcher_op_binary_flo *bin_flo;
+    bin_flo = (mongoc_matcher_op_binary_flo *)bson_malloc (sizeof *bin_flo);
+    bin_flo->cursor_pos = 0;
+    bson_subtype_t subtype;
+    bson_iter_binary(child, &subtype, &bin_flo->binary_len, &bin_flo->binary);
+
+    YR_STREAM stream;
+    stream.user_data = bin_flo;
+    stream.read = binary_read;
+
+    int error;
+    error = yr_rules_load_stream(&stream, &op->compare.rules);
+    bson_free(bin_flo);
+    if (error > 0 )
+    {
+        return NULL; //Cause a segfault- easy to trace error.  Didn't clean up op malloc
+    }
+    return op;
 }
 
 size_t

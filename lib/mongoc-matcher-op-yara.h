@@ -11,7 +11,7 @@
 
 BSON_BEGIN_DECLS
 #define MONGOC_MATCHER_YARA_TIMEOUT_DEFAULT 300
-#define MONGOC_MATCHER_YARA_FAST_MODE_DEFAULT false
+#define MONGOC_MATCHER_YARA_FAST_MODE_DEFAULT true
 
 typedef struct _mongoc_matcher_op_binary_flo         mongoc_matcher_op_binary_flo;
 typedef struct _mongoc_matcher_op_yara_callback_data mongoc_matcher_op_yara_callback_data;
@@ -46,7 +46,10 @@ bool
 _mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
                                 mongoc_matcher_op_binary_flo *bin_flo);
 
-size_t
+mongoc_matcher_op_t *
+_mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,
+                                              bson_iter_t             *child);
+        size_t
 binary_read(void* ptr,
             size_t size,
             size_t count,
