@@ -9,7 +9,29 @@
 #include "mongoc-matcher-op-private.h"
 #include "mongoc-matcher-op-yara.h"
 
-
+/*
+ *--------------------------------------------------------------------------
+ *
+ * yara_callback --
+ *
+ *       use this function as a basic yara callback that aborts additional
+ *       scanning after the first rule fires.
+ *
+ *       This is a good function to use if you don't care WHICH rule fires
+ *       as much as you care that any of the rules fired.
+ *
+ * Returns:
+ *       <int> that is wither CONTINUE or ABORT for yara to act upon.
+ *
+ * Notes:
+ *      Additional information about yara C api can be found
+ *      https://yara.readthedocs.io/en/latest/capi.html
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 int yara_callback(
         int message,
         void* message_data,
@@ -40,6 +62,29 @@ int yara_callback(
     return result;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_yara_match --
+ *
+ *       Main function responsible to translate the bsoncompare data
+ *          into a file-like-object (flo) that is yara consumable
+ *       and yara's response
+ *          into a bsoncompare true/false.
+ *
+ *       This function hands the flo off to the helper function to perform
+ *          the compare.
+ * Returns:
+ *       <bool> if ANY rule fires.
+ *
+ * Notes:
+ *      None
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
                                bson_iter_t                 *iter)    /* IN */
@@ -85,6 +130,31 @@ _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
     return result;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_yara_compare --
+ *
+ *       Helper function responsible to manage the internals of the
+ *          call to libyara.
+ *
+ *       This is worth a separate function as it may provide utility
+ *          outside bsoncompare itself.  Developers could import this
+ *          function and generate the bin_flo object rather than
+ *          creating the bson_iter_t to use the yara capi.
+ *
+ *
+ * Returns:
+ *       <bool> if ANY rule fires.
+ *
+ * Notes:
+ *      None
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 bool
 _mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
                                 mongoc_matcher_op_binary_flo *bin_flo)
@@ -112,6 +182,48 @@ _mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
     return result;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_yara_new --
+ *
+ *       This function takes a bson.Binary type object which must contain
+ *          the raw compiled
+ *
+ *       There is no input validation on this function, but if magic string
+ *          on the object passed as binary should be "YARA".
+ *
+ *       value may be "standard form" with the pointer placed as follows:
+ *          { "$yara" : Binary(<compiled data>) }
+ *                     ^
+ *          -----------^
+ *        or a "expanded form" with the pointer places as follows:
+ *          { "$yara" : { "source":Binary(<compiled data>),
+ *                     ^  "timeout":<int32>,  //seconds before yara aborts
+ *                     ^  "fastmode":<bool>} //only look at strings once
+ *                     ^
+ *        -------------^
+ *
+ * Returns:
+ *       NULL if error
+ *       or
+ *       <mongoc_matcher_op_t> which can be used to call either of:
+ *                              _mongoc_matcher_op_yara_match
+ *                              _mongoc_matcher_op_yara_compare
+ *
+ *        (variables are populated in the op->compare section only)
+ *        with the exception of OPCODE_YARA placed in main op.
+ *        caller responsible to check OPCODE_YARA before calling
+ *        the afforementioned functions.
+ *
+ * Notes:
+ *      None
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 mongoc_matcher_op_t *
 _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
                                  bson_iter_t             *child)   /* IN */
@@ -126,7 +238,7 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
             //          user specified {"$yara":{"source":<Binary>/<utf8>, binary=load(), utf8=compile(),
             //                                   "filename":<utf8>, compile the sig written to this file
             //                                   "timeout":<int>,
-            //                                   "fast_mode":<bool>}}
+            //                                   "fastmode":<bool>}}
             bson_iter_t yara_config_iter;
             if (bson_iter_recurse (child, &yara_config_iter)) {
                 while (bson_iter_next (&yara_config_iter)) {
@@ -186,6 +298,34 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
     return op; //is NULL if the spec isn't correct.  Will cause segfault later.
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_yara_new_op_from_bin --
+ *
+ *       responsible for taking a bson_iter_t which MUST be pointing at a
+ *       Binary object.
+ *
+ *       THIS IS THE ONLY FUNCTION THAT SHOULD EVER ALLOCATE A FLO
+ *       TO CALL yr_rules_load_stream
+ *
+ *       yara's capi only loads streams via a file like object.
+ *
+ *       this function is responsible for generating the flo,
+ *       allocating the yara stream, and freeing the file like object.
+ *
+ * Returns:
+ *        mongoc_matcher_op_t
+ *        or NULL
+ *
+ * Notes:
+ *      None
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 mongoc_matcher_op_t *
 _mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,   /* IN */
                                               bson_iter_t             *child)   /* IN */
@@ -214,6 +354,47 @@ _mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,   /
     return op;
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * binary_read --
+ *
+ *       yara capi dedicated function.  This intentionally does NOT have
+ *       bsoncompare types in here.
+ *
+ *       yara issues this callback with a mongoc_matcher_op_binary_flo
+ *          object that was issued by _mongoc_matcher_op_yara_new_op_from_bin
+ *
+ *       Use extreme caution and avoid using this function outside of
+ *          _mongoc_matcher_op_yara_new_op_from_bin
+ *
+ *       This function will segfault if the void user_data pointer
+ *          points to other than a mongoc_matcher_op_binary_flo obj
+ *
+ *       This function attempts to match a standard file.read() function
+ *
+ *       It's correct, and it doesnt leak.  Other than that
+ *          I'm a little shicked it actually worked, so I'm not touching it
+ *          from here on out
+ *
+ *
+ *
+ * Returns:
+ *        <size_t> number of bytes that this function handed back to yara.
+ *
+ *        if return value does not equal input size+count:
+ *              yara will stop reading from the buffer
+ *
+ *
+ * Notes:
+ *        ptr value is terrifying.  I don't understand what is happening to
+ *          it between callbacks.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 size_t
 binary_read(
         void* ptr,
