@@ -62,11 +62,14 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
                             int *skip,
                             bson_iter_t *descendant) /* OUT */
 {
-    bson_iter_t tmp, tmp2;
+    bson_iter_t tmp, tmp2, tmp3;
     const char *dot;
+    bool any_key = (dotkey[0] == '$');
     bool found_descendant_doc = false;
     bool found_descendant_array = false;
     bool set_descendant = false;
+
+    bool result = false;
     size_t sublen;
 
     BSON_ASSERT (iter);
@@ -78,19 +81,48 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
     } else {
         sublen = strlen (dotkey);
     }
-
-    if (_mongoc_bson_iter_find_with_len (iter, dotkey, (int)sublen)) {
+    bool moved_to_key = _mongoc_bson_iter_move_to_key(iter, dotkey, (int)sublen);
+    while (moved_to_key) {
+        moved_to_key = false;
         if (!dot) {
-            set_descendant = true;
+            if (any_key){
+                while (*skip > 0 &&
+                        _mongoc_bson_iter_move_to_key (iter, dotkey, (int)sublen)){
+                    (*skip)--;
+                }
+                if (*skip == 0){
+                    set_descendant = true;
+                }
+            } else {
+                set_descendant = true;
+            }
         } else if (BSON_ITER_HOLDS_DOCUMENT (iter)) {
             if (bson_iter_recurse (iter, &tmp)) {
                 found_descendant_doc =  bson_iter_find_descendants (&tmp, dot + 1, skip, descendant);
-                if (found_descendant_doc && (*skip > 0)){
-                    found_descendant_doc = false;
+                if (found_descendant_doc){
+                    if (*skip > 0){
+                        found_descendant_doc = false;
+                        moved_to_key = _mongoc_bson_iter_move_to_key(iter, dotkey, (int)sublen);
+                        if (moved_to_key){
+                            (*skip)--;
+                            continue;
+                        }
+                    }
                 }
             }
         } else if (BSON_ITER_HOLDS_ARRAY(iter)){
-            if (bson_iter_recurse (iter, &tmp)) {
+            if (bson_iter_recurse (iter, &tmp) && bson_iter_recurse (iter, &tmp3)) {
+                //look for positional
+                found_descendant_array = bson_iter_find_descendants (&tmp3, dot + 1, skip, descendant);
+                if (found_descendant_array){
+                    if (*skip > 0){
+                        found_descendant_array = false;
+                        moved_to_key = _mongoc_bson_iter_move_to_key(iter, dotkey, (int)sublen);
+                        (*skip)--;
+                        continue; //to while(moved_to_key)
+                    }
+                }
+                //look for sub documents
                 while (bson_iter_next(&tmp)){
                     if (bson_iter_recurse(&tmp, &tmp2)){
                         found_descendant_array = bson_iter_find_descendants (&tmp2, dot + 1, skip, descendant);
@@ -105,10 +137,25 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
             }
         }
     }
+
     if (set_descendant)
         *descendant = *iter;
 
-    return (found_descendant_doc || found_descendant_array || set_descendant);
+    result = (found_descendant_doc || found_descendant_array || set_descendant);
+    return result;
+}
+
+bool
+_mongoc_bson_iter_move_to_key(bson_iter_t *iter,   /* INOUT */
+                              const char  *key,    /* IN */
+                              int          keylen)  /* IN */
+{
+    bool any_key = (key[0] == '$');
+    if (any_key){
+        return bson_iter_next(iter);
+    } else {
+        return _mongoc_bson_iter_find_with_len(iter, key, keylen);
+    }
 }
 
 
@@ -157,7 +204,7 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
 bool
 _mongoc_bson_iter_find_with_len (bson_iter_t *iter,   /* INOUT */
                                 const char  *key,    /* IN */
-                                int          keylen) /* IN */
+                                int          keylen)  /* IN */
 {
     const char *ikey;
 
