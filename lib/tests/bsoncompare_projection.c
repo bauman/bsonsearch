@@ -84,6 +84,34 @@ int
 main (int   argc,
       char *argv[])
 {
+    //test $any command with list projections
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": {\"x\": {\"f\":1}, \"y\": {\"f\":2}, \"z\": {\"f\":3}}}",
+                                  "{\"$project\":{\"a\":{\"$foundin\":[\"a.$any.f\"]}}}",
+                                  "{ \"a\" : [ 1, 2, 3 ] }"));
+    }while(false);//*/
+
+    //test $any command with list projections
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": {\"x\": [2,3,4], \"y\": [5, 6, 7], \"z\": [8,9]}}",
+                                  "{\"$project\":{\"a\":{\"$foundin\":[\"a.$any.1\"]}}}",
+                                  "{ \"a\" : [ 3, 6, 9 ] }"));
+    }while(false);//*/
+
+    //test $any command with list projections
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": {\"x\": [2,3,4], \"y\": [5, 6, 7], \"z\": [8,9]}}",
+                                  "{\"$project\":{\"a\":{\"$foundin\":[\"a.$any\"]}}}",
+                                  "{ \"a\" : [ 2, 3, 4, 5, 6, 7, 8, 9 ] }"));
+    }while(false);//*/
+
+    //test $any command with projections
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": {\"x\": 2, \"y\": 3, \"z\": 4}}",
+                                  "{\"$project\":{\"a\":{\"$foundin\":[\"a.$any\"]}}}",
+                                  "{ \"a\" : [ 2, 3, 4 ] }"));
+    }while(false);
+
 
     //test foundin command with deep doc
     do {

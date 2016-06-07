@@ -33,7 +33,9 @@
  *
  * _mongoc_matcher_op_geonear_new --
  *
- *       Create a new op for checking {$near: [x,y], $maxDistance: n}.
+ *       Create a new op for checking {$near: {<GeoJSON-dict>},
+ *                                     $maxDistance: n,
+ *                                     $minDistance: n }.
  *
  * Returns:
  *       A newly allocated mongoc_matcher_op_t that should be freed with

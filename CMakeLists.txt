@@ -21,7 +21,7 @@ function(bsonsearch_add_test test_name)
     add_executable(${test_name} ${ARGN})
     target_link_libraries(${test_name} libbsonsearch )
 endfunction()
-
+bsonsearch_add_test(bcon-sample lib/tests/bcon_samples.c)
 bsonsearch_add_test(compare-equal lib/tests/bsoncompare_simple.c)
 bsonsearch_add_test(simple lib/tests/simple.c)
 bsonsearch_add_test(mongodbtests lib/tests/matchertest.c)
