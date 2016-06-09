@@ -201,7 +201,9 @@ class bsoncompare(object):
     def project_bson_as_dict(self, matcher_id, doc_id):
         return bson.BSON.decode(bson.BSON(self.project_bson(matcher_id, doc_id)))
 
-    def project_json_as_dict(self, matcher_id, doc_id):
+    def project_json_as_dict(self, matcher_id, doc_id, loads_function=None):
+        if callable(loads_function):
+            return loads_function(self.project_json(matcher_id, doc_id))
         return loads(self.project_json(matcher_id, doc_id))
 
     def project_json(self, matcher_id, doc_id):
