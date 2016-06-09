@@ -51,7 +51,7 @@
  *      None
  *
  * Side effects:
- *       None.
+ *       bson_t * object in pointer will be destroyed and freed.
  *
  *--------------------------------------------------------------------------
  */
@@ -63,6 +63,8 @@ bson_as_string(PyObject* self, PyObject* args)
     if (PyArg_ParseTuple(args, "L", &bson_object)){
         const uint8_t *doc_bson = bson_get_data(bson_object);
         PyObject * result =  Py_BuildValue("s#", doc_bson, bson_object->len);
+        bson_destroy(bson_object);
+        bson_free(bson_object);
         return result;
     }
     return NULL;
