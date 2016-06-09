@@ -48,6 +48,13 @@ bsonsearch_project_json(mongoc_matcher_t *matcher,     //in
     bson_free(projected);
     return str;
 }
+//call this to free the cstring from project_json
+int
+bsonsearch_free_project_str(void * ptr)
+{
+    bson_free(ptr);
+    return 0;
+}
 
 bson_t *
 bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
@@ -58,12 +65,7 @@ bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
     return projected;
 }
 
-int
-bsonsearch_free_project_str(void * ptr)
-{
-    bson_free(ptr);
-    return 0;
-}
+
 
 
 #endif //WITH_PROJECTION

@@ -77,6 +77,7 @@ test_bson_api(const char *json,
     matcher_destroy(matcher);
     bson_destroy(doc);
     bson_destroy(spec);
+    bson_destroy(bson_out);
     bsonsearch_free_project_str(out);
     return same;
 }
