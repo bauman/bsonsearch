@@ -85,6 +85,13 @@ int
 main (int   argc,
       char *argv[])
 {
+    //too many embedded dict are failing.
+    do {
+        BSON_ASSERT(!test_bson_api("{\"a\":[{\"b\":[{\"c\":1}]},{\"b\":[{\"c\":2}]}]}",
+                                  "{\"$project\":{\"a\":{\"$foundin\":[\"a.b.c\"]}}}",
+                                  "{ \"a\" : [ 1, 2 ] }"));
+    }while(false);//*/
+
     //test $any command with list projections
     do {
         BSON_ASSERT(test_bson_api("{\"a\": {\"x\": {\"f\":1}, \"y\": {\"f\":2}, \"z\": {\"f\":3}}}",
