@@ -13,7 +13,7 @@
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-matcher-op-private.h"
 #ifdef WITH_YARA //&& WITH_UTILS
-#include <mongoc-matcher-op-yara.h>
+#include "mongoc-matcher-op-yara.h"
 #endif //WITH_YARA && WITH_UTILS
 #endif //WITH_UTILS
 

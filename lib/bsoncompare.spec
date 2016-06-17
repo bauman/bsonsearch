@@ -1,6 +1,6 @@
 Name: libbsoncompare		
-Version: 1.3.3
-Release: 36%{?dist}.db
+Version: 1.3.5
+Release: 1%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -28,6 +28,7 @@ Source16: BSONSEARCH_LICENSING.txt
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara
 Requires: libbson == %{version}, pcre, yara
+Provides: libbsoncompare.so()(64bit)
 
 %description
 Provides a shared object which can be used to perform mongo-like queries against BSON data.
