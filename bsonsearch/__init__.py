@@ -32,7 +32,11 @@ except ImportError:
 
 class bsoncompare(object):
     def __init__(self):
-        self.bc = ctypes.CDLL(find_library("bsoncompare")) #libbsoncompare rpm.
+        lib_path = find_library("bsoncompare")
+        if not lib_path:
+            lib_path = "libbsoncompare.so"
+        self.bc = ctypes.CDLL(lib_path) #libbsoncompare rpm.
+
         #utils
         self.bc.bsonsearch_haversine_distance.argtypes = [c_double, c_double, c_double, c_double]
         self.bc.bsonsearch_haversine_distance.restype = c_double
