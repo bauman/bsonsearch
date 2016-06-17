@@ -23,7 +23,7 @@ module1 = Extension('bsonhelper', #TODO: Figure out how to deploy this lib insid
                     include_dirs=["/usr/include/libbson-1.0/"])
 
 setup (name = 'python-bsonsearch',
-        version = '1.3.3',
+        version = '1.3.5',
         description = 'compare bson documents',
         maintainer = "Dan Bauman",
         packages=["bsonsearch"],

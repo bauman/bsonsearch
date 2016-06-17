@@ -1,8 +1,8 @@
 %define name python-bsonsearch
-%define version 1.3.3
-%define unmangled_version 1.3.3
-%define unmangled_version 1.3.3
-%define release 38
+%define version 1.3.5
+%define unmangled_version 1.3.5
+%define unmangled_version 1.3.5
+%define release 2
 
 Summary: Ctypes wrapper to libbsoncompare
 Name: %{name}
@@ -15,6 +15,7 @@ BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: x86_64
 Requires: libbsoncompare == %{version}
+BuildRequires: libbson-devel == %{version}
 Vendor: Dan Bauman
 
 %description
