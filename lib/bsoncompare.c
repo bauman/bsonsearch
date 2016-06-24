@@ -1,4 +1,5 @@
 #include <stdio.h>
+#include <stddef.h>
 #include <bson.h>
 #include "mongoc-matcher.h"
 #include "bsoncompare.h"
