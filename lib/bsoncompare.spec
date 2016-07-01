@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.5
-Release: 3%{?dist}.db
+Release: 4%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman

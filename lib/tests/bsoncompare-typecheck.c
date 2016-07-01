@@ -24,6 +24,20 @@ main (int   argc,
     do {
         bson_t spec;
         bson_init(&spec);
+        BCON_APPEND(&spec, "a", "{","$type","integer", "}");
+        BSON_ASSERT(test_bson_api("{\"a\": 1000000000000000000}",&spec));
+        bson_destroy(&spec);
+    } while (false);//*/
+    do {
+        bson_t spec;
+        bson_init(&spec);
+        BCON_APPEND(&spec, "a", "{","$type","integer", "}");
+        BSON_ASSERT(!test_bson_api("{\"a\": 10.34}",&spec));
+        bson_destroy(&spec);
+    } while (false);//*/
+    do {
+        bson_t spec;
+        bson_init(&spec);
         BCON_APPEND(&spec, "a", "{","$type","number", "}");
         BSON_ASSERT(test_bson_api("{\"a\": 1000000000000000000}",&spec));
         bson_destroy(&spec);

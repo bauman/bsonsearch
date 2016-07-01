@@ -153,6 +153,8 @@ _mongoc_matcher_op_type_new (const char  *path, /* IN */
          } else {
             if ((strcmp(type, "string") == 0)) {
                op->type.type = BSON_TYPE_UTF8;
+            } else if (strcmp(type, "integer") == 0){
+               op->type.type = BSON_TYPE_INT32 + BSON_TYPE_INT64;
             } else if (strcmp(type, "number") == 0){
                op->type.type = BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE;
             } else if (strcmp(type, "bool") == 0){
@@ -664,14 +666,32 @@ static bool
 _mongoc_matcher_op_type_match_iter (mongoc_matcher_op_type_t *type, /* IN */
                                     bson_iter_t               *iter) /* IN */
 {
-   if (type->type == BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE){
-      bson_type_t itype = bson_iter_type (iter);
-      return ( itype == BSON_TYPE_INT32 ||
-               itype == BSON_TYPE_INT64 ||
-               itype == BSON_TYPE_DOUBLE);
-   } else {
-      return (bson_iter_type (iter) == type->type);
+   bool result = false;
+   switch (type->type){
+      case (BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE):
+      {
+         bson_type_t itype = bson_iter_type (iter);
+         result = ( itype == BSON_TYPE_INT32 ||
+                    itype == BSON_TYPE_INT64 ||
+                    itype == BSON_TYPE_DOUBLE);
+         break;
+      }
+      case (BSON_TYPE_INT32 + BSON_TYPE_INT64):
+      {
+         bson_type_t itype = bson_iter_type (iter);
+         result = ( itype == BSON_TYPE_INT32 ||
+                    itype == BSON_TYPE_INT64   );
+         break;
+      }
+      default:
+      {
+         result = (bson_iter_type (iter) == type->type);
+         break;
+      }
    }
+
+
+      return result;
 }
 static bool
 _mongoc_matcher_op_type_match (mongoc_matcher_op_type_t *type, /* IN */
