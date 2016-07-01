@@ -125,7 +125,7 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
       } else if (strcmp(key, "$exists") == 0) {
          op = _mongoc_matcher_op_exists_new (path, bson_iter_bool (&child));
       } else if (strcmp(key, "$type") == 0) {
-         op = _mongoc_matcher_op_type_new (path, bson_iter_type (&child));
+         op = _mongoc_matcher_op_type_new (path, &child);
       } else if (strcmp(key, "$size") == 0) {
           op = _mongoc_matcher_op_size_new (path, &child);
       } else if (strcmp(key, "$near") == 0) {

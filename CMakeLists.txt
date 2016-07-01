@@ -50,5 +50,4 @@ bsonsearch_add_test(and-bail-test lib/tests/bsoncompare_and_bailout.c)
 bsonsearch_add_test(json_decode lib/tests/bsoncompare_json_input.c)
 bsonsearch_add_test(projection_leak lib/tests/projection_leak.c)
 bsonsearch_add_test(unwind_compare lib/tests/bsoncompare_unwind.c)
-
-
+bsonsearch_add_test(type-checking lib/tests/bsoncompare-typecheck.c)

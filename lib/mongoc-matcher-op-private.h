@@ -199,7 +199,8 @@ mongoc_matcher_op_t *_mongoc_matcher_op_compare_new (mongoc_matcher_opcode_t  op
 mongoc_matcher_op_t *_mongoc_matcher_op_exists_new  (const char              *path,
                                                      bool                     exists);
 mongoc_matcher_op_t *_mongoc_matcher_op_type_new    (const char              *path,
-                                                     bson_type_t              type);
+                                                     bson_iter_t             *iter);
+
 mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (const char              *path,
                                                      const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_not_new     (const char              *path,
