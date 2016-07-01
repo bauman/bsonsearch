@@ -24,7 +24,8 @@ project_json(const char *json,
     matcher_destroy(matcher);
     doc_destroy(spec);
     doc_destroy(doc);
-    doc_destroy(out);
+    bson_destroy(out);
+    bson_free(out);
     bson_free(str);
     return same;
 }
@@ -78,6 +79,7 @@ test_bson_api(const char *json,
     bson_destroy(doc);
     bson_destroy(spec);
     bson_destroy(bson_out);
+    bson_free(bson_out);
     bsonsearch_free_project_str(out);
     return same;
 }
