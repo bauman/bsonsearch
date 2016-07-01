@@ -128,6 +128,7 @@ struct _mongoc_matcher_op_exists_t
    mongoc_matcher_op_base_t base;
    char *path;
    bool exists;
+   mongoc_matcher_op_t *query;
 };
 
 struct _mongoc_matcher_op_size_t
@@ -197,7 +198,7 @@ mongoc_matcher_op_t *_mongoc_matcher_op_compare_new (mongoc_matcher_opcode_t  op
                                                      const char              *path,
                                                      const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_exists_new  (const char              *path,
-                                                     bool                     exists);
+                                                     bson_iter_t             *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_type_new    (const char              *path,
                                                      bson_iter_t             *iter);
 

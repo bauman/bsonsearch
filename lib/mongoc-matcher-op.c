@@ -24,6 +24,7 @@
 #include "bsoncompare.h"
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-bson-descendants.h"
+#include "mongoc-matcher-private.h"
 
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
@@ -51,7 +52,7 @@
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_exists_new (const char  *path,   /* IN */
-                               bool  exists) /* IN */
+                               bson_iter_t *iter) /* IN */
 {
    mongoc_matcher_op_t *op;
 
@@ -60,8 +61,32 @@ _mongoc_matcher_op_exists_new (const char  *path,   /* IN */
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
    op->exists.base.opcode = MONGOC_MATCHER_OPCODE_EXISTS;
    op->exists.path = bson_strdup (path);
-   op->exists.exists = exists;
-
+   op->exists.exists = false;
+   bson_type_t iter_type =bson_iter_type (iter);
+   switch (iter_type) {
+      case BSON_TYPE_BOOL:
+      {
+         op->exists.exists = bson_iter_bool(iter);
+         op->exists.query  = NULL;
+         break;
+      }
+      case BSON_TYPE_DOCUMENT:
+      {
+         op->exists.exists = true;
+         bson_iter_t child;
+         mongoc_matcher_op_t *queryer   = NULL;
+         if (bson_iter_recurse(iter, &child)&& bson_iter_next(&child)) {
+            queryer = _mongoc_matcher_parse (&child, NULL);
+            op->exists.query = queryer;
+         }
+         break;
+      }
+      default:
+      {
+         _mongoc_matcher_op_destroy(op);
+         op = NULL;
+      }
+   }
    return op;
 }
 /*
@@ -550,8 +575,13 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->not_.path);
       break;
    case MONGOC_MATCHER_OPCODE_EXISTS:
+   {
       bson_free (op->exists.path);
+      if (op->exists.query){
+         _mongoc_matcher_op_destroy (op->exists.query);
+      }
       break;
+   }
    case MONGOC_MATCHER_OPCODE_TYPE:
       bson_free (op->type.path);
       break;
@@ -633,16 +663,36 @@ _mongoc_matcher_op_exists_match (mongoc_matcher_op_exists_t *exists, /* IN */
                                  const bson_t               *bson)   /* IN */
 {
    bson_iter_t iter;
-   bson_iter_t desc;
-   bool found;
-
+   bson_iter_t tmp;
    BSON_ASSERT (exists);
    BSON_ASSERT (bson);
-
-   found = (bson_iter_init (&iter, bson) &&
-            bson_iter_find_descendant (&iter, exists->path, &desc));
-
-   return (found == exists->exists);
+   bool found_one = false;
+   bool query_result = true;
+   int checked = 0, skip=0;
+   if (strchr (exists->path, '.')) {
+      if (!bson_iter_init (&tmp, bson) ||
+          !bson_iter_find_descendant (&tmp, exists->path, &iter)) { //try this way first
+         while (!found_one &&
+                bson_iter_init (&tmp, bson) &&
+                bson_iter_find_descendants (&tmp, exists->path, &skip, &iter)){
+            found_one = true;
+            if (exists->query) {
+               query_result = _mongoc_matcher_op_match(exists->query, bson);
+            }
+            skip = ++checked;
+         }
+         return ((checked>0) && (found_one  == exists->exists) &&  query_result);
+      }
+   } else if (!bson_iter_init_find (&iter, bson, exists->path)) {
+      if (!exists->query) {
+         return (false == exists->exists);
+      }
+   }
+   if (!exists->query) {
+      return (true == exists->exists);
+   } else {
+      return _mongoc_matcher_op_match(exists->query, bson);
+   }
 }
 
 
