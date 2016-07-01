@@ -25,5 +25,7 @@ main (int   argc,
 
     BSON_ASSERT(compare_json("{\"main\": [{\"sub\": {\"third\": 0}}, {\"sub\": [{\"third\": 1}, {\"third\": 2}, {\"third\": 3}, {\"third\": 4}]}]}",
                              "{\"main.sub.third\": 3}"));
+    BSON_ASSERT(compare_json("{\"main\": [{\"sub\": {\"third\": 0}}, {\"sub\": [{\"third\": 1}, {\"third\": 2}, {\"third\": 3}, {\"third\": 4}]}]}",
+                             "{\"main.sub.third\": 4}"));
     return 0;
 }
