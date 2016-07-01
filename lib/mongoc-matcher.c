@@ -25,6 +25,7 @@
 #endif//YARA
 #ifdef WITH_PROJECTION
 #include "mongoc-projection.h"
+#include  "mongoc-matcher-op-unwind.h"
 #endif//projection
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
@@ -187,7 +188,8 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
  *--------------------------------------------------------------------------
  */
 
-static mongoc_matcher_op_t *
+
+mongoc_matcher_op_t *
 _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                        bson_error_t *error) /* OUT */
 {
@@ -231,9 +233,13 @@ _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                if (strcmp (key, "$project") == 0) {
                    return _mongoc_matcher_parse_projection(MONGOC_MATCHER_OPCODE_PROJECTION,
                                                            iter, false, error);
+               } else if (strcmp (key, "$unwind") == 0){
+                   return _mongoc_matcher_parse_unwind(MONGOC_MATCHER_OPCODE_UNWIND,
+                                                           iter, false, error);
                }
                break;
            }
+
 #endif //projection
            default:
                break;

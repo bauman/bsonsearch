@@ -7,7 +7,14 @@ add_definitions(-DWITH_YARA)
 add_definitions(-DWITH_PROJECTION)
 add_definitions(-DWITH_UTILS)
 
-set(SOURCE_FILES lib/bsoncompare.c lib/mongoc-matcher.c lib/mongoc-matcher-op.c lib/mongoc-matcher-op-geojson.c lib/mongoc-bson-descendants.c lib/mongoc-matcher-op-yara.c lib/mongoc-projection.c)
+set(SOURCE_FILES lib/bsoncompare.c
+                 lib/mongoc-matcher.c
+                 lib/mongoc-matcher-op.c
+                 lib/mongoc-matcher-op-geojson.c
+                 lib/mongoc-bson-descendants.c
+                 lib/mongoc-matcher-op-yara.c
+                 lib/mongoc-projection.c
+                 lib/mongoc-matcher-op-unwind.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
@@ -42,6 +49,6 @@ bsonsearch_add_test(projection-test lib/tests/bsoncompare_projection.c)
 bsonsearch_add_test(and-bail-test lib/tests/bsoncompare_and_bailout.c)
 bsonsearch_add_test(json_decode lib/tests/bsoncompare_json_input.c)
 bsonsearch_add_test(projection_leak lib/tests/projection_leak.c)
-
+bsonsearch_add_test(unwind_compare lib/tests/bsoncompare_unwind.c)
 
 

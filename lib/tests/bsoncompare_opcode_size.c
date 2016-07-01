@@ -24,6 +24,8 @@ int
 main (int   argc,
       char *argv[])
 {
+    BSON_ASSERT(compare_json("{\"hello\": \"world\"}",
+                             "{\"hello\": {\"$size\":1}}"));
 
     BSON_ASSERT(compare_json("{\"hello\": {\"world\": [{\"a\":[1]},{\"a\":\"two\"},{\"a\":3}, {\"a\":null}]}}",
                              "{\"hello.world.a\": {\"$size\":3}}"));

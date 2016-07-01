@@ -70,12 +70,12 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
                                   bson_error_t            *error)   /* OUT */
 {
     mongoc_matcher_op_t *op = NULL;
-    BSON_ASSERT (opcode == MONGOC_MATCHER_OPCODE_PROJECTION);
+    BSON_ASSERT (opcode == MONGOC_MATCHER_OPCODE_PROJECTION || opcode == MONGOC_MATCHER_OPCODE_UNWIND );
     BSON_ASSERT (iter);
 
     bson_iter_t child;
     if (bson_iter_recurse(iter, &child)) {
-        op = _mongoc_matcher_parse_projection_loop(&child, error);
+        op = _mongoc_matcher_parse_projection_loop(opcode, &child, error);
     }
     return op;
 }
@@ -110,7 +110,8 @@ _mongoc_matcher_parse_projection (mongoc_matcher_opcode_t  opcode,  /* IN */
  *--------------------------------------------------------------------------
  */
 mongoc_matcher_op_t *
-_mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
+_mongoc_matcher_parse_projection_loop (mongoc_matcher_opcode_t  opcode,
+                                       bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error)   /* OUT */
 {
     mongoc_matcher_op_t *on_the_left=NULL;
@@ -130,9 +131,9 @@ _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN *
             case BSON_TYPE_INT32:
             {
                 const char * key = bson_iter_key (iter);
-                next_left = _mongoc_matcher_parse_projection_loop(iter, error);
+                next_left = _mongoc_matcher_parse_projection_loop(opcode, iter, error);
                 on_the_left = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *on_the_left);
-                on_the_left->base.opcode = MONGOC_MATCHER_OPCODE_PROJECTION;
+                on_the_left->base.opcode = opcode;
                 on_the_left->projection.path = bson_strdup(key);
                 on_the_left->projection.next = next_left;
                 on_the_left->projection.as = d_value; //null or set in UTF8 case
@@ -144,9 +145,9 @@ _mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN *
                 mongoc_matcher_op_str_hashtable_t *multimatch =NULL;
                 multimatch =_mongoc_matcher_parse_projection_complex(iter, error);
                 const char * key = bson_iter_key (iter);
-                next_left = _mongoc_matcher_parse_projection_loop(iter, error);
+                next_left = _mongoc_matcher_parse_projection_loop(opcode, iter, error);
                 on_the_left = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *on_the_left);
-                on_the_left->base.opcode = MONGOC_MATCHER_OPCODE_PROJECTION;
+                on_the_left->base.opcode = opcode;
                 on_the_left->projection.path = NULL;
                 on_the_left->projection.next = next_left;
                 on_the_left->projection.as = bson_strdup(key);
@@ -330,7 +331,7 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,        /*in */
                                   bson_t              *bson,      /*in */
                                   bson_t              *projected) /*in/out */
 {
-    assert(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION);
+    assert(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION || op->base.opcode == MONGOC_MATCHER_OPCODE_UNWIND);
     bson_t arrlist;
     bool result = true;
     bson_init (projected);
@@ -516,6 +517,96 @@ mongoc_matcher_projection_value_into_array(bson_iter_t  *iter, bson_t *arrlist, 
     }
     return objects_added;
 }
-
+uint32_t
+mongoc_matcher_projection_value_into_document(bson_iter_t  *iter, bson_t *arrlist, char * key, size_t st)
+{
+    uint32_t objects_added = 0;
+    switch (bson_iter_type (iter)) {
+        case BSON_TYPE_DOCUMENT:
+        {
+            uint32_t          document_len;
+            const uint8_t     *document;
+            bson_iter_document(iter, &document_len, &document);
+            bson_t *doc_data = bson_new_from_data(document, document_len);
+            bson_append_document(arrlist, key, st, doc_data);//this performs a memcopy
+            objects_added += 1;
+            bson_free(doc_data);
+            break;
+        }
+        case BSON_TYPE_UTF8:
+        {
+            uint32_t vlen=-1;
+            const char * value = bson_iter_utf8(iter, &vlen);
+            bson_append_utf8(arrlist, key, st, value, vlen);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_INT32:
+        {
+            int32_t num = bson_iter_int32(iter);
+            bson_append_int32 (arrlist, key, st, num);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_INT64:
+        {
+            int64_t num = bson_iter_int64(iter);
+            bson_append_int64 (arrlist, key, st, num);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_DOUBLE:
+        {
+            double dbl = bson_iter_double(iter);
+            bson_append_double (arrlist, key, st, dbl);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_OID:
+        {
+            const bson_oid_t * oid = bson_iter_oid(iter);
+            bson_append_oid (arrlist, key, st, oid);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_DATE_TIME:
+        {
+            int64_t dt = bson_iter_date_time(iter);
+            bson_append_date_time (arrlist, key, st, dt);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_BOOL:
+        {
+            bool bl = bson_iter_bool(iter);
+            bson_append_bool (arrlist, key, st, bl);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_BINARY:
+        {
+            bson_subtype_t subtype;
+            uint32_t binary_len=0;
+            const uint8_t * binary;
+            bson_iter_binary(iter, &subtype, &binary_len, &binary);
+            bson_append_binary (arrlist, key, st, subtype, binary, binary_len);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_REGEX:
+        {
+            const char * regex_pattern, *regex_options;
+            regex_pattern = bson_iter_regex (iter, &regex_options);
+            bson_append_regex(arrlist, key, st, regex_pattern, regex_options);
+            objects_added += 1;
+            break;
+        }
+        case BSON_TYPE_ARRAY:
+        default:
+            objects_added = 0;
+            break;
+    }
+    return objects_added;
+}
 
 #endif //WITH_PROJECTION

@@ -27,7 +27,8 @@
 #include "mongoc-matcher-op-private.h"
 
 mongoc_matcher_op_t *
-_mongoc_matcher_parse_projection_loop (bson_iter_t             *iter,    /* IN */
+_mongoc_matcher_parse_projection_loop (mongoc_matcher_opcode_t  opcode,
+                                       bson_iter_t             *iter,    /* IN */
                                        bson_error_t            *error) ;  /* OUT */
 mongoc_matcher_op_str_hashtable_t *
 _mongoc_matcher_parse_projection_complex (bson_iter_t             *iter,    /* IN */
@@ -46,6 +47,12 @@ uint32_t
 mongoc_matcher_projection_value_into_array(bson_iter_t *iter,   /* IN */
                                            bson_t *arrlist,     /* IN/OUT */
                                            uint32_t i);         /* IN */
+
+uint32_t
+mongoc_matcher_projection_value_into_document(bson_iter_t  *iter,
+                                              bson_t *arrlist,
+                                              char * key,
+                                              size_t st);
 
 #endif //MONGOC_MATCHER_PROJECTION
 #endif //WITH_PROJECTION

@@ -66,6 +66,7 @@ typedef enum
    MONGOC_MATCHER_OPCODE_GEOUNDEFINED,
 #ifdef WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_PROJECTION,
+   MONGOC_MATCHER_OPCODE_UNWIND,
 #endif //WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
@@ -118,6 +119,7 @@ struct _mongoc_matcher_op_projection_t
     mongoc_matcher_op_str_hashtable_t *pathlist;
     char* as;
     mongoc_matcher_op_t *next;
+    mongoc_matcher_op_t *query;
 };
 #endif //WITH_PROJECTION
 

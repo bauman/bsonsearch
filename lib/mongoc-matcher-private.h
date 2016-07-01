@@ -31,6 +31,9 @@ struct _mongoc_matcher_t
 };
 
 
+mongoc_matcher_op_t *
+_mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
+                      bson_error_t *error); /* OUT */
 BSON_END_DECLS
 
 

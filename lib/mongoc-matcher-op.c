@@ -28,6 +28,9 @@
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
 #endif //WITH_YARA
+#ifdef WITH_PROJECTION
+#include "mongoc-matcher-op-unwind.h"
+#endif //WITH_PROJECTION
 
 /*
  *--------------------------------------------------------------------------
@@ -514,6 +517,12 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
 #endif //WITH_YARA
 #ifdef WITH_PROJECTION
+   case MONGOC_MATCHER_OPCODE_UNWIND:
+   {
+      if (op->projection.query)
+         _mongoc_matcher_op_destroy(op->projection.query);
+      //continue to rest of projection
+   }
    case MONGOC_MATCHER_OPCODE_PROJECTION:
    {
       bson_free(op->projection.path);
@@ -1847,6 +1856,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_geowithin (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
       return _mongoc_matcher_op_geowithinpoly (op, bson);
+#ifdef WITH_PROJECTION
+   case MONGOC_MATCHER_OPCODE_UNWIND:
+      return _mongoc_matcher_op_unwind(op, bson);
+#endif /* WITH_PROJECTION*/
    default:
       break;
    }
