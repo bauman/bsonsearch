@@ -124,7 +124,6 @@ _mongoc_matcher_op_unwind (mongoc_matcher_op_t *op, /* IN */
         {
             bson_t * item = bson_new();
             bson_init(item);
-            bson_t arrlist;
             mongoc_matcher_projection_value_into_document(&array_iter, item, op->projection.as, sz);
             matched = _mongoc_matcher_op_match(op->projection.query, (const bson_t *)item);
             bson_destroy(item);
@@ -139,10 +138,4 @@ _mongoc_matcher_op_unwind (mongoc_matcher_op_t *op, /* IN */
     return matched;
 }
 
-bool
-_mongoc_matcher_op_unwind_add_to_item (bson_t * item,
-                                       bson_iter_t * iter)
-{
-
-}
 #endif /* WITH_PROJECTION */

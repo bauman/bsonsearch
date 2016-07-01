@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.5
-Release: 1%{?dist}.db
+Release: 2%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -23,6 +23,8 @@ Source13: mongoc-matcher-op-yara.h
 Source14: mongoc-projection.c
 Source15: mongoc-projection.h
 Source16: BSONSEARCH_LICENSING.txt
+Source17: mongoc-matcher-op-unwind.c
+Source18: mongoc-matcher-op-unwind.h
 
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
@@ -60,13 +62,15 @@ cp -fp %{SOURCE13} ./
 cp -fp %{SOURCE14} ./
 cp -fp %{SOURCE15} ./
 cp -fp %{SOURCE16} ./
+cp -fp %{SOURCE17} ./
+cp -fp %{SOURCE18} ./
 
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_PYTHON -D WITH_UTILS -D WITH_YARA -DWITH_PROJECTION -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_UTILS -D WITH_YARA -DWITH_PROJECTION -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
@@ -82,6 +86,8 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-geojson.h $RPM_BUILD_ROOT/%{_
 install -m 644 -p $RPM_BUILD_DIR/mongoc-bson-descendants.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-bson-descendants.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-yara.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-yara.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-projection.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-projection.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-unwind.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-unwind.h
+
 
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
