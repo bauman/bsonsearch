@@ -646,6 +646,13 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
  *       {$exists: bool} query can be either true or fase so we must
  *       handle false as "not exists".
  *
+ *       non-standard behavior
+ *          {key:{$exists:{spec}}} semantically means:
+ *                                 if the key exists, it must match the spec
+ *                                 A document where the key doesn't exist
+ *                                 will return true when it obviously doesn't
+ *                                 meet the spec.
+ *
  * Returns:
  *       true if the field exists and the spec expected it.
  *       true if the field does not exist and the spec expected it to not
@@ -681,11 +688,17 @@ _mongoc_matcher_op_exists_match (mongoc_matcher_op_exists_t *exists, /* IN */
             }
             skip = ++checked;
          }
-         return ((checked>0) && (found_one  == exists->exists) &&  query_result);
+         if (!exists->query){
+            return ((checked>0) && (found_one  == exists->exists));
+         } else {
+            return (query_result);
+         }
       }
    } else if (!bson_iter_init_find (&iter, bson, exists->path)) {
       if (!exists->query) {
          return (false == exists->exists);
+      } else {
+         return (true == exists->exists);
       }
    }
    if (!exists->query) {

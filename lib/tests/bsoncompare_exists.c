@@ -23,6 +23,18 @@ int
 main (int   argc,
       char *argv[]) {
     do {
+        BSON_ASSERT(!test_bson_api("{\"a\": 1}",
+                                   "{\"a\": {\"$exists\": {\"a\":{\"$lte\":0}}}}"));
+    } while (false);//*/
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": 1}",
+                                  "{\"b\": {\"$exists\": {\"b\":{\"$gte\":0}}}}"));
+    } while (false);//*/
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": [{\"b\":1}, {\"c\":1}, {\"d\":1}]}",
+                                  "{\"a.f\": {\"$exists\": {\"a.f\":{\"$gte\":0}}}}"));
+    } while (false);//*/
+    do {
         BSON_ASSERT(test_bson_api("{\"a\": [{\"b\":1}, {\"c\":1}, {\"d\":1}]}",
                                   "{\"a.c\": {\"$exists\": {\"a.c\":{\"$gte\":0}}}}"));
     } while (false);//*/
