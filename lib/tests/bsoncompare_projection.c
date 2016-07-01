@@ -89,9 +89,15 @@ main (int   argc,
 {
     //too many embedded dict are failing.
     do {
+        //project follows at least once checking.
+        // Results in duplicate values being apended at the end in complex cases
+        //FIX THIS  |
+        //          V
         BSON_ASSERT(!test_bson_api("{\"a\":[{\"b\":[{\"c\":1}]},{\"b\":[{\"c\":2}]}]}",
                                   "{\"$project\":{\"a\":{\"$foundin\":[\"a.b.c\"]}}}",
                                   "{ \"a\" : [ 1, 2 ] }"));
+        //                        "{ \"a\" : [ 1, 2, 2 ] }" <- duplicate 2 is added
+        //                                                     because traversing this mess is hard
     }while(false);//*/
 
     //test $any command with list projections
