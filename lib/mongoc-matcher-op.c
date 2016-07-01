@@ -667,7 +667,7 @@ _mongoc_matcher_op_type_match_iter (mongoc_matcher_op_type_t *type, /* IN */
                                     bson_iter_t               *iter) /* IN */
 {
    bool result = false;
-   switch ((uint16_t)type->type){
+   switch ((uint8_t)type->type){
       case (BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE):
       {
          bson_type_t itype = bson_iter_type (iter);
