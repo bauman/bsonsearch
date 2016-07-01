@@ -70,7 +70,7 @@ cp -fp %{SOURCE18} ./
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_UTILS -D WITH_YARA -DWITH_PROJECTION -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}

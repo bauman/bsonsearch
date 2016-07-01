@@ -113,28 +113,39 @@ _mongoc_matcher_op_unwind (mongoc_matcher_op_t *op, /* IN */
                             const bson_t                       *bson) /* IN */
 {
     bool matched = false;
-    bson_t * projected = bson_new();
-    mongoc_matcher_projection_execute(op, (bson_t *)bson, projected);
-    bson_iter_t iter,  array_iter;
-    if (bson_iter_init_find (&iter, projected, op->projection.as) &&
+    char * key = NULL;
+    size_t key_size = 0;
+    if (op->projection.as){ //path and as may both be populated
+        key = op->projection.as;
+        key_size = strlen(op->projection.as);
+    } else if (op->projection.path){
+        key = op->projection.path;
+        key_size = strlen(op->projection.path);
+    }
+    if (key){
+        bson_t * projected = bson_new();
+        mongoc_matcher_projection_execute(op, (bson_t *)bson, projected);
+        bson_iter_t iter,  array_iter;
+        if (bson_iter_init_find (&iter, projected, key) &&
             BSON_ITER_HOLDS_ARRAY(&iter) &&
             bson_iter_recurse(&iter, &array_iter)){
-        size_t sz = strlen(op->projection.as);
-        while (bson_iter_next(&array_iter))
-        {
-            bson_t * item = bson_new();
-            bson_init(item);
-            mongoc_matcher_projection_value_into_document(&array_iter, item, op->projection.as, sz);
-            matched = _mongoc_matcher_op_match(op->projection.query, (const bson_t *)item);
-            bson_destroy(item);
-            bson_free(item);
-            if (matched){
-                break;
+
+            while (bson_iter_next(&array_iter))
+            {
+                bson_t * item = bson_new();
+                bson_init(item);
+                mongoc_matcher_projection_value_into_document(&array_iter, item, key, key_size);
+                matched = _mongoc_matcher_op_match(op->projection.query, (const bson_t *)item);
+                bson_destroy(item);
+                bson_free(item);
+                if (matched){
+                    break;
+                }
             }
         }
+        bson_destroy(projected);
+        bson_free(projected);
     }
-    bson_destroy(projected);
-    bson_free(projected);
     return matched;
 }
 

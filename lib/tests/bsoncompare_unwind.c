@@ -38,5 +38,14 @@ main (int   argc,
         BSON_ASSERT(test_bson_api("{\"a\": [{\"c\": 1, \"b\": 1}, {\"c\": 2, \"b\": 2}]}",
                                   "{\"$unwind\": {\"$project\": {\"a\": {\"$foundin\": [\"a\"]}}, \"$query\": {\"$and\": [{\"a.b\": 2}, {\"a.c\": 2}]}}}"));
     } while (false);//*/
+
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": [{\"c\": 1, \"b\": 1}, {\"c\": 2, \"b\": 2}]}",
+                                  "{\"$unwind\": {\"$project\": {\"a\": 1}, \"$query\": {\"$and\": [{\"a.b\": 2}, {\"a.c\": 2}]}}}"));
+    } while (false);//*/
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": [{\"c\": 1, \"b\": 1}, {\"c\": 2, \"b\": 2}]}",
+                                  "{\"$unwind\": {\"$project\": {\"a\": \"aa\"}, \"$query\": {\"$and\": [{\"aa.b\": 2}, {\"aa.c\": 2}]}}}"));
+    } while (false);//*/
     exit(0);
 }
