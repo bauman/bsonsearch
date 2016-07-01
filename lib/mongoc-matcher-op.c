@@ -667,7 +667,7 @@ _mongoc_matcher_op_type_match_iter (mongoc_matcher_op_type_t *type, /* IN */
                                     bson_iter_t               *iter) /* IN */
 {
    bool result = false;
-   switch (type->type){
+   switch ((uint16_t)type->type){
       case (BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE):
       {
          bson_type_t itype = bson_iter_type (iter);
@@ -689,9 +689,7 @@ _mongoc_matcher_op_type_match_iter (mongoc_matcher_op_type_t *type, /* IN */
          break;
       }
    }
-
-
-      return result;
+   return result;
 }
 static bool
 _mongoc_matcher_op_type_match (mongoc_matcher_op_type_t *type, /* IN */
