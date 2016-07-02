@@ -245,7 +245,8 @@ _mongoc_matcher_op_type_new (const char  *path, /* IN */
  */
 
 mongoc_matcher_op_t *
-_mongoc_matcher_op_size_new (const char         *path,   /* IN */
+_mongoc_matcher_op_size_new (mongoc_matcher_opcode_t opcode,
+                             const char         *path,   /* IN */
                              const bson_iter_t   *iter) /* IN */
 {
    mongoc_matcher_op_t *op;
@@ -253,7 +254,7 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
    BSON_ASSERT (path);
 
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
-   op->size.base.opcode = MONGOC_MATCHER_OPCODE_SIZE;
+   op->size.base.opcode = opcode;
    op->size.compare_type = MONGOC_MATCHER_OPCODE_UNDEFINED;
    op->size.path = bson_strdup (path);
    switch (bson_iter_type ((iter))) {
@@ -586,6 +587,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->type.path);
       break;
    case MONGOC_MATCHER_OPCODE_SIZE:
+   case MONGOC_MATCHER_OPCODE_STRLEN:
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
@@ -787,6 +789,48 @@ _mongoc_matcher_op_type_match (mongoc_matcher_op_type_t *type, /* IN */
 /*
  *--------------------------------------------------------------------------
  *
+ * _mongoc_matcher_op_length_match_value --
+ *
+ *       Helper Function for opcodes that require internal gt/lt/ne/etc.
+ *
+ * Returns:
+ *       true if the size operator logic matches the
+ *       the requested type.
+ *
+ * TODO: iterating every object in the array is slow
+ *       should be able to seek to the last record in the array
+ *       or the next object after the array and back
+ *       No luck so far
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+static bool
+_mongoc_matcher_op_length_match_value (mongoc_matcher_op_size_t *size, /* IN */
+                                       uint32_t                  length) /* IN */
+{
+   switch (size->compare_type){
+      case MONGOC_MATCHER_OPCODE_EQ:
+         return (length == size->size);
+      case MONGOC_MATCHER_OPCODE_GTE:
+         return (length >= size->size);
+      case MONGOC_MATCHER_OPCODE_GT:
+         return (length > size->size);
+      case MONGOC_MATCHER_OPCODE_LTE:
+         return (length <= size->size);
+      case MONGOC_MATCHER_OPCODE_LT:
+         return (length < size->size);
+      case MONGOC_MATCHER_OPCODE_NOT:
+         return (length != size->size);
+      default:
+         break;
+   }
+   return false;
+}
+/*
+ *--------------------------------------------------------------------------
+ *
  * _mongoc_matcher_op_size_match --
  *
  *       Checks if @bson matches the {$size: ...} op.
@@ -810,7 +854,7 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
                                const bson_t             *bson) /* IN */
 {
    bson_iter_t iter;
-   int32_t right_array_size = 0; //NOT AN ARRAY
+   uint32_t right_array_size = 0; //NOT AN ARRAY
    BSON_ASSERT (size);
    BSON_ASSERT (bson);
 
@@ -836,22 +880,130 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
    } else if (bson_iter_init_find (&iter, bson, size->path)) {
       right_array_size += _mongoc_matcher_op_size_get_iter_len(&iter);
    }
-
-   switch (size->compare_type){
-      case MONGOC_MATCHER_OPCODE_EQ:
-         return (right_array_size == size->size);
-      case MONGOC_MATCHER_OPCODE_GTE:
-         return (right_array_size >= size->size);
-      case MONGOC_MATCHER_OPCODE_GT:
-         return (right_array_size > size->size);
-      case MONGOC_MATCHER_OPCODE_LTE:
-         return (right_array_size <= size->size);
-      case MONGOC_MATCHER_OPCODE_LT:
-         return (right_array_size < size->size);
-      case MONGOC_MATCHER_OPCODE_NOT:
-         return (right_array_size != size->size);
+   return _mongoc_matcher_op_length_match_value(size, right_array_size);
+}
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_strlen_match_iter --
+ *
+ *       Checks if @bson matches the {$strlen: ...} op.
+ *
+ *       Checks the length of objects in represented by the followng types
+ *          BSON_TYPE_UTF8   = <strlen(value)>
+ *          BSON_TYPE_REGEX  = <strlen(value.pattern)>
+ *          BSON_TYPE_BINARY = <strlen(value.decoded)>
+ *
+ * Returns:
+ *       true if the object length matches the input size
+ *       the requested type.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+static bool
+_mongoc_matcher_op_strlen_match_iter (mongoc_matcher_op_size_t *size, /* IN */
+                                      bson_iter_t            *iter) /* IN */
+{
+   uint32_t length = 0;
+   bool result = false;
+   switch (bson_iter_type(iter))
+   {
+      case BSON_TYPE_UTF8:
+      {
+         bson_iter_utf8(iter, &length);
+         result = _mongoc_matcher_op_length_match_value(size, length);
+         if (result){
+            return result;
+         }
+         break;
+      }
+      case BSON_TYPE_BINARY:
+      {
+         bson_subtype_t subtype;
+         const uint8_t * binary;
+         bson_iter_binary(iter, &subtype, &length, &binary);
+         result = _mongoc_matcher_op_length_match_value(size, length);
+         if (result){
+            return result;
+         }
+         break;
+      }
+      case BSON_TYPE_REGEX:
+      {
+         const char * regex_pattern, *regex_options;
+         regex_pattern = bson_iter_regex (iter, &regex_options);
+         length = (uint32_t)strlen(regex_pattern);
+         result = _mongoc_matcher_op_length_match_value(size, length);
+         if (result){
+            return result;
+         }
+      }
       default:
          break;
+   }
+   return result;
+}
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_strlen_match --
+ *
+ *       Checks if @bson matches the {$strlen: ...} op.
+ *
+ * Returns:
+ *       true if the array length matches the input size
+ *       the requested type.
+ *
+ * TODO: iterating every object in the array is slow
+ *       should be able to seek to the last record in the array
+ *       or the next object after the array and back
+ *       No luck so far
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+static bool
+_mongoc_matcher_op_strlen_match (mongoc_matcher_op_size_t *size, /* IN */
+                                 const bson_t             *bson) /* IN */
+{
+   bson_iter_t iter;
+
+   bool result = false;
+   BSON_ASSERT (size);
+   BSON_ASSERT (bson);
+
+   bson_iter_t tmp;
+   int checked = 0, skip=0;
+   if (strchr (size->path, '.')) {
+      if (bson_iter_init (&tmp, bson) )
+      {
+         if (bson_iter_find_descendant (&tmp, size->path, &iter))
+         {
+            result = _mongoc_matcher_op_strlen_match_iter(size, &iter);
+            if (result) {
+               return result;
+            }
+         } else {
+            while (bson_iter_init (&tmp, bson) &&
+                   bson_iter_find_descendants (&tmp, size->path, &skip, &iter)){
+               result = _mongoc_matcher_op_strlen_match_iter(size, &iter);
+               if (result) {
+                  return result;
+               }
+               checked = checked + 1;
+               skip = checked;
+            }
+         }
+      }
+   } else if (bson_iter_init_find (&iter, bson, size->path)) {
+      result = _mongoc_matcher_op_strlen_match_iter(size, &iter);
+      if (result) {
+         return result;
+      }
    }
    return false;
 }
@@ -2008,6 +2160,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_type_match (&op->type, bson);
    case MONGOC_MATCHER_OPCODE_SIZE:
       return _mongoc_matcher_op_size_match (&op->size, bson);
+   case MONGOC_MATCHER_OPCODE_STRLEN:
+      return _mongoc_matcher_op_strlen_match (&op->size, bson);
    case MONGOC_MATCHER_OPCODE_NEAR:
       return _mongoc_matcher_op_near (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEONEAR:

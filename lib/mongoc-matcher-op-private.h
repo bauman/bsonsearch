@@ -59,6 +59,7 @@ typedef enum
    MONGOC_MATCHER_OPCODE_EXISTS,
    MONGOC_MATCHER_OPCODE_TYPE,
    MONGOC_MATCHER_OPCODE_SIZE,
+   MONGOC_MATCHER_OPCODE_STRLEN,
    MONGOC_MATCHER_OPCODE_NEAR,
    MONGOC_MATCHER_OPCODE_GEONEAR,
    MONGOC_MATCHER_OPCODE_GEOWITHIN,
@@ -202,7 +203,8 @@ mongoc_matcher_op_t *_mongoc_matcher_op_exists_new  (const char              *pa
 mongoc_matcher_op_t *_mongoc_matcher_op_type_new    (const char              *path,
                                                      bson_iter_t             *iter);
 
-mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (const char              *path,
+mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (mongoc_matcher_opcode_t opcode,
+                                                     const char              *path,
                                                      const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_not_new     (const char              *path,
                                                      mongoc_matcher_op_t     *child);
