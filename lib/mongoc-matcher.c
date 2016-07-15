@@ -27,6 +27,10 @@
 #include "mongoc-projection.h"
 #include  "mongoc-matcher-op-unwind.h"
 #endif//projection
+#ifdef WITH_CONDITIONAL
+#include "mongoc-matcher-op-conditional.h"
+#endif /*WITH_CONDITIONAL*/
+
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
 
@@ -229,9 +233,10 @@ _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                }
                break;
            }
-#ifdef WITH_PROJECTION
            case BSON_TYPE_DOCUMENT:
            {
+
+#ifdef WITH_PROJECTION
                if (strcmp (key, "$project") == 0) {
                    return _mongoc_matcher_parse_projection(MONGOC_MATCHER_OPCODE_PROJECTION,
                                                            iter, false, error);
@@ -239,10 +244,15 @@ _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                    return _mongoc_matcher_parse_unwind(MONGOC_MATCHER_OPCODE_UNWIND,
                                                            iter, false, error);
                }
+#endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+               if (strcmp (key, "$cond") == 0) {
+                   return _mongoc_matcher_parse_conditional(MONGOC_MATCHER_OPCODE_CONDITIONAL,
+                                                            iter, false, error);
+               }
+#endif //WITH_CONDITIONAL
                break;
            }
-
-#endif //projection
            default:
                break;
        }

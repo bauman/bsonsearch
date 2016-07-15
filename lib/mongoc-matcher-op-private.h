@@ -65,6 +65,9 @@ typedef enum
    MONGOC_MATCHER_OPCODE_GEOWITHIN,
    MONGOC_MATCHER_OPCODE_GEOWITHINPOLY,
    MONGOC_MATCHER_OPCODE_GEOUNDEFINED,
+#ifdef WITH_CONDITIONAL
+   MONGOC_MATCHER_OPCODE_CONDITIONAL,
+#endif /*WITH_CONDITIONAL*/
 #ifdef WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_PROJECTION,
    MONGOC_MATCHER_OPCODE_UNWIND,
@@ -109,6 +112,17 @@ struct _mongoc_matcher_op_compare_t
    bool fast_mode;
 #endif //WITH_YARA
 };
+
+#ifdef WITH_CONDITIONAL
+typedef struct _mongoc_matcher_op_conditional_t mongoc_matcher_op_conditional_t;
+struct _mongoc_matcher_op_conditional_t
+{
+    mongoc_matcher_op_base_t base;
+    mongoc_matcher_op_t *condition;
+    mongoc_matcher_op_t *iftrue;
+    mongoc_matcher_op_t *iffalse;
+};
+#endif /*WITH_CONDITIONAL*/
 
 #ifdef WITH_PROJECTION
 
@@ -182,6 +196,9 @@ union _mongoc_matcher_op_t
 #ifdef WITH_PROJECTION
    mongoc_matcher_op_projection_t projection;
 #endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+   mongoc_matcher_op_conditional_t conditional;
+#endif /*WITH_CONDITIONAL*/
 };
 
 

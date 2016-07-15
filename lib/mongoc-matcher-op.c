@@ -32,6 +32,9 @@
 #ifdef WITH_PROJECTION
 #include "mongoc-matcher-op-unwind.h"
 #endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+#include "mongoc-matcher-op-conditional.h"
+#endif /*WITH_CONDITIONAL*/
 
 /*
  *--------------------------------------------------------------------------
@@ -631,6 +634,18 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
    }
 #endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+   case MONGOC_MATCHER_OPCODE_CONDITIONAL:
+   {
+      if (op->conditional.condition)
+         _mongoc_matcher_op_destroy(op->conditional.condition);
+      if (op->conditional.iftrue)
+         _mongoc_matcher_op_destroy(op->conditional.iftrue);
+      if (op->conditional.iffalse)
+         _mongoc_matcher_op_destroy(op->conditional.iffalse);
+      break;
+   }
+#endif /*WITH_CONDITIONAL*/
    default:
       break;
    }
@@ -2174,6 +2189,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_UNWIND:
       return _mongoc_matcher_op_unwind(op, bson);
 #endif /* WITH_PROJECTION*/
+#ifdef WITH_CONDITIONAL
+   case MONGOC_MATCHER_OPCODE_CONDITIONAL:
+      return _mongoc_matcher_op_conditional(op, bson);
+#endif /*WITH_CONDITIONAL*/
    default:
       break;
    }

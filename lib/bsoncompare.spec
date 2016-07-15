@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.5
-Release: 8%{?dist}.db
+Release: 9%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -25,7 +25,8 @@ Source15: mongoc-projection.h
 Source16: BSONSEARCH_LICENSING.txt
 Source17: mongoc-matcher-op-unwind.c
 Source18: mongoc-matcher-op-unwind.h
-
+Source19: mongoc-matcher-op-conditional.c
+Source20: mongoc-matcher-op-conditional.h
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara
@@ -64,13 +65,15 @@ cp -fp %{SOURCE15} ./
 cp -fp %{SOURCE16} ./
 cp -fp %{SOURCE17} ./
 cp -fp %{SOURCE18} ./
+cp -fp %{SOURCE19} ./
+cp -fp %{SOURCE20} ./
 
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
@@ -87,7 +90,7 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-bson-descendants.h $RPM_BUILD_ROOT/%{_in
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-yara.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-yara.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-projection.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-projection.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-unwind.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-unwind.h
-
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-conditional.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-conditional.h
 
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}

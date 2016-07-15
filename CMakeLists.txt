@@ -6,6 +6,7 @@ LINK_DIRECTORIES(/usr/lib64/)
 add_definitions(-DWITH_YARA)
 add_definitions(-DWITH_PROJECTION)
 add_definitions(-DWITH_UTILS)
+add_definitions(-DWITH_CONDITIONAL)
 
 set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-matcher.c
@@ -14,7 +15,8 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-bson-descendants.c
                  lib/mongoc-matcher-op-yara.c
                  lib/mongoc-projection.c
-                 lib/mongoc-matcher-op-unwind.c)
+                 lib/mongoc-matcher-op-unwind.c
+                 lib/mongoc-matcher-op-conditional.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
@@ -53,3 +55,4 @@ bsonsearch_add_test(unwind_compare lib/tests/bsoncompare_unwind.c)
 bsonsearch_add_test(type-checking lib/tests/bsoncompare-typecheck.c)
 bsonsearch_add_test(exists-check lib/tests/bsoncompare_exists.c)
 bsonsearch_add_test(strlen-check lib/tests/bsoncompare_strlen.c)
+bsonsearch_add_test(conditional lib/tests/bsoncompare_conditional.c)
