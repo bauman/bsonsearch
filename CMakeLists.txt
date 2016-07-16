@@ -7,6 +7,7 @@ add_definitions(-DWITH_YARA)
 add_definitions(-DWITH_PROJECTION)
 add_definitions(-DWITH_UTILS)
 add_definitions(-DWITH_CONDITIONAL)
+add_definitions(-DWITH_TEXT)
 
 set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-matcher.c
@@ -16,13 +17,15 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-matcher-op-yara.c
                  lib/mongoc-projection.c
                  lib/mongoc-matcher-op-unwind.c
-                 lib/mongoc-matcher-op-conditional.c)
+                 lib/mongoc-matcher-op-conditional.c
+                 lib/mongoc-matcher-op-text.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(libbsonsearch bson-1.0 pcre)
 TARGET_LINK_LIBRARIES(libbsonsearch yara)
+TARGET_LINK_LIBRARIES(libbsonsearch stemmer)
 enable_testing()
 
 
@@ -56,3 +59,4 @@ bsonsearch_add_test(type-checking lib/tests/bsoncompare-typecheck.c)
 bsonsearch_add_test(exists-check lib/tests/bsoncompare_exists.c)
 bsonsearch_add_test(strlen-check lib/tests/bsoncompare_strlen.c)
 bsonsearch_add_test(conditional lib/tests/bsoncompare_conditional.c)
+bsonsearch_add_test(textsearch lib/tests/bsoncompare_text.c)

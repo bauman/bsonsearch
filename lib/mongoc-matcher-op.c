@@ -26,6 +26,9 @@
 #include "mongoc-bson-descendants.h"
 #include "mongoc-matcher-private.h"
 
+#ifdef WITH_TEXT
+#include "mongoc-matcher-op-text.h"
+#endif /*WITH_TEXT*/
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
 #endif //WITH_YARA
@@ -646,6 +649,24 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
    }
 #endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
+   {
+      _mongoc_matcher_op_destroy(op->text.size_container);
+      if (op->text.stemmer)
+         sb_stemmer_delete(op->text.stemmer);
+      mongoc_matcher_op_str_hashtable_t *s, *tmp;
+      HASH_ITER(hh, op->text.wordlist, s, tmp) {
+         HASH_DEL(op->text.wordlist, s);
+         bson_free(s->matcher_hash_key);
+         free(s);
+      }
+      bson_free(op->text.language);
+      bson_free(op->text.stop_word);
+      bson_free (op->text.path);
+      break;
+   }
+#endif /* WITH_TEXT */
    default:
       break;
    }
@@ -821,7 +842,7 @@ _mongoc_matcher_op_type_match (mongoc_matcher_op_type_t *type, /* IN */
  *
  *--------------------------------------------------------------------------
  */
-static bool
+bool
 _mongoc_matcher_op_length_match_value (mongoc_matcher_op_size_t *size, /* IN */
                                        uint32_t                  length) /* IN */
 {
@@ -2193,6 +2214,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_CONDITIONAL:
       return _mongoc_matcher_op_conditional(op, bson);
 #endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
+      return _mongoc_matcher_op_text_match(&op->text, bson);
+#endif /*WITH_TEXT*/
    default:
       break;
    }

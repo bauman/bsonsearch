@@ -23,7 +23,9 @@
 #ifdef WITH_YARA
 #include <yara.h>
 #endif //WITH_YARA
-
+#ifdef WITH_TEXT
+#include <libstemmer.h>
+#endif /*WITH_TEXT*/
 
 BSON_BEGIN_DECLS
 
@@ -68,6 +70,9 @@ typedef enum
 #ifdef WITH_CONDITIONAL
    MONGOC_MATCHER_OPCODE_CONDITIONAL,
 #endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+    MONGOC_MATCHER_OPCODE_TEXT_COUNT,
+#endif /*WITH_TEXT*/
 #ifdef WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_PROJECTION,
    MONGOC_MATCHER_OPCODE_UNWIND,
@@ -123,6 +128,24 @@ struct _mongoc_matcher_op_conditional_t
     mongoc_matcher_op_t *iffalse;
 };
 #endif /*WITH_CONDITIONAL*/
+
+
+#ifdef WITH_TEXT
+
+typedef struct _mongoc_matcher_op_text_t mongoc_matcher_op_text_t;
+struct _mongoc_matcher_op_text_t
+{
+    mongoc_matcher_op_base_t base;
+    char * path;
+    char * stop_word;
+    char * language;
+    bool case_sensitive;
+    mongoc_matcher_op_str_hashtable_t *wordlist;
+    mongoc_matcher_op_t *size_container;
+    struct sb_stemmer * stemmer;
+};
+#endif /*WITH_TEXT*/
+
 
 #ifdef WITH_PROJECTION
 
@@ -199,6 +222,9 @@ union _mongoc_matcher_op_t
 #ifdef WITH_CONDITIONAL
    mongoc_matcher_op_conditional_t conditional;
 #endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+   mongoc_matcher_op_text_t text;
+#endif /*WITH_TEXT*/
 };
 
 
@@ -240,6 +266,9 @@ void                 _mongoc_matcher_op_to_bson     (mongoc_matcher_op_t     *op
                                                      bson_t                  *bson);
 uint32_t _mongoc_matcher_op_size_get_iter_len       (bson_iter_t  *iter);
 
+bool
+_mongoc_matcher_op_length_match_value (mongoc_matcher_op_size_t *size, /* IN */
+                                       uint32_t                  length); /* IN */
 
 BSON_END_DECLS
 
