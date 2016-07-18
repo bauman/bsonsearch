@@ -6,14 +6,29 @@ LINK_DIRECTORIES(/usr/lib64/)
 add_definitions(-DWITH_YARA)
 add_definitions(-DWITH_PROJECTION)
 add_definitions(-DWITH_UTILS)
+add_definitions(-DWITH_CONDITIONAL)
+add_definitions(-DWITH_TEXT)
+add_definitions(-DWITH_STEMMER)
+add_definitions(-DWITH_ASPELL)
 
-set(SOURCE_FILES lib/bsoncompare.c lib/mongoc-matcher.c lib/mongoc-matcher-op.c lib/mongoc-matcher-op-geojson.c lib/mongoc-bson-descendants.c lib/mongoc-matcher-op-yara.c lib/mongoc-projection.c)
+set(SOURCE_FILES lib/bsoncompare.c
+                 lib/mongoc-matcher.c
+                 lib/mongoc-matcher-op.c
+                 lib/mongoc-matcher-op-geojson.c
+                 lib/mongoc-bson-descendants.c
+                 lib/mongoc-matcher-op-yara.c
+                 lib/mongoc-projection.c
+                 lib/mongoc-matcher-op-unwind.c
+                 lib/mongoc-matcher-op-conditional.c
+                 lib/mongoc-matcher-op-text.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
 
 TARGET_LINK_LIBRARIES(libbsonsearch bson-1.0 pcre)
 TARGET_LINK_LIBRARIES(libbsonsearch yara)
+TARGET_LINK_LIBRARIES(libbsonsearch stemmer)
+TARGET_LINK_LIBRARIES(libbsonsearch aspell)
 enable_testing()
 
 
@@ -42,6 +57,10 @@ bsonsearch_add_test(projection-test lib/tests/bsoncompare_projection.c)
 bsonsearch_add_test(and-bail-test lib/tests/bsoncompare_and_bailout.c)
 bsonsearch_add_test(json_decode lib/tests/bsoncompare_json_input.c)
 bsonsearch_add_test(projection_leak lib/tests/projection_leak.c)
-
-
-
+bsonsearch_add_test(unwind_compare lib/tests/bsoncompare_unwind.c)
+bsonsearch_add_test(type-checking lib/tests/bsoncompare-typecheck.c)
+bsonsearch_add_test(exists-check lib/tests/bsoncompare_exists.c)
+bsonsearch_add_test(strlen-check lib/tests/bsoncompare_strlen.c)
+bsonsearch_add_test(conditional lib/tests/bsoncompare_conditional.c)
+bsonsearch_add_test(textsearch lib/tests/bsoncompare_text.c)
+bsonsearch_add_test(spellingsearch lib/tests/bsoncompare_spelling.c)

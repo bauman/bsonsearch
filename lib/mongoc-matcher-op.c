@@ -24,10 +24,23 @@
 #include "bsoncompare.h"
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-bson-descendants.h"
+#include "mongoc-matcher-private.h"
 
+#ifdef WITH_TEXT
+#include "mongoc-matcher-op-text.h"
+#ifdef WITH_ASPELL
+#include <aspell.h>
+#endif /*WITH_ASPELL && WITH_TEXT*/
+#endif /*WITH_TEXT*/
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
 #endif //WITH_YARA
+#ifdef WITH_PROJECTION
+#include "mongoc-matcher-op-unwind.h"
+#endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+#include "mongoc-matcher-op-conditional.h"
+#endif /*WITH_CONDITIONAL*/
 
 /*
  *--------------------------------------------------------------------------
@@ -48,7 +61,7 @@
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_exists_new (const char  *path,   /* IN */
-                               bool  exists) /* IN */
+                               bson_iter_t *iter) /* IN */
 {
    mongoc_matcher_op_t *op;
 
@@ -57,8 +70,32 @@ _mongoc_matcher_op_exists_new (const char  *path,   /* IN */
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
    op->exists.base.opcode = MONGOC_MATCHER_OPCODE_EXISTS;
    op->exists.path = bson_strdup (path);
-   op->exists.exists = exists;
-
+   op->exists.exists = false;
+   bson_type_t iter_type =bson_iter_type (iter);
+   switch (iter_type) {
+      case BSON_TYPE_BOOL:
+      {
+         op->exists.exists = bson_iter_bool(iter);
+         op->exists.query  = NULL;
+         break;
+      }
+      case BSON_TYPE_DOCUMENT:
+      {
+         op->exists.exists = true;
+         bson_iter_t child;
+         mongoc_matcher_op_t *queryer   = NULL;
+         if (bson_iter_recurse(iter, &child)&& bson_iter_next(&child)) {
+            queryer = _mongoc_matcher_parse (&child, NULL);
+            op->exists.query = queryer;
+         }
+         break;
+      }
+      default:
+      {
+         _mongoc_matcher_op_destroy(op);
+         op = NULL;
+      }
+   }
    return op;
 }
 /*
@@ -113,7 +150,8 @@ _mongoc_matcher_op_inset_new (const char              *path,   /* IN */
  *
  * _mongoc_matcher_op_type_new --
  *
- *       Create a new op for checking {$type: int}.
+ *       Create a new op for checking {$type: 'int32'}.
+ *       https://docs.mongodb.com/manual/reference/operator/query/type/
  *
  * Returns:
  *       A newly allocated mongoc_matcher_op_t that should be freed with
@@ -127,18 +165,74 @@ _mongoc_matcher_op_inset_new (const char              *path,   /* IN */
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_type_new (const char  *path, /* IN */
-                             bson_type_t  type) /* IN */
+                             bson_iter_t *iter) /* IN */
 {
    mongoc_matcher_op_t *op;
 
    BSON_ASSERT (path);
-   BSON_ASSERT (type);
+   BSON_ASSERT (iter);
 
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
    op->type.base.opcode = MONGOC_MATCHER_OPCODE_TYPE;
    op->type.path = bson_strdup (path);
-   op->type.type = type;
-
+   op->type.type = BSON_TYPE_UNDEFINED;
+   bson_type_t iter_type =bson_iter_type (iter);
+   switch (iter_type){
+      case BSON_TYPE_UTF8:
+      {
+         uint32_t vlen=0;
+         const char * type = bson_iter_utf8(iter, &vlen);
+         if (vlen == 0){
+            op->type.type = BSON_TYPE_UTF8;
+         } else {
+            if ((strcmp(type, "string") == 0)) {
+               op->type.type = BSON_TYPE_UTF8;
+            } else if (strcmp(type, "integer") == 0){
+               op->type.type = BSON_TYPE_INT32 + BSON_TYPE_INT64;
+            } else if (strcmp(type, "number") == 0){
+               op->type.type = BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE;
+            } else if (strcmp(type, "bool") == 0){
+               op->type.type = BSON_TYPE_BOOL;
+            } else if (strcmp(type, "int") == 0){
+               op->type.type = BSON_TYPE_INT32;
+            } else if (strcmp(type, "double") == 0){
+               op->type.type = BSON_TYPE_DOUBLE;
+            } else if (strcmp(type, "long") == 0){
+               op->type.type = BSON_TYPE_INT64;
+            } else if (strcmp(type, "objectId") == 0){
+               op->type.type = BSON_TYPE_OID;
+            } else if (strcmp(type, "date") == 0){
+               op->type.type = BSON_TYPE_DATE_TIME;
+            } else if (strcmp(type, "timestamp") == 0){
+               op->type.type = BSON_TYPE_TIMESTAMP;
+            } else if (strcmp(type, "object") == 0){
+               op->type.type = BSON_TYPE_DOCUMENT;
+            } else if (strcmp(type, "array") == 0){
+               op->type.type = BSON_TYPE_ARRAY;
+            } else if (strcmp(type, "binData") == 0){
+               op->type.type = BSON_TYPE_BINARY;
+            } else if (strcmp(type, "null") == 0){
+               op->type.type = BSON_TYPE_NULL;
+            } else if (strcmp(type, "regex") == 0){
+               op->type.type = BSON_TYPE_REGEX;
+            } else if (strcmp(type, "dbPointer") == 0){
+               op->type.type = BSON_TYPE_DBPOINTER;
+            } else if (strcmp(type, "symbol") == 0){
+               op->type.type = BSON_TYPE_SYMBOL;
+            } else if (strcmp(type, "minKey") == 0){
+               op->type.type = BSON_TYPE_MINKEY;
+            } else if (strcmp(type, "maxKey") == 0){
+               op->type.type = BSON_TYPE_MAXKEY;
+            }
+         }
+         break;
+      }
+      default:
+      {
+         op->type.type = bson_iter_type (iter);
+         break;
+      }
+   }
    return op;
 }
 
@@ -160,7 +254,8 @@ _mongoc_matcher_op_type_new (const char  *path, /* IN */
  */
 
 mongoc_matcher_op_t *
-_mongoc_matcher_op_size_new (const char         *path,   /* IN */
+_mongoc_matcher_op_size_new (mongoc_matcher_opcode_t opcode,
+                             const char         *path,   /* IN */
                              const bson_iter_t   *iter) /* IN */
 {
    mongoc_matcher_op_t *op;
@@ -168,7 +263,7 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
    BSON_ASSERT (path);
 
    op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
-   op->size.base.opcode = MONGOC_MATCHER_OPCODE_SIZE;
+   op->size.base.opcode = opcode;
    op->size.compare_type = MONGOC_MATCHER_OPCODE_UNDEFINED;
    op->size.path = bson_strdup (path);
    switch (bson_iter_type ((iter))) {
@@ -199,6 +294,8 @@ _mongoc_matcher_op_size_new (const char         *path,   /* IN */
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_LT;
                } else if (strcmp(key, "$not") == 0) {
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_NOT;
+               } else if (strcmp(key, "$eq") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_EQ;
                }
             }
          }
@@ -490,12 +587,18 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->not_.path);
       break;
    case MONGOC_MATCHER_OPCODE_EXISTS:
+   {
       bson_free (op->exists.path);
+      if (op->exists.query){
+         _mongoc_matcher_op_destroy (op->exists.query);
+      }
       break;
+   }
    case MONGOC_MATCHER_OPCODE_TYPE:
       bson_free (op->type.path);
       break;
    case MONGOC_MATCHER_OPCODE_SIZE:
+   case MONGOC_MATCHER_OPCODE_STRLEN:
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
@@ -514,6 +617,12 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
 #endif //WITH_YARA
 #ifdef WITH_PROJECTION
+   case MONGOC_MATCHER_OPCODE_UNWIND:
+   {
+      if (op->projection.query)
+         _mongoc_matcher_op_destroy(op->projection.query);
+      //continue to rest of projection
+   }
    case MONGOC_MATCHER_OPCODE_PROJECTION:
    {
       bson_free(op->projection.path);
@@ -533,6 +642,53 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
    }
 #endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+   case MONGOC_MATCHER_OPCODE_CONDITIONAL:
+   {
+      if (op->conditional.condition)
+         _mongoc_matcher_op_destroy(op->conditional.condition);
+      if (op->conditional.iftrue)
+         _mongoc_matcher_op_destroy(op->conditional.iftrue);
+      if (op->conditional.iffalse)
+         _mongoc_matcher_op_destroy(op->conditional.iffalse);
+      break;
+   }
+#endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+#ifdef WITH_ASPELL
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
+   {
+      bson_free(op->text.dictionary);
+      op->text.dictionary = NULL;
+      if (op->text.spell_checker){
+         delete_aspell_speller(op->text.spell_checker);
+      }
+   }
+#endif /*WITH_ASPELL*/
+#ifdef WITH_STEMMER
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES:
+#endif /*WITH_STEMMER*/
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
+   {
+      _mongoc_matcher_op_destroy(op->text.size_container);
+#ifdef WITH_STEMMER
+      if (op->text.stemmer)
+         sb_stemmer_delete(op->text.stemmer);
+      mongoc_matcher_op_str_hashtable_t *s, *tmp;
+      HASH_ITER(hh, op->text.wordlist, s, tmp) {
+         HASH_DEL(op->text.wordlist, s);
+         bson_free(s->matcher_hash_key);
+         free(s);
+      }
+      bson_free(op->text.language);
+#endif /*WITH_STEMMER*/
+      bson_free(op->text.stop_word);
+      bson_free (op->text.path);
+      break;
+   }
+#endif /* WITH_TEXT */
    default:
       break;
    }
@@ -549,6 +705,13 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
  *       Checks to see if @bson matches @exists requirements. The
  *       {$exists: bool} query can be either true or fase so we must
  *       handle false as "not exists".
+ *
+ *       non-standard behavior
+ *          {key:{$exists:{spec}}} semantically means:
+ *                                 if the key exists, it must match the spec
+ *                                 A document where the key doesn't exist
+ *                                 will return true when it obviously doesn't
+ *                                 meet the spec.
  *
  * Returns:
  *       true if the field exists and the spec expected it.
@@ -567,16 +730,42 @@ _mongoc_matcher_op_exists_match (mongoc_matcher_op_exists_t *exists, /* IN */
                                  const bson_t               *bson)   /* IN */
 {
    bson_iter_t iter;
-   bson_iter_t desc;
-   bool found;
-
+   bson_iter_t tmp;
    BSON_ASSERT (exists);
    BSON_ASSERT (bson);
-
-   found = (bson_iter_init (&iter, bson) &&
-            bson_iter_find_descendant (&iter, exists->path, &desc));
-
-   return (found == exists->exists);
+   bool found_one = false;
+   bool query_result = true;
+   int checked = 0, skip=0;
+   if (strchr (exists->path, '.')) {
+      if (!bson_iter_init (&tmp, bson) ||
+          !bson_iter_find_descendant (&tmp, exists->path, &iter)) { //try this way first
+         while (!found_one &&
+                bson_iter_init (&tmp, bson) &&
+                bson_iter_find_descendants (&tmp, exists->path, &skip, &iter)){
+            found_one = true;
+            if (exists->query) {
+               query_result = _mongoc_matcher_op_match(exists->query, bson);
+            }
+            skip = ++checked;
+         }
+         if (!exists->query){
+            return ((checked>0) && (found_one  == exists->exists));
+         } else {
+            return (query_result);
+         }
+      }
+   } else if (!bson_iter_init_find (&iter, bson, exists->path)) {
+      if (!exists->query) {
+         return (false == exists->exists);
+      } else {
+         return (true == exists->exists);
+      }
+   }
+   if (!exists->query) {
+      return (true == exists->exists);
+   } else {
+      return _mongoc_matcher_op_match(exists->query, bson);
+   }
 }
 
 
@@ -596,25 +785,107 @@ _mongoc_matcher_op_exists_match (mongoc_matcher_op_exists_t *exists, /* IN */
  *
  *--------------------------------------------------------------------------
  */
-
+static bool
+_mongoc_matcher_op_type_match_iter (mongoc_matcher_op_type_t *type, /* IN */
+                                    bson_iter_t               *iter) /* IN */
+{
+   bool result = false;
+   switch ((uint8_t)type->type){
+      case (BSON_TYPE_INT32 + BSON_TYPE_INT64 + BSON_TYPE_DOUBLE):
+      {
+         bson_type_t itype = bson_iter_type (iter);
+         result = ( itype == BSON_TYPE_INT32 ||
+                    itype == BSON_TYPE_INT64 ||
+                    itype == BSON_TYPE_DOUBLE);
+         break;
+      }
+      case (BSON_TYPE_INT32 + BSON_TYPE_INT64):
+      {
+         bson_type_t itype = bson_iter_type (iter);
+         result = ( itype == BSON_TYPE_INT32 ||
+                    itype == BSON_TYPE_INT64   );
+         break;
+      }
+      default:
+      {
+         result = (bson_iter_type (iter) == type->type);
+         break;
+      }
+   }
+   return result;
+}
 static bool
 _mongoc_matcher_op_type_match (mongoc_matcher_op_type_t *type, /* IN */
                                const bson_t             *bson) /* IN */
 {
-   bson_iter_t iter;
-   bson_iter_t desc;
 
    BSON_ASSERT (type);
    BSON_ASSERT (bson);
 
-   if (bson_iter_init (&iter, bson) &&
-       bson_iter_find_descendant (&iter, type->path, &desc)) {
-      return (bson_iter_type (&iter) == type->type);
-   }
+   bson_iter_t tmp;
+   bson_iter_t iter;
 
-   return false;
+   bool found_one = false;
+   int checked = 0, skip=0;
+   if (strchr (type->path, '.')) {
+      if (!bson_iter_init (&tmp, bson) ||
+          !bson_iter_find_descendant (&tmp, type->path, &iter)) { //try this way first
+         while (!found_one &&
+                bson_iter_init (&tmp, bson) &&
+                bson_iter_find_descendants (&tmp, type->path, &skip, &iter)){
+            found_one |= _mongoc_matcher_op_type_match_iter(type, &iter);
+            skip = ++checked;
+         }
+         return ((checked>0) && found_one);
+      }
+   } else if (!bson_iter_init_find (&iter, bson, type->path)) {
+      return false;
+   }
+   return _mongoc_matcher_op_type_match_iter(type, &iter);
 }
 
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_length_match_value --
+ *
+ *       Helper Function for opcodes that require internal gt/lt/ne/etc.
+ *
+ * Returns:
+ *       true if the size operator logic matches the
+ *       the requested type.
+ *
+ * TODO: iterating every object in the array is slow
+ *       should be able to seek to the last record in the array
+ *       or the next object after the array and back
+ *       No luck so far
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+bool
+_mongoc_matcher_op_length_match_value (mongoc_matcher_op_size_t *size, /* IN */
+                                       uint32_t                  length) /* IN */
+{
+   switch (size->compare_type){
+      case MONGOC_MATCHER_OPCODE_EQ:
+         return (length == size->size);
+      case MONGOC_MATCHER_OPCODE_GTE:
+         return (length >= size->size);
+      case MONGOC_MATCHER_OPCODE_GT:
+         return (length > size->size);
+      case MONGOC_MATCHER_OPCODE_LTE:
+         return (length <= size->size);
+      case MONGOC_MATCHER_OPCODE_LT:
+         return (length < size->size);
+      case MONGOC_MATCHER_OPCODE_NOT:
+         return (length != size->size);
+      default:
+         break;
+   }
+   return false;
+}
 /*
  *--------------------------------------------------------------------------
  *
@@ -641,7 +912,7 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
                                const bson_t             *bson) /* IN */
 {
    bson_iter_t iter;
-   int32_t right_array_size = 0; //NOT AN ARRAY
+   uint32_t right_array_size = 0; //NOT AN ARRAY
    BSON_ASSERT (size);
    BSON_ASSERT (bson);
 
@@ -667,22 +938,130 @@ _mongoc_matcher_op_size_match (mongoc_matcher_op_size_t *size, /* IN */
    } else if (bson_iter_init_find (&iter, bson, size->path)) {
       right_array_size += _mongoc_matcher_op_size_get_iter_len(&iter);
    }
-
-   switch (size->compare_type){
-      case MONGOC_MATCHER_OPCODE_EQ:
-         return (right_array_size == size->size);
-      case MONGOC_MATCHER_OPCODE_GTE:
-         return (right_array_size >= size->size);
-      case MONGOC_MATCHER_OPCODE_GT:
-         return (right_array_size > size->size);
-      case MONGOC_MATCHER_OPCODE_LTE:
-         return (right_array_size <= size->size);
-      case MONGOC_MATCHER_OPCODE_LT:
-         return (right_array_size < size->size);
-      case MONGOC_MATCHER_OPCODE_NOT:
-         return (right_array_size != size->size);
+   return _mongoc_matcher_op_length_match_value(size, right_array_size);
+}
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_strlen_match_iter --
+ *
+ *       Checks if @bson matches the {$strlen: ...} op.
+ *
+ *       Checks the length of objects in represented by the followng types
+ *          BSON_TYPE_UTF8   = <strlen(value)>
+ *          BSON_TYPE_REGEX  = <strlen(value.pattern)>
+ *          BSON_TYPE_BINARY = <strlen(value.decoded)>
+ *
+ * Returns:
+ *       true if the object length matches the input size
+ *       the requested type.
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+static bool
+_mongoc_matcher_op_strlen_match_iter (mongoc_matcher_op_size_t *size, /* IN */
+                                      bson_iter_t            *iter) /* IN */
+{
+   uint32_t length = 0;
+   bool result = false;
+   switch (bson_iter_type(iter))
+   {
+      case BSON_TYPE_UTF8:
+      {
+         bson_iter_utf8(iter, &length);
+         result = _mongoc_matcher_op_length_match_value(size, length);
+         if (result){
+            return result;
+         }
+         break;
+      }
+      case BSON_TYPE_BINARY:
+      {
+         bson_subtype_t subtype;
+         const uint8_t * binary;
+         bson_iter_binary(iter, &subtype, &length, &binary);
+         result = _mongoc_matcher_op_length_match_value(size, length);
+         if (result){
+            return result;
+         }
+         break;
+      }
+      case BSON_TYPE_REGEX:
+      {
+         const char * regex_pattern, *regex_options;
+         regex_pattern = bson_iter_regex (iter, &regex_options);
+         length = (uint32_t)strlen(regex_pattern);
+         result = _mongoc_matcher_op_length_match_value(size, length);
+         if (result){
+            return result;
+         }
+      }
       default:
          break;
+   }
+   return result;
+}
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_strlen_match --
+ *
+ *       Checks if @bson matches the {$strlen: ...} op.
+ *
+ * Returns:
+ *       true if the array length matches the input size
+ *       the requested type.
+ *
+ * TODO: iterating every object in the array is slow
+ *       should be able to seek to the last record in the array
+ *       or the next object after the array and back
+ *       No luck so far
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+static bool
+_mongoc_matcher_op_strlen_match (mongoc_matcher_op_size_t *size, /* IN */
+                                 const bson_t             *bson) /* IN */
+{
+   bson_iter_t iter;
+
+   bool result = false;
+   BSON_ASSERT (size);
+   BSON_ASSERT (bson);
+
+   bson_iter_t tmp;
+   int checked = 0, skip=0;
+   if (strchr (size->path, '.')) {
+      if (bson_iter_init (&tmp, bson) )
+      {
+         if (bson_iter_find_descendant (&tmp, size->path, &iter))
+         {
+            result = _mongoc_matcher_op_strlen_match_iter(size, &iter);
+            if (result) {
+               return result;
+            }
+         } else {
+            while (bson_iter_init (&tmp, bson) &&
+                   bson_iter_find_descendants (&tmp, size->path, &skip, &iter)){
+               result = _mongoc_matcher_op_strlen_match_iter(size, &iter);
+               if (result) {
+                  return result;
+               }
+               checked = checked + 1;
+               skip = checked;
+            }
+         }
+      }
+   } else if (bson_iter_init_find (&iter, bson, size->path)) {
+      result = _mongoc_matcher_op_strlen_match_iter(size, &iter);
+      if (result) {
+         return result;
+      }
    }
    return false;
 }
@@ -1839,6 +2218,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_type_match (&op->type, bson);
    case MONGOC_MATCHER_OPCODE_SIZE:
       return _mongoc_matcher_op_size_match (&op->size, bson);
+   case MONGOC_MATCHER_OPCODE_STRLEN:
+      return _mongoc_matcher_op_strlen_match (&op->size, bson);
    case MONGOC_MATCHER_OPCODE_NEAR:
       return _mongoc_matcher_op_near (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEONEAR:
@@ -1847,6 +2228,26 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_geowithin (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
       return _mongoc_matcher_op_geowithinpoly (op, bson);
+#ifdef WITH_PROJECTION
+   case MONGOC_MATCHER_OPCODE_UNWIND:
+      return _mongoc_matcher_op_unwind(op, bson);
+#endif /* WITH_PROJECTION*/
+#ifdef WITH_CONDITIONAL
+   case MONGOC_MATCHER_OPCODE_CONDITIONAL:
+      return _mongoc_matcher_op_conditional(op, bson);
+#endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+#ifdef WITH_STEMMER
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES:
+#endif /*WITH_STEMMER*/
+#ifdef WITH_ASPELL
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
+#endif /*WITH_ASPELL*/
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
+      return _mongoc_matcher_op_text_match(&op->text, bson);
+#endif /*WITH_TEXT*/
    default:
       break;
    }

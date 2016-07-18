@@ -1,6 +1,6 @@
 Name: libbsoncompare		
-Version: 1.3.3
-Release: 36%{?dist}.db
+Version: 1.3.5
+Release: 12%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -23,11 +23,17 @@ Source13: mongoc-matcher-op-yara.h
 Source14: mongoc-projection.c
 Source15: mongoc-projection.h
 Source16: BSONSEARCH_LICENSING.txt
-
+Source17: mongoc-matcher-op-unwind.c
+Source18: mongoc-matcher-op-unwind.h
+Source19: mongoc-matcher-op-conditional.c
+Source20: mongoc-matcher-op-conditional.h
+Source21: mongoc-matcher-op-text.c
+Source22: mongoc-matcher-op-text.h
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara
-Requires: libbson == %{version}, pcre, yara
+BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara, libstemmer-devel, libstemmer, aspell-devel
+Requires: libbson == %{version}, pcre, yara, libstemmer, aspell, aspell-en
+Provides: libbsoncompare.so()(64bit)
 
 %description
 Provides a shared object which can be used to perform mongo-like queries against BSON data.
@@ -42,6 +48,16 @@ Group: Development/Libraries
 %description devel
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
+
+%package lite
+Summary: libbsoncompare with basic functionality and minimal external dependencies
+Requires: libbson == %{version}, pcre
+Provides: libbsoncomparelite.so()(64bit)
+Group: Development/Libraries
+
+%description lite
+The %{name}-lite package contains %{name} library containing
+minimal external dependencies with links to external functionality disabled.
 
 
 %prep
@@ -59,17 +75,25 @@ cp -fp %{SOURCE13} ./
 cp -fp %{SOURCE14} ./
 cp -fp %{SOURCE15} ./
 cp -fp %{SOURCE16} ./
+cp -fp %{SOURCE17} ./
+cp -fp %{SOURCE18} ./
+cp -fp %{SOURCE19} ./
+cp -fp %{SOURCE20} ./
+cp -fp %{SOURCE21} ./
+cp -fp %{SOURCE22} ./
 
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -D WITH_PYTHON -D WITH_UTILS -D WITH_YARA -DWITH_PROJECTION -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -shared -DWITH_STEMMER -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
 install -m 644 -p $RPM_BUILD_DIR/libbsoncompare.so $RPM_BUILD_ROOT/%{_usr}/%{_lib}/libbsoncompare.so
+install -m 644 -p $RPM_BUILD_DIR/libbsoncomparelite.so $RPM_BUILD_ROOT/%{_usr}/%{_lib}/libbsoncomparelite.so
 
 mkdir -p $RPM_BUILD_ROOT/%{_includedir}
 install -m 644 -p $RPM_BUILD_DIR/bsoncompare.h $RPM_BUILD_ROOT/%{_includedir}/bsoncompare.h
@@ -81,7 +105,9 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-geojson.h $RPM_BUILD_ROOT/%{_
 install -m 644 -p $RPM_BUILD_DIR/mongoc-bson-descendants.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-bson-descendants.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-yara.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-yara.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-projection.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-projection.h
-
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-unwind.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-unwind.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-conditional.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-conditional.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-text.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-text.h
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
 install -m 644 -p $RPM_BUILD_DIR/BSONSEARCH_LICENSING.txt $RPM_BUILD_ROOT/%{_docdir}/%{name}/LICENSING.txt
@@ -97,7 +123,8 @@ rm -rf %{buildroot}
 %{_docdir}/%{name}/LICENSING.txt
 %files devel
 %{_includedir}/*.h
-
+%files lite
+%{_usr}/%{_lib}/libbsoncomparelite.so
 
 %changelog
 

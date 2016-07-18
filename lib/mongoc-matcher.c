@@ -20,12 +20,20 @@
 #include "mongoc-error.h"
 #include "mongoc-matcher.h"
 #include "mongoc-matcher-op-geojson.h"
+#ifdef WITH_TEXT
+#include "mongoc-matcher-op-text.h"
+#endif /* WITH_TEXT */
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
 #endif//YARA
 #ifdef WITH_PROJECTION
 #include "mongoc-projection.h"
+#include  "mongoc-matcher-op-unwind.h"
 #endif//projection
+#ifdef WITH_CONDITIONAL
+#include "mongoc-matcher-op-conditional.h"
+#endif /*WITH_CONDITIONAL*/
+
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
 
@@ -105,6 +113,10 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
           op = _mongoc_matcher_op_yara_new (path,
                                             &child);
 #endif //WITH_YARA
+#ifdef WITH_TEXT
+      } else if (strcmp(key, "$text") == 0) {
+          op = _mongoc_matcher_text_new(path, &child);
+#endif //WITH_TEXT
       } else if (strcmp(key, "$in") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_IN, path,
                                               &child);
@@ -122,11 +134,13 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
                                               &child);
 
       } else if (strcmp(key, "$exists") == 0) {
-         op = _mongoc_matcher_op_exists_new (path, bson_iter_bool (&child));
+         op = _mongoc_matcher_op_exists_new (path, &child);
       } else if (strcmp(key, "$type") == 0) {
-         op = _mongoc_matcher_op_type_new (path, bson_iter_type (&child));
+         op = _mongoc_matcher_op_type_new (path, &child);
       } else if (strcmp(key, "$size") == 0) {
-          op = _mongoc_matcher_op_size_new (path, &child);
+          op = _mongoc_matcher_op_size_new (MONGOC_MATCHER_OPCODE_SIZE, path, &child);
+      } else if (strcmp(key, "$strlen") == 0) {
+          op = _mongoc_matcher_op_size_new (MONGOC_MATCHER_OPCODE_STRLEN, path, &child);
       } else if (strcmp(key, "$near") == 0) {
           if (BSON_ITER_HOLDS_ARRAY(&child))
           {
@@ -187,7 +201,8 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
  *--------------------------------------------------------------------------
  */
 
-static mongoc_matcher_op_t *
+
+mongoc_matcher_op_t *
 _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                        bson_error_t *error) /* OUT */
 {
@@ -225,16 +240,26 @@ _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                }
                break;
            }
-#ifdef WITH_PROJECTION
            case BSON_TYPE_DOCUMENT:
            {
+
+#ifdef WITH_PROJECTION
                if (strcmp (key, "$project") == 0) {
                    return _mongoc_matcher_parse_projection(MONGOC_MATCHER_OPCODE_PROJECTION,
                                                            iter, false, error);
+               } else if (strcmp (key, "$unwind") == 0){
+                   return _mongoc_matcher_parse_unwind(MONGOC_MATCHER_OPCODE_UNWIND,
+                                                           iter, false, error);
                }
+#endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+               if (strcmp (key, "$cond") == 0) {
+                   return _mongoc_matcher_parse_conditional(MONGOC_MATCHER_OPCODE_CONDITIONAL,
+                                                            iter, false, error);
+               }
+#endif //WITH_CONDITIONAL
                break;
            }
-#endif //projection
            default:
                break;
        }

@@ -23,7 +23,14 @@
 #ifdef WITH_YARA
 #include <yara.h>
 #endif //WITH_YARA
-
+#ifdef WITH_TEXT
+#ifdef WITH_STEMMER
+#include <libstemmer.h>
+#endif /* WITH_STEMMER */
+#ifdef WITH_ASPELL
+#include <aspell.h>
+#endif /*WITH_ASPELL*/
+#endif /*WITH_TEXT*/
 
 BSON_BEGIN_DECLS
 
@@ -59,13 +66,29 @@ typedef enum
    MONGOC_MATCHER_OPCODE_EXISTS,
    MONGOC_MATCHER_OPCODE_TYPE,
    MONGOC_MATCHER_OPCODE_SIZE,
+   MONGOC_MATCHER_OPCODE_STRLEN,
    MONGOC_MATCHER_OPCODE_NEAR,
    MONGOC_MATCHER_OPCODE_GEONEAR,
    MONGOC_MATCHER_OPCODE_GEOWITHIN,
    MONGOC_MATCHER_OPCODE_GEOWITHINPOLY,
    MONGOC_MATCHER_OPCODE_GEOUNDEFINED,
+#ifdef WITH_CONDITIONAL
+   MONGOC_MATCHER_OPCODE_CONDITIONAL,
+#endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+    MONGOC_MATCHER_OPCODE_TEXT_COUNT,
+#ifdef WITH_STEMMER /* && WITH_TEXT*/
+    MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES,
+#endif /*WITH_STEMMER && WITH_TEXT*/
+#ifdef WITH_ASPELL /* && WITH_TEXT */
+    MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT,
+    MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT,
+    MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT,
+#endif /*WITH_ASPELL && WITH_TEXT*/
+#endif /*WITH_TEXT*/
 #ifdef WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_PROJECTION,
+   MONGOC_MATCHER_OPCODE_UNWIND,
 #endif //WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
@@ -108,6 +131,41 @@ struct _mongoc_matcher_op_compare_t
 #endif //WITH_YARA
 };
 
+#ifdef WITH_CONDITIONAL
+typedef struct _mongoc_matcher_op_conditional_t mongoc_matcher_op_conditional_t;
+struct _mongoc_matcher_op_conditional_t
+{
+    mongoc_matcher_op_base_t base;
+    mongoc_matcher_op_t *condition;
+    mongoc_matcher_op_t *iftrue;
+    mongoc_matcher_op_t *iffalse;
+};
+#endif /*WITH_CONDITIONAL*/
+
+
+#ifdef WITH_TEXT
+
+typedef struct _mongoc_matcher_op_text_t mongoc_matcher_op_text_t;
+struct _mongoc_matcher_op_text_t
+{
+    mongoc_matcher_op_base_t base;
+    char * path;
+    bool case_sensitive;
+    char * stop_word;
+    mongoc_matcher_op_t *size_container;
+#ifdef WITH_STEMMER
+    char * language;
+    struct sb_stemmer * stemmer;
+    mongoc_matcher_op_str_hashtable_t *wordlist;
+#endif /*WITH_STEMMER && WITH_TEXT*/
+#ifdef WITH_ASPELL
+    char * dictionary;
+    AspellSpeller * spell_checker;
+#endif /*WITH_ASPELL && WITH_TEXT*/
+};
+#endif /*WITH_TEXT*/
+
+
 #ifdef WITH_PROJECTION
 
 typedef struct _mongoc_matcher_op_projection_t mongoc_matcher_op_projection_t;
@@ -118,6 +176,7 @@ struct _mongoc_matcher_op_projection_t
     mongoc_matcher_op_str_hashtable_t *pathlist;
     char* as;
     mongoc_matcher_op_t *next;
+    mongoc_matcher_op_t *query;
 };
 #endif //WITH_PROJECTION
 
@@ -126,6 +185,7 @@ struct _mongoc_matcher_op_exists_t
    mongoc_matcher_op_base_t base;
    char *path;
    bool exists;
+   mongoc_matcher_op_t *query;
 };
 
 struct _mongoc_matcher_op_size_t
@@ -178,6 +238,12 @@ union _mongoc_matcher_op_t
 #ifdef WITH_PROJECTION
    mongoc_matcher_op_projection_t projection;
 #endif //WITH_PROJECTION
+#ifdef WITH_CONDITIONAL
+   mongoc_matcher_op_conditional_t conditional;
+#endif /*WITH_CONDITIONAL*/
+#ifdef WITH_TEXT
+   mongoc_matcher_op_text_t text;
+#endif /*WITH_TEXT*/
 };
 
 
@@ -195,10 +261,12 @@ mongoc_matcher_op_t *_mongoc_matcher_op_compare_new (mongoc_matcher_opcode_t  op
                                                      const char              *path,
                                                      const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_exists_new  (const char              *path,
-                                                     bool                     exists);
+                                                     bson_iter_t             *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_type_new    (const char              *path,
-                                                     bson_type_t              type);
-mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (const char              *path,
+                                                     bson_iter_t             *iter);
+
+mongoc_matcher_op_t *_mongoc_matcher_op_size_new    (mongoc_matcher_opcode_t opcode,
+                                                     const char              *path,
                                                      const bson_iter_t       *iter);
 mongoc_matcher_op_t *_mongoc_matcher_op_not_new     (const char              *path,
                                                      mongoc_matcher_op_t     *child);
@@ -217,6 +285,9 @@ void                 _mongoc_matcher_op_to_bson     (mongoc_matcher_op_t     *op
                                                      bson_t                  *bson);
 uint32_t _mongoc_matcher_op_size_get_iter_len       (bson_iter_t  *iter);
 
+bool
+_mongoc_matcher_op_length_match_value (mongoc_matcher_op_size_t *size, /* IN */
+                                       uint32_t                  length); /* IN */
 
 BSON_END_DECLS
 

@@ -95,4 +95,5 @@ main (int   argc,
     regex_destroy();
 
     check_precompiled_regex();
+    exit(0);
 }
