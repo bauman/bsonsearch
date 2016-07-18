@@ -28,6 +28,9 @@
 
 #ifdef WITH_TEXT
 #include "mongoc-matcher-op-text.h"
+#ifdef WITH_ASPELL
+#include <aspell.h>
+#endif /*WITH_ASPELL && WITH_TEXT*/
 #endif /*WITH_TEXT*/
 #ifdef WITH_YARA
 #include "mongoc-matcher-op-yara.h"
@@ -650,6 +653,17 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    }
 #endif /*WITH_CONDITIONAL*/
 #ifdef WITH_TEXT
+#ifdef WITH_ASPELL
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
+   {
+      bson_free(op->text.dictionary);
+      if (op->text.spell_checker){
+         delete_aspell_speller(op->text.spell_checker);
+      }
+   }
+#endif /*WITH_ASPELL*/
    case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
    {
       _mongoc_matcher_op_destroy(op->text.size_container);
@@ -2215,6 +2229,14 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_conditional(op, bson);
 #endif /*WITH_CONDITIONAL*/
 #ifdef WITH_TEXT
+#ifdef WITH_STEMMER
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES:
+#endif /*WITH_STEMMER*/
+#ifdef WITH_ASPELL
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:
+   case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
+#endif /*WITH_ASPELL*/
    case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
       return _mongoc_matcher_op_text_match(&op->text, bson);
 #endif /*WITH_TEXT*/

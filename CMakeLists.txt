@@ -8,6 +8,8 @@ add_definitions(-DWITH_PROJECTION)
 add_definitions(-DWITH_UTILS)
 add_definitions(-DWITH_CONDITIONAL)
 add_definitions(-DWITH_TEXT)
+add_definitions(-DWITH_STEMMER)
+add_definitions(-DWITH_ASPELL)
 
 set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-matcher.c
@@ -26,6 +28,7 @@ add_library(libbsonsearch SHARED ${SOURCE_FILES})
 TARGET_LINK_LIBRARIES(libbsonsearch bson-1.0 pcre)
 TARGET_LINK_LIBRARIES(libbsonsearch yara)
 TARGET_LINK_LIBRARIES(libbsonsearch stemmer)
+TARGET_LINK_LIBRARIES(libbsonsearch aspell)
 enable_testing()
 
 
@@ -60,3 +63,4 @@ bsonsearch_add_test(exists-check lib/tests/bsoncompare_exists.c)
 bsonsearch_add_test(strlen-check lib/tests/bsoncompare_strlen.c)
 bsonsearch_add_test(conditional lib/tests/bsoncompare_conditional.c)
 bsonsearch_add_test(textsearch lib/tests/bsoncompare_text.c)
+bsonsearch_add_test(spellingsearch lib/tests/bsoncompare_spelling.c)

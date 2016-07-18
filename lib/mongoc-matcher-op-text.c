@@ -28,7 +28,9 @@
 #include "mongoc-matcher-op-private.h"
 #include "mongoc-matcher-op-text.h"
 #include "mongoc-bson-descendants.h"
-
+#ifdef WITH_ASPELL
+#include <aspell.h>
+#endif /*WITH_ASPELL*/
 
 /*
  *--------------------------------------------------------------------------
@@ -82,12 +84,20 @@ _mongoc_matcher_text_new (const char   *path,   /* IN */
     }
     return op;
 }
+static bool
+mongoc_verify_dict_name(const char * dict_name)
+{
+    return ((strcmp(dict_name, "en_US")==0) ||
+            (strcmp(dict_name, "en_GB")==0)
+
+    );
+}
 
 static bool
 mongoc_verify_stem_algo(const char * stem_algo)
 {
     return ( (strcmp(stem_algo, "english")==0) ||
-             (strcmp(stem_algo, "porter")==0) ||
+            (strcmp(stem_algo, "porter")==0) ||
              (strcmp(stem_algo, "arabic")==0) ||
             (strcmp(stem_algo, "danish")==0) ||
             (strcmp(stem_algo, "dutch")==0) ||
@@ -124,6 +134,26 @@ _populate_mongoc_matcher_populate_wordlist(mongoc_matcher_op_t * op,
     free(pch);
     return;
 }
+static bool
+_mongoc_matcher_text_parse_opcode(mongoc_matcher_op_t *op,
+                                  const char          *opcode,
+                                  uint32_t             opcode_len)
+{
+    bool result = false;
+    if (strncmp(opcode, "$wordcount", (size_t)opcode_len)==0){
+        op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_COUNT;
+    }
+#ifdef WITH_ASPELL
+    else if (strncmp(opcode, "$spellingerror", (size_t)opcode_len)==0) {
+        op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT;
+    } else if (strncmp(opcode, "$spellingcorrect", (size_t)opcode_len)==0) {
+        op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT;
+    } else if (strncmp(opcode, "$spellingpercentage", (size_t)opcode_len)==0) {
+        op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT;
+    }
+#endif /*WITH_ASPELL*/
+    return result;
+}
 mongoc_matcher_op_t *
 _mongoc_matcher_parse_text_loop (const char              * path,
                                  bson_iter_t             *iter)
@@ -133,8 +163,11 @@ _mongoc_matcher_parse_text_loop (const char              * path,
     uint32_t search_len = 0;
     op = (mongoc_matcher_op_t *) bson_malloc0(sizeof *op);
     op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_COUNT;
-    op->text.case_sensitive = false;
-    op->text.language = bson_strdup(DEFAULT_TEXT_LANG);
+    op->text.case_sensitive = DEFAULT_TEXT_CASE_SENSITIVE;
+    op->text.language = bson_strdup(DEFAULT_TEXT_STEMMING_LANG);
+#ifdef WITH_ASPELL
+    op->text.dictionary = bson_strdup(DEFAULT_TEXT_DICTIONARY);
+#endif /* WITH_ASPELL */
     op->text.stop_word = bson_strdup(DEFAULT_TEXT_STOPCHARS);
     while (bson_iter_next(iter)) {
         const char * key = bson_iter_key(iter);
@@ -142,6 +175,7 @@ _mongoc_matcher_parse_text_loop (const char              * path,
             if (BSON_ITER_HOLDS_UTF8(iter)){
                 const char * csearch = bson_iter_utf8(iter, &search_len);
                 if (search_len > 0){
+                    op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES;
                     search = bson_strdup(csearch);
                 }
             }
@@ -154,7 +188,30 @@ _mongoc_matcher_parse_text_loop (const char              * path,
                     op->text.language = bson_strdup(langc);
                 }
             }
-        } else if (strcmp(key, "$stopWord")==0){
+        }
+#ifdef WITH_ASPELL
+        else if (strcmp(key, "$dictionary")==0){
+            if (BSON_ITER_HOLDS_UTF8(iter)){
+                uint32_t dict_len = 0;
+                const char *  dict  = bson_iter_utf8(iter, &dict_len);
+                if (dict_len > 0 && mongoc_verify_dict_name(dict)){
+                    bson_free(op->text.dictionary); //free the default
+                    op->text.dictionary = bson_strdup(dict);
+                    AspellConfig * spell_config = new_aspell_config();
+                    aspell_config_replace(spell_config, "lang", dict);
+                    AspellCanHaveError * possible_err = new_aspell_speller(spell_config);
+                    delete_aspell_config(spell_config);
+                    if (aspell_error(possible_err) != 0) {
+                        delete_aspell_can_have_error(possible_err);
+                    } else {
+                        op->text.spell_checker = to_aspell_speller(possible_err);
+                    }
+
+                }
+            }
+        }
+#endif /*WITH_ASPELL*/
+        else if (strcmp(key, "$stopWord")==0){
             if (BSON_ITER_HOLDS_UTF8(iter)){
                 uint32_t swc_len = 0;
                 const char *  swc  = bson_iter_utf8(iter, &swc_len);
@@ -165,8 +222,13 @@ _mongoc_matcher_parse_text_loop (const char              * path,
             }
         } else if (strcmp(key, "$size")==0){
             op->text.size_container = _mongoc_matcher_op_size_new(MONGOC_MATCHER_OPCODE_SIZE, path, iter);
+        } else if (strcmp(key, "$opcode")==0){
+            if (BSON_ITER_HOLDS_UTF8(iter)){
+                uint32_t opcode_len;
+                const char *  opcode  = bson_iter_utf8(iter, &opcode_len);
+                _mongoc_matcher_text_parse_opcode(op, opcode, opcode_len);
+            }
         }
-
     }
     //need to build the stemmer after all the configs are found
     if (search){
@@ -174,7 +236,8 @@ _mongoc_matcher_parse_text_loop (const char              * path,
         _populate_mongoc_matcher_populate_wordlist(op, search);
         bson_free(search);
     }
-    if (!op->text.stemmer){
+    if (op->base.opcode == MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES &&
+            !op->text.stemmer){
         //out of memory or invalid $search
         _mongoc_matcher_op_destroy(op); // config not right, nuke and null
         op = NULL;
@@ -209,6 +272,29 @@ _mongoc_matcher_op_text_match  (mongoc_matcher_op_text_t     *compare,
     return _mongoc_matcher_op_text_match_iter(compare, &iter);
 
 }
+#ifdef WITH_ASPELL
+static uint32_t
+_mongoc_matcher_op_text_spellcheck(mongoc_matcher_op_text_t *compare,
+                                   char * word_to_check)
+{
+    bool correct ;
+    uint32_t  matches = 0;
+    correct = (bool)aspell_speller_check(compare->spell_checker, word_to_check, -1);
+    switch (compare->base.opcode){
+        case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
+        case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT:
+            matches += (uint32_t)correct;
+            break;
+        case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:
+            matches += (uint32_t)(!correct);
+            break;
+        default:
+            break;
+    }
+    return matches;
+}
+#endif /*WITH_ASPELL*/
+
 bool
 _mongoc_matcher_op_text_match_iter (mongoc_matcher_op_text_t *compare, /* IN */
                                     bson_iter_t                 *iter)    /* IN */
@@ -216,23 +302,54 @@ _mongoc_matcher_op_text_match_iter (mongoc_matcher_op_text_t *compare, /* IN */
     mongoc_matcher_op_str_hashtable_t *check=NULL;
     bson_iter_t right_array;
     if BSON_ITER_HOLDS_UTF8(iter){
-        uint32_t str_len = 0, matches = 0;
+        uint32_t str_len = 0, matches = 0, total=0;
         const char * source_data = bson_iter_utf8(iter, &str_len);
         char * source_data_mallocd = bson_strdup(source_data);
         char * pch;
         pch = strtok (source_data_mallocd, compare->stop_word);
         while (pch != NULL){
-            const sb_symbol * matcher_hash_key = sb_stemmer_stem(compare->stemmer,
-                                                                 (const sb_symbol*)pch,
-                                                                 strlen(pch));
-            HASH_FIND_STR(compare->wordlist, (const char *)matcher_hash_key, check);
-            if (check != NULL){
-                matches++;
+            total++;
+            switch (compare->base.opcode)
+            {
+                case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
+                {
+                    matches++;
+                    break;
+                }
+                case MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES:
+                {
+                    const sb_symbol * matcher_hash_key = sb_stemmer_stem(compare->stemmer,
+                                                                         (const sb_symbol*)pch,
+                                                                         strlen(pch));
+                    HASH_FIND_STR(compare->wordlist, (const char *)matcher_hash_key, check);
+                    if (check != NULL){
+                        matches++;
+                    }
+                    break;
+                }
+#ifdef WITH_ASPELL
+                case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
+                case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:
+                case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT:
+                {
+                    matches += _mongoc_matcher_op_text_spellcheck(compare, pch);
+                    break;
+                }
+#endif /*WITH_ASPELL*/
+                default:
+                {
+                    break;
+                }
             }
             pch = strtok (NULL, compare->stop_word);
         }
         bson_free(pch);
         bson_free(source_data_mallocd);
+#ifdef WITH_ASPELL
+        if (compare->base.opcode == MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT){
+            matches = (uint32_t) (100*((double)matches/(double)total));
+        }
+#endif /*WITH_ASPELL*/
         return _mongoc_matcher_op_length_match_value(&compare->size_container->size, matches);
 
     } else if (BSON_ITER_HOLDS_ARRAY (iter) && bson_iter_recurse(iter, &right_array)) {

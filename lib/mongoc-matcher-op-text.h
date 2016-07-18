@@ -26,7 +26,10 @@
 #include "mongoc-matcher-op-private.h"
 BSON_BEGIN_DECLS
 #define DEFAULT_TEXT_STOPCHARS " ,.-?;:()&@#%$^"
-#define DEFAULT_TEXT_LANG "english"
+#define DEFAULT_TEXT_STEMMING_LANG "english"
+#define DEFAULT_TEXT_DICTIONARY "en_US"
+#define DEFAULT_TEXT_CASE_SENSITIVE false
+
 mongoc_matcher_op_t *
 _mongoc_matcher_text_new (const char              *path,   /* IN */
                             bson_iter_t             *child);   /* OUT */

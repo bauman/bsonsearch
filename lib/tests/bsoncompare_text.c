@@ -46,7 +46,7 @@ main (int   argc,
 */
 
 
-    BSON_ASSERT(compare_json("{\"a\": \"world how are you doing this fine afternoon?\"}",
+    BSON_ASSERT(compare_json("{\"a\": \"world how are you doing traveling this fine afternoon?\"}",
                              "{\"a\": {\"$text\": {\"$size\":{\"$gte\":1}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
 
     BSON_ASSERT(!compare_json("{\"a\": \"world how are you doing this fine afternoon?\"}",

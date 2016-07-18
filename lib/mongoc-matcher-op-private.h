@@ -24,7 +24,12 @@
 #include <yara.h>
 #endif //WITH_YARA
 #ifdef WITH_TEXT
+#ifdef WITH_STEMMER
 #include <libstemmer.h>
+#endif /* WITH_STEMMER */
+#ifdef WITH_ASPELL
+#include <aspell.h>
+#endif /*WITH_ASPELL*/
 #endif /*WITH_TEXT*/
 
 BSON_BEGIN_DECLS
@@ -72,6 +77,14 @@ typedef enum
 #endif /*WITH_CONDITIONAL*/
 #ifdef WITH_TEXT
     MONGOC_MATCHER_OPCODE_TEXT_COUNT,
+#ifdef WITH_STEMMER /* && WITH_TEXT*/
+    MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES,
+#endif /*WITH_STEMMER && WITH_TEXT*/
+#ifdef WITH_ASPELL /* && WITH_TEXT */
+    MONGOC_MATCHER_OPCODE_TEXT_SPELLING_CORRECT,
+    MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT,
+    MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT,
+#endif /*WITH_ASPELL && WITH_TEXT*/
 #endif /*WITH_TEXT*/
 #ifdef WITH_PROJECTION
    MONGOC_MATCHER_OPCODE_PROJECTION,
@@ -137,12 +150,18 @@ struct _mongoc_matcher_op_text_t
 {
     mongoc_matcher_op_base_t base;
     char * path;
-    char * stop_word;
-    char * language;
     bool case_sensitive;
-    mongoc_matcher_op_str_hashtable_t *wordlist;
+    char * stop_word;
     mongoc_matcher_op_t *size_container;
+#ifdef WITH_STEMMER
+    char * language;
     struct sb_stemmer * stemmer;
+    mongoc_matcher_op_str_hashtable_t *wordlist;
+#endif /*WITH_STEMMER && WITH_TEXT*/
+#ifdef WITH_ASPELL
+    char * dictionary;
+    AspellSpeller * spell_checker;
+#endif /*WITH_ASPELL && WITH_TEXT*/
 };
 #endif /*WITH_TEXT*/
 
