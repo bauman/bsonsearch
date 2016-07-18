@@ -32,26 +32,35 @@ except ImportError:
 
 class bsoncompare(object):
     def __init__(self):
+        self.CAPABILITY = 0
         lib_path = find_library("bsoncompare")
         if not lib_path:
             lib_path = "libbsoncompare.so"
-        self.bc = ctypes.CDLL(lib_path) #libbsoncompare rpm.
+        try:
+            self.bc = ctypes.CDLL(lib_path) #libbsoncompare rpm.
+            self.CAPABILITY = 10
+        except OSError:
+            lib_path = find_library("bsoncomparelite")
+            if not lib_path:
+                lite_path = "libbsoncomparelite.so"
+            self.bc = ctypes.CDLL(lib_path) #libbsoncompare rpm.
 
-        #utils
-        self.bc.bsonsearch_haversine_distance.argtypes = [c_double, c_double, c_double, c_double]
-        self.bc.bsonsearch_haversine_distance.restype = c_double
-        self.bc.bsonsearch_haversine_distance_degrees.argtypes = [c_double, c_double, c_double, c_double]
-        self.bc.bsonsearch_haversine_distance_degrees.restype = c_double
-        self.bc.bsonsearch_yara_gte1_hit_raw.argtypes = [c_void_p, c_char_p, c_uint]
-        self.bc.bsonsearch_yara_gte1_hit_raw.restype = c_bool
-        self.bc.bsonsearch_free_project_str.argtypes = [c_void_p]
-        self.bc.bsonsearch_free_project_str.restype = c_uint
+        if self.CAPABILITY > 5:
+            #utils
+            self.bc.bsonsearch_haversine_distance.argtypes = [c_double, c_double, c_double, c_double]
+            self.bc.bsonsearch_haversine_distance.restype = c_double
+            self.bc.bsonsearch_haversine_distance_degrees.argtypes = [c_double, c_double, c_double, c_double]
+            self.bc.bsonsearch_haversine_distance_degrees.restype = c_double
+            self.bc.bsonsearch_yara_gte1_hit_raw.argtypes = [c_void_p, c_char_p, c_uint]
+            self.bc.bsonsearch_yara_gte1_hit_raw.restype = c_bool
+            self.bc.bsonsearch_free_project_str.argtypes = [c_void_p]
+            self.bc.bsonsearch_free_project_str.restype = c_uint
 
-        self.bc.bsonsearch_project_json.argtypes = [c_void_p, c_void_p]
-        self.bc.bsonsearch_project_json.restype = c_void_p
+            self.bc.bsonsearch_project_json.argtypes = [c_void_p, c_void_p]
+            self.bc.bsonsearch_project_json.restype = c_void_p
 
-        self.bc.bsonsearch_project_bson.argtypes = [c_void_p, c_void_p]
-        self.bc.bsonsearch_project_bson.restype = c_void_p
+            self.bc.bsonsearch_project_bson.argtypes = [c_void_p, c_void_p]
+            self.bc.bsonsearch_project_bson.restype = c_void_p
 
         #standard
         self.bc.bsonsearch_startup.argtypes = []
@@ -74,14 +83,6 @@ class bsoncompare(object):
 
         self.bc.matcher_compare_doc.argtypes = [c_void_p, c_void_p]
         self.bc.matcher_compare_doc.restype = c_uint
-
-        #self.bc.bsonsearch_bson_as_pystring.argtypes = [c_void_p]
-        #self.bc.bsonsearch_bson_as_pystring.restype = py_object
-
-
-
-
-
 
         self.matchers = {} #keys = string, value = c-pointers
         self.docs = {} #keys = string, value = c-pointers

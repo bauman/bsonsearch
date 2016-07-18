@@ -2,7 +2,7 @@
 %define version 1.3.5
 %define unmangled_version 1.3.5
 %define unmangled_version 1.3.5
-%define release 7
+%define release 9
 
 Summary: Ctypes wrapper to libbsoncompare
 Name: %{name}
@@ -14,12 +14,13 @@ Group: Development/Libraries
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 Prefix: %{_prefix}
 BuildArch: x86_64
-Requires: libbsoncompare == %{version}
+Requires: libbsoncompare-lite == %{version}, python-bson
 BuildRequires: libbson-devel == %{version}
 Vendor: Dan Bauman
 
 %description
 Library wrapping libbsoncompare.  Also includes feature to convert a given spec to work on documents with lists embedded in the namespace.
+This wrapper requires AT LEAST libbsoncompare-lite.  If libbsoncompare (full version) is available, it will prefer and use that.
 
 %prep
 %setup -n %{name}-%{unmangled_version} -n %{name}-%{unmangled_version}
