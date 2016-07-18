@@ -45,14 +45,34 @@ main (int   argc,
     sb_stemmer_delete(stemmer);
 */
 
+    BSON_ASSERT(compare_json("{\"a\": \"world how are you doing traveling this fine afternoon?\"}",
+                             "{\"a\": {\"$text\": {\"$size\":{\"$eq\":9}}}}"));
 
     BSON_ASSERT(compare_json("{\"a\": \"world how are you doing traveling this fine afternoon?\"}",
-                             "{\"a\": {\"$text\": {\"$size\":{\"$gte\":1}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
+                             "{\"a\": {\"$text\": {\"$size\":{\"$gt\":1}}}}"));
+
+    BSON_ASSERT(compare_json("{\"a\": \"world how are you doing traveling this fine afternoon?\"}",
+                             "{\"a\": {\"$text\": {\"$size\":{\"$lt\":10}}}}"));
+
+#ifdef WITH_STEMMER
+    BSON_ASSERT(compare_json("{\"a\": \"world how are you doing traveling this fine afternoon?\"}",
+                             "{\"a\": {\"$text\": {\"$size\":{\"$eq\":2}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
 
     BSON_ASSERT(!compare_json("{\"a\": \"world how are you doing this fine afternoon?\"}",
                              "{\"a\": {\"$text\": {\"$size\":{\"$gt\":2}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
 
     BSON_ASSERT(compare_json("{\"a\": [{\"b\": \"nothing to see\"}, {\"b\":\"world how are you doing this fine afternoon?\"}]}",
-                              "{\"a.b\": {\"$text\": {\"$size\":{\"$gt\":0}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
+                              "{\"a.b\": {\"$text\": {\"$size\":{\"$eq\":1}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
+
+#else
+    BSON_ASSERT(compare_json("{\"a\": \"world how are you doing traveling this fine afternoon?\"}",
+                             "{\"a\": {\"$text\": {\"$size\":9}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
+
+    BSON_ASSERT(compare_json("{\"a\": [{\"b\": \"nothing to see\"}, {\"b\":\"world how are you doing this fine afternoon?\"}]}",
+                             "{\"a.b\": {\"$text\": {\"$size\":{\"$eq\":8}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
+
+    BSON_ASSERT(!compare_json("{\"a\": [{\"b\": \"nothing to see\"}, {\"b\":\"world how are you doing this fine afternoon?\"}]}",
+                             "{\"a.b\": {\"$text\": {\"$size\":{\"$lt\":3}, \"$search\": \"hello worldly travelers\", \"$language\":\"english\"}}}"));
+#endif /*WITH_STEMMER*/
     return 0;
 }

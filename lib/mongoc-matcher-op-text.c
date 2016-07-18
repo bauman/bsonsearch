@@ -119,6 +119,7 @@ static void
 _populate_mongoc_matcher_populate_wordlist(mongoc_matcher_op_t * op,
                                            char                *full_string_maloc){
 
+#ifdef WITH_STEMMER
     mongoc_matcher_op_str_hashtable_t *s;
     char * pch;
     pch = strtok (full_string_maloc, op->text.stop_word);
@@ -132,6 +133,7 @@ _populate_mongoc_matcher_populate_wordlist(mongoc_matcher_op_t * op,
         pch = strtok (NULL, op->text.stop_word);
     }
     free(pch);
+#endif /*WITH_STEMMER*/
     return;
 }
 static bool
@@ -164,14 +166,17 @@ _mongoc_matcher_parse_text_loop (const char              * path,
     op = (mongoc_matcher_op_t *) bson_malloc0(sizeof *op);
     op->base.opcode = MONGOC_MATCHER_OPCODE_TEXT_COUNT;
     op->text.case_sensitive = DEFAULT_TEXT_CASE_SENSITIVE;
+#ifdef WITH_STEMMER
     op->text.language = bson_strdup(DEFAULT_TEXT_STEMMING_LANG);
-#ifdef WITH_ASPELL
-    op->text.dictionary = bson_strdup(DEFAULT_TEXT_DICTIONARY);
-#endif /* WITH_ASPELL */
+#endif /*WITH_SEMMER*/
     op->text.stop_word = bson_strdup(DEFAULT_TEXT_STOPCHARS);
     while (bson_iter_next(iter)) {
         const char * key = bson_iter_key(iter);
-        if (strcmp(key, "$search")==0){
+        if (strcmp(key, "$size")==0) {
+            op->text.size_container = _mongoc_matcher_op_size_new(MONGOC_MATCHER_OPCODE_SIZE, path, iter);
+        }
+#ifdef WITH_STEMMER
+        else if (strcmp(key, "$search")==0){
             if (BSON_ITER_HOLDS_UTF8(iter)){
                 const char * csearch = bson_iter_utf8(iter, &search_len);
                 if (search_len > 0){
@@ -179,7 +184,8 @@ _mongoc_matcher_parse_text_loop (const char              * path,
                     search = bson_strdup(csearch);
                 }
             }
-        } else if (strcmp(key, "$language")==0){
+        }
+        else if (strcmp(key, "$language")==0){
             if (BSON_ITER_HOLDS_UTF8(iter)){
                 uint32_t lang_len = 0;
                 const char *  langc  = bson_iter_utf8(iter, &lang_len);
@@ -189,13 +195,13 @@ _mongoc_matcher_parse_text_loop (const char              * path,
                 }
             }
         }
+#endif /*WITH_STEMMER*/
 #ifdef WITH_ASPELL
         else if (strcmp(key, "$dictionary")==0){
             if (BSON_ITER_HOLDS_UTF8(iter)){
                 uint32_t dict_len = 0;
                 const char *  dict  = bson_iter_utf8(iter, &dict_len);
                 if (dict_len > 0 && mongoc_verify_dict_name(dict)){
-                    bson_free(op->text.dictionary); //free the default
                     op->text.dictionary = bson_strdup(dict);
                     AspellConfig * spell_config = new_aspell_config();
                     aspell_config_replace(spell_config, "lang", dict);
@@ -220,8 +226,6 @@ _mongoc_matcher_parse_text_loop (const char              * path,
                     op->text.stop_word = bson_strdup(swc);
                 }
             }
-        } else if (strcmp(key, "$size")==0){
-            op->text.size_container = _mongoc_matcher_op_size_new(MONGOC_MATCHER_OPCODE_SIZE, path, iter);
         } else if (strcmp(key, "$opcode")==0){
             if (BSON_ITER_HOLDS_UTF8(iter)){
                 uint32_t opcode_len;
@@ -230,7 +234,9 @@ _mongoc_matcher_parse_text_loop (const char              * path,
             }
         }
     }
+
     //need to build the stemmer after all the configs are found
+#ifdef WITH_STEMMER
     if (search){
         op->text.stemmer = sb_stemmer_new(op->text.language, enc);
         _populate_mongoc_matcher_populate_wordlist(op, search);
@@ -242,6 +248,7 @@ _mongoc_matcher_parse_text_loop (const char              * path,
         _mongoc_matcher_op_destroy(op); // config not right, nuke and null
         op = NULL;
     }
+#endif /*WITH_STEMMER*/
     return op;
 }
 
@@ -316,6 +323,7 @@ _mongoc_matcher_op_text_match_iter (mongoc_matcher_op_text_t *compare, /* IN */
                     matches++;
                     break;
                 }
+#ifdef WITH_STEMMER
                 case MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES:
                 {
                     const sb_symbol * matcher_hash_key = sb_stemmer_stem(compare->stemmer,
@@ -327,6 +335,7 @@ _mongoc_matcher_op_text_match_iter (mongoc_matcher_op_text_t *compare, /* IN */
                     }
                     break;
                 }
+#endif /*WITH_STEMMER*/
 #ifdef WITH_ASPELL
                 case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
                 case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_INCORRECT:

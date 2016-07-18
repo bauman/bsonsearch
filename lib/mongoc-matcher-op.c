@@ -294,6 +294,8 @@ _mongoc_matcher_op_size_new (mongoc_matcher_opcode_t opcode,
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_LT;
                } else if (strcmp(key, "$not") == 0) {
                   op->size.compare_type = MONGOC_MATCHER_OPCODE_NOT;
+               } else if (strcmp(key, "$eq") == 0) {
+                  op->size.compare_type = MONGOC_MATCHER_OPCODE_EQ;
                }
             }
          }
@@ -659,14 +661,19 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    case MONGOC_MATCHER_OPCODE_TEXT_SPELLING_PERCENTAGE_CORRECT:
    {
       bson_free(op->text.dictionary);
+      op->text.dictionary = NULL;
       if (op->text.spell_checker){
          delete_aspell_speller(op->text.spell_checker);
       }
    }
 #endif /*WITH_ASPELL*/
+#ifdef WITH_STEMMER
+   case MONGOC_MATCHER_OPCODE_TEXT_COUNT_MATCHES:
+#endif /*WITH_STEMMER*/
    case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
    {
       _mongoc_matcher_op_destroy(op->text.size_container);
+#ifdef WITH_STEMMER
       if (op->text.stemmer)
          sb_stemmer_delete(op->text.stemmer);
       mongoc_matcher_op_str_hashtable_t *s, *tmp;
@@ -676,6 +683,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
          free(s);
       }
       bson_free(op->text.language);
+#endif /*WITH_STEMMER*/
       bson_free(op->text.stop_word);
       bson_free (op->text.path);
       break;

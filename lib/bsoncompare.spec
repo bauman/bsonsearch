@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.5
-Release: 11%{?dist}.db
+Release: 12%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -49,6 +49,16 @@ Group: Development/Libraries
 The %{name}-devel package contains libraries and header files for
 developing applications that use %{name}.
 
+%package lite
+Summary: libbsoncompare with basic functionality and minimal external dependencies
+Requires: libbson == %{version}, pcre
+Provides: libbsoncomparelite.so()(64bit)
+Group: Development/Libraries
+
+%description lite
+The %{name}-lite package contains %{name} library containing
+minimal external dependencies with links to external functionality disabled.
+
 
 %prep
 cp -fp %{SOURCE3} ./
@@ -78,10 +88,12 @@ cp -fp %{SOURCE22} ./
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
 gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -shared -DWITH_STEMMER -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}
 install -m 644 -p $RPM_BUILD_DIR/libbsoncompare.so $RPM_BUILD_ROOT/%{_usr}/%{_lib}/libbsoncompare.so
+install -m 644 -p $RPM_BUILD_DIR/libbsoncomparelite.so $RPM_BUILD_ROOT/%{_usr}/%{_lib}/libbsoncomparelite.so
 
 mkdir -p $RPM_BUILD_ROOT/%{_includedir}
 install -m 644 -p $RPM_BUILD_DIR/bsoncompare.h $RPM_BUILD_ROOT/%{_includedir}/bsoncompare.h
@@ -111,7 +123,8 @@ rm -rf %{buildroot}
 %{_docdir}/%{name}/LICENSING.txt
 %files devel
 %{_includedir}/*.h
-
+%files lite
+%{_usr}/%{_lib}/libbsoncomparelite.so
 
 %changelog
 
