@@ -62,17 +62,49 @@ compile
 
 runtime requires
 
-libbson (https://github.com/mongodb/libbson)
-
-libpcre
+- libbson (https://github.com/mongodb/libbson)
+- libpcre
 
 compilation also requires
+- libbson-devel
+- pcre-devel
+- uthash-devel
 
-libbson-devel
 
-pcre-devel
+Optional Compile time requirements
 
-uthash-devel
+These features are disabled in the lite version to reduce the memory footprint of each matcher object and streamline dependencies
+
+Projection Operator ($project)
+- WITH_PROJECTION macro at compile time
+- WITH_UTILS macro (optional) provides useful utilities to assist
+
+Conditional Operator ($cond)
+- WITH_CONDITIONAL macro at compile time.
+
+Text Search (string tokenization and comparison) requires:
+- WITH_TEXT macro at compile time
+
+Text Stemmer requires
+- libstemmer (link at compile time, SO at runtime)
+- libstemmer-devel (import at compile time)
+- WITH_STEMMER macro at compile time
+
+Text Spell Checking requirements (ASPELL library is licensed LGPL)
+- aspell (link at compile time, SO at runtime)
+- aspell-devel (import at compile time
+- aspell-en (or language dictionary of choice package at runtime)
+- WITH_ASPELL macro at compile time (requires WITH_TEXT)
+
+YARA signature matching requirements:
+- yara (link at compile time, SO at runtime)
+- yara-devel (import at compile time)
+- WITH_YARA macro at compile time
+
+Projection
+
+
+
 
 
 
