@@ -460,7 +460,41 @@ Grid units are in meters
 
     >>>True
 ```
+$unwind example
+==================
+Unwind lists and perform the compare against each unwound document individually
 
+This is useful where {"doc":[{"a":1,"b":1}, {"a":2,"b":2}]}
+
+the above document would (notionally) incorrectly match on {"doc.a":1, "doc.b":2}
+
+There may be cases where the default matching is desired.
+
+If you want to find only documents where {"a":1,"b":2} in the SAME subdocument, you need to unwind the subdocuments first using the $projection operator.
+
+bsoncompare must be compiled using the WITH_PROJECTION macro for $unwind command to work.
+
+
+``` python
+    import bsonsearch
+    doc = {"doc":[{"a":1,"b":1}, {"a":2,"b":2}]}
+    incorrect_spec = {"doc.a":1, "doc.b":2}
+    correct_spec = {"$unwind": {"$project": {"doc": {"$foundin": ["doc"]}}, "$query": {"$and": [{"doc.a": 1}, {"doc.b": 2}]}}}
+
+    bc = bsonsearch.bsoncompare()
+    doc_id = bc.generate_doc(doc)
+    incorrect_matcher = bc.generate_matcher(incorrect_spec)
+    correct_matcher = bc.generate_matcher(correct_spec)
+
+    print "Should be False (result is %s) using standard spec" %bc.match_doc(incorrect_matcher, doc_id)
+    print "Should be False (result is %s) using $unwind spec"  %bc.match_doc(correct_matcher, doc_id)
+
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+
+    >>>Should be False (result is True) using standard spec
+       Should be False (result is False) using $unwind spec
+```
 streaming example
 ==================
 
