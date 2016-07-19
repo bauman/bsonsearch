@@ -460,6 +460,31 @@ Grid units are in meters
 
     >>>True
 ```
+
+$cond (conditional) example
+==================
+
+See https://docs.mongodb.com/manual/reference/operator/aggregation/cond/ for more details
+
+This library **ONLY** supports the dictionary style spec
+
+    ```{ $cond: { if: <boolean-expression>, then: <true-case>, else: <false-case-> } }```
+
+the true case and false case must all be matchers.  You cannot "hardcode" a true/false.
+
+This will lead to multiple copies of the same matcher but keeps the complexity down.
+
+In this spec:
+
+```
+    doc  = {"hello": "world"}
+    spec = {"$cond":{"if": {"hello":{"$exists":true}}, "then": {"hello":"world"}, "else": {"hello":{"$exists":false}} }}}
+```
+
+the coditional statement says If the key "hello" exists, the value must be "world", if the key doesn't exist, the document still matches the spec.
+
+This is useful for validating or checking optional fields.
+
 $unwind example
 ==================
 Unwind lists and perform the compare against each unwound document individually
