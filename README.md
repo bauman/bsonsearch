@@ -101,8 +101,6 @@ YARA signature matching requirements:
 - yara-devel (import at compile time)
 - WITH_YARA macro at compile time
 
-Projection
-
 
 
 
