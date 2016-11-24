@@ -546,12 +546,28 @@ _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
  *--------------------------------------------------------------------------
  */
 bool
+_mongoc_matcher_op_point_in_op (mongoc_matcher_op_t    *op, /* IN */
+                                 bson_iter_t           *point) /* IN */
+{
+    bool return_val = false;
+
+    mongoc_matcher_op_t *right;
+    right = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right);
+    right->base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHINPOLY;
+    if (_mongoc_matcher_op_array_to_op_t(point, right) &&
+        (op->near.near_type == right->near.near_type)){
+        return_val = point_in_poly(op->near.maxd, op, right->near.x, right->near.y);
+    }
+    _mongoc_matcher_op_destroy(right);
+    return return_val;
+}
+bool
 _mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
                                   const bson_t           *bson) /* IN */
 {
     bson_iter_t iter;
     bson_iter_t desc;
-    mongoc_matcher_op_t *right_op;
+
     bool return_val = false;
     BSON_ASSERT (op);
     BSON_ASSERT (bson);
@@ -559,14 +575,9 @@ _mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
     if (bson_iter_init (&iter, bson) &&
         bson_iter_find_descendant (&iter, op->near.path, &desc))
     {
-        if (BSON_ITER_HOLDS_ARRAY (&desc)){ //legacy point
-            right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
-            right_op->base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHINPOLY;
-            if (_mongoc_matcher_op_array_to_op_t(&desc, right_op) &&
-                (op->near.near_type == right_op->near.near_type)){
-                return_val = point_in_poly(op->near.maxd, op, right_op->near.x, right_op->near.y);
-            }
-            _mongoc_matcher_op_destroy(right_op);
+        if (BSON_ITER_HOLDS_ARRAY (&desc)){ //legacy point type
+            return_val = _mongoc_matcher_op_point_in_op(op, &desc);
+
         } else if (BSON_ITER_HOLDS_DOCUMENT (&desc)){ //GeoJSON
             //find coordinate list
             bson_iter_t geojson, outer_coords, poly_coords;
@@ -578,17 +589,19 @@ _mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
                     BSON_ITER_HOLDS_ARRAY(&outer_coords) &&
                     bson_iter_recurse(&outer_coords, &poly_coords) &&
                     bson_iter_next(&poly_coords) &&
-                    BSON_ITER_HOLDS_ARRAY(&poly_coords)){
+                    BSON_ITER_HOLDS_ARRAY(&poly_coords))
+            {
                 return_val = false;
                 do {
-                    right_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *right_op);
                     //each point on the list must be inside the bounding area
-                    if (_mongoc_matcher_op_array_to_op_t(&poly_coords, right_op)){
-                        return_val |= point_in_poly(op->near.maxd, op, right_op->near.x, right_op->near.y);
-                    }
-                    _mongoc_matcher_op_destroy(right_op);
+                    return_val |= _mongoc_matcher_op_point_in_op(op, &poly_coords);
                 } while (bson_iter_next(&poly_coords) && return_val);
+            } else {
+                //might be a point type
+                //cursor at coordinates -- find in if stmt
+                return_val = _mongoc_matcher_op_point_in_op(op, &geojson);
             }
+
         }
     }
     return return_val;

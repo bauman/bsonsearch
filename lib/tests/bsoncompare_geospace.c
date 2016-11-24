@@ -23,16 +23,26 @@ main (int   argc,
       char *argv[])
 {
     int i = 0;
-    while (true) {
+    do {
 
         i++;
         printf ("run %d\n", i);
+
+
+
+        BSON_ASSERT(compare_json(
+                "{\"loc\": {\"type\": \"Point\", \"coordinates\": [2,2]}}",
+                "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 0 , 0 ], [ 0 , 100 ], [ 100 , 100 ], [ 100, 0 ] ] } } }"));
+
+        BSON_ASSERT(!compare_json(
+                "{\"loc\": {\"type\": \"Point\", \"coordinates\": [-2,2]}}",
+                "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 0 , 0 ], [ 0 , 100 ], [ 100 , 100 ], [ 100, 0 ] ] } } }"));
         BSON_ASSERT(compare_json(
                 "{\"loc\": {\"type\": \"Polygon\", \"coordinates\": [ [[30, 99.9], [40, 40], [20, 40], [10, 20], [30, 10]] ]}}",
                 "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 0 , 0 ], [ 0 , 100 ], [ 100 , 100 ], [ 100, 0 ] ] } } }"));
         BSON_ASSERT(compare_json(
                 "{\"loc\": {\"type\": \"Polygon\", \"coordinates\": [ [[30, 10], [40, 40], [20, 40], [10, 20], [30, 10]] ]}}",
                 "{\"loc\": { \"$geoWithin\": { \"$polygon\": [ [ 0 , 0 ], [ 0 , 100 ], [ 100 , 100 ], [ 100, 0 ] ] } } }"));
-    }
+    } while (false);
     return 0;
 }
