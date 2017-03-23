@@ -2,7 +2,7 @@
 %define version 1.3.5
 %define unmangled_version 1.3.5
 %define unmangled_version 1.3.5
-%define release 9
+%define release 10
 
 Summary: Ctypes wrapper to libbsoncompare
 Name: %{name}
