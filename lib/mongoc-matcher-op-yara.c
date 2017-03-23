@@ -270,6 +270,7 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
                             //this should be eaten by the compiler.
                             if (strcmp(key, "source")==0 ) {
                                 //call yara.compile on the source string
+                                op = _mongoc_matcher_op_yara_new_op_from_string(path, &yara_config_iter);
                             } else if ( strcmp(key, "filename")==0 ) {
                                 //call yara.compile on the source string file handle
                             }
@@ -350,6 +351,65 @@ _mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,   /
     if (error > 0 )
     {
         return NULL; //Cause a segfault- easy to trace error.  Didn't clean up op malloc
+    }
+    return op;
+}
+
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_yara_new_op_from_string --
+ *
+ *       responsible for taking a bson_iter_t which MUST be pointing at a
+ *       utf8 string representing a plain text yara rule fset.
+ *
+ *       THIS IS THE ONLY FUNCTION THAT SHOULD EVER ALLOCATE A FLO
+ *       TO CALL yr_compiler_add_string
+ *
+ * Returns:
+ *        mongoc_matcher_op_t (success)
+ *        or NULL             (failure)
+ *
+ * Notes:
+ *      None
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+mongoc_matcher_op_t *
+_mongoc_matcher_op_yara_new_op_from_string     ( const char              *path,   /* IN */
+                                                 bson_iter_t             *child)   /* IN */
+{
+    mongoc_matcher_op_yara_compiler_data cr;
+    cr.errors = 0;
+    cr.warnings  = 0;
+    const char * ns = NULL;
+    int rule_errors = 0;
+    YR_COMPILER* compiler = NULL;
+    YR_RULES* rules = NULL;
+
+
+    mongoc_matcher_op_t *op = NULL;
+    op = (mongoc_matcher_op_t *)bson_malloc (sizeof *op);
+    op->compare.base.opcode = MONGOC_MATCHER_OPCODE_YARA;
+    op->compare.path = bson_strdup (path);
+    if (ERROR_SUCCESS == yr_compiler_create(&compiler)){
+        uint32_t rule_len = 0;
+        const char *  rule_string  = bson_iter_utf8(child, &rule_len);
+        cr.errors = yr_compiler_add_string(compiler, rule_string, ns);
+        if (cr.errors == 0){
+            rule_errors = yr_compiler_get_rules(compiler, &op->compare.rules);
+        }
+    }
+    if (compiler != NULL) {
+        yr_compiler_destroy(compiler);
+    }
+    if (rule_errors > 0){
+        _mongoc_matcher_op_destroy(op);
+        return NULL;
     }
     return op;
 }

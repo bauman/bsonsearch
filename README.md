@@ -62,17 +62,47 @@ compile
 
 runtime requires
 
-libbson (https://github.com/mongodb/libbson)
-
-libpcre
+- libbson (https://github.com/mongodb/libbson)
+- libpcre
 
 compilation also requires
+- libbson-devel
+- pcre-devel
+- uthash-devel
 
-libbson-devel
 
-pcre-devel
+Optional Compile time requirements
 
-uthash-devel
+These features are disabled in the lite version to reduce the memory footprint of each matcher object and streamline dependencies
+
+Projection Operator ($project)
+- WITH_PROJECTION macro at compile time
+- WITH_UTILS macro (optional) provides useful utilities to assist
+
+Conditional Operator ($cond)
+- WITH_CONDITIONAL macro at compile time.
+
+Text Search (string tokenization and comparison) requires:
+- WITH_TEXT macro at compile time
+
+Text Stemmer requires
+- libstemmer (link at compile time, SO at runtime)
+- libstemmer-devel (import at compile time)
+- WITH_STEMMER macro at compile time
+
+Text Spell Checking requirements (ASPELL library is licensed LGPL)
+- aspell (link at compile time, SO at runtime)
+- aspell-devel (import at compile time
+- aspell-en (or language dictionary of choice package at runtime)
+- WITH_ASPELL macro at compile time (requires WITH_TEXT)
+
+YARA signature matching requirements:
+- yara (link at compile time, SO at runtime)
+- yara-devel (import at compile time)
+- WITH_YARA macro at compile time
+
+
+
 
 
 
@@ -431,6 +461,65 @@ Grid units are in meters
     >>>True
 ```
 
+$cond (conditional) example
+==================
+
+See https://docs.mongodb.com/manual/reference/operator/aggregation/cond/ for more details
+
+This library **ONLY** supports the dictionary style spec
+
+    ```{ $cond: { if: <boolean-expression>, then: <true-case>, else: <false-case-> } }```
+
+the true case and false case must all be matchers.  You cannot "hardcode" a true/false.
+
+This will lead to multiple copies of the same matcher but keeps the complexity down.
+
+In this spec:
+
+```
+    doc  = {"hello": "world"}
+    spec = {"$cond":{"if": {"hello":{"$exists":true}}, "then": {"hello":"world"}, "else": {"hello":{"$exists":false}} }}}
+```
+
+the coditional statement says If the key "hello" exists, the value must be "world", if the key doesn't exist, the document still matches the spec.
+
+This is useful for validating or checking optional fields.
+
+$unwind example
+==================
+Unwind lists and perform the compare against each unwound document individually
+
+This is useful where {"doc":[{"a":1,"b":1}, {"a":2,"b":2}]}
+
+the above document would (notionally) incorrectly match on {"doc.a":1, "doc.b":2}
+
+There may be cases where the default matching is desired.
+
+If you want to find only documents where {"a":1,"b":2} in the SAME subdocument, you need to unwind the subdocuments first using the $projection operator.
+
+bsoncompare must be compiled using the WITH_PROJECTION macro for $unwind command to work.
+
+
+``` python
+    import bsonsearch
+    doc = {"doc":[{"a":1,"b":1}, {"a":2,"b":2}]}
+    incorrect_spec = {"doc.a":1, "doc.b":2}
+    correct_spec = {"$unwind": {"$project": {"doc": {"$foundin": ["doc"]}}, "$query": {"$and": [{"doc.a": 1}, {"doc.b": 2}]}}}
+
+    bc = bsonsearch.bsoncompare()
+    doc_id = bc.generate_doc(doc)
+    incorrect_matcher = bc.generate_matcher(incorrect_spec)
+    correct_matcher = bc.generate_matcher(correct_spec)
+
+    print "Should be False (result is %s) using standard spec" %bc.match_doc(incorrect_matcher, doc_id)
+    print "Should be False (result is %s) using $unwind spec"  %bc.match_doc(correct_matcher, doc_id)
+
+    bc.destroy_doc(bc.docs)
+    bc.destroy_matcher(bc.matchers)
+
+    >>>Should be False (result is True) using standard spec
+       Should be False (result is False) using $unwind spec
+```
 streaming example
 ==================
 
