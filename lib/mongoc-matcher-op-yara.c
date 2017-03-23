@@ -389,8 +389,6 @@ _mongoc_matcher_op_yara_new_op_from_string     ( const char              *path, 
     const char * ns = NULL;
     int rule_errors = 0;
     YR_COMPILER* compiler = NULL;
-    YR_RULES* rules = NULL;
-
 
     mongoc_matcher_op_t *op = NULL;
     op = (mongoc_matcher_op_t *)bson_malloc (sizeof *op);
