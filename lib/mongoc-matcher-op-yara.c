@@ -355,12 +355,34 @@ _mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,   /
     return op;
 }
 
+
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_yara_new_op_from_string --
+ *
+ *       responsible for taking a bson_iter_t which MUST be pointing at a
+ *       utf8 string representing a plain text yara rule fset.
+ *
+ *       THIS IS THE ONLY FUNCTION THAT SHOULD EVER ALLOCATE A FLO
+ *       TO CALL yr_compiler_add_string
+ *
+ * Returns:
+ *        mongoc_matcher_op_t (success)
+ *        or NULL             (failure)
+ *
+ * Notes:
+ *      None
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
 mongoc_matcher_op_t *
 _mongoc_matcher_op_yara_new_op_from_string     ( const char              *path,   /* IN */
                                                  bson_iter_t             *child)   /* IN */
 {
-
-
     mongoc_matcher_op_yara_compiler_data cr;
     cr.errors = 0;
     cr.warnings  = 0;
