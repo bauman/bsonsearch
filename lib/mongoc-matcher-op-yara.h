@@ -16,6 +16,7 @@ BSON_BEGIN_DECLS
 typedef struct _mongoc_matcher_op_binary_flo         mongoc_matcher_op_binary_flo;
 typedef struct _mongoc_matcher_op_yara_callback_data mongoc_matcher_op_yara_callback_data;
 typedef struct _mongoc_matcher_op_yara_callback_hits mongoc_matcher_op_yara_callback_hits;
+typedef struct _mongoc_matcher_op_yara_compiler_data mongoc_matcher_op_yara_compiler_data;
 
 struct _mongoc_matcher_op_binary_flo
 {
@@ -35,6 +36,12 @@ struct _mongoc_matcher_op_yara_callback_hits
     mongoc_matcher_op_yara_callback_hits *next_hit;
 };
 
+struct _mongoc_matcher_op_yara_compiler_data
+{
+    int errors;
+    int warnings;
+};
+
 bool
 _mongoc_matcher_op_yara_match (mongoc_matcher_op_compare_t *compare, /* IN */
                                bson_iter_t                 *iter)  ;  /* IN */
@@ -48,6 +55,10 @@ _mongoc_matcher_op_yara_compare(mongoc_matcher_op_compare_t *compare,
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_yara_new_op_from_bin     ( const char              *path,
+                                              bson_iter_t             *child);
+
+mongoc_matcher_op_t *
+_mongoc_matcher_op_yara_new_op_from_string  ( const char              *path,
                                               bson_iter_t             *child);
         size_t
 binary_read(void* ptr,
