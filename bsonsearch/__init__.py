@@ -26,6 +26,10 @@ try:
     def YARA_COMPILE_STR(source):
         compiled_rule = yara.compile(source=source)
         return YARA_DICT(compiled_rule)
+    def YARA_SOURCE_STR(source):
+        assert isinstance(source, basestring)
+        return {"$yara":{"source":source}}
+
 except ImportError:
     yara = None
 
