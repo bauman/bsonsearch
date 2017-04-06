@@ -9,6 +9,7 @@
 #endif //WITH_YARA
 #ifdef WITH_PROJECTION
 #include "mongoc-projection.h"
+#include "mongoc-redaction.h"
 #endif //WITH_PROJECTION
 #ifdef WITH_UTILS
 #include "mongoc-matcher-op-geojson.h"
@@ -29,8 +30,23 @@ project_bson(mongoc_matcher_t *matcher,     //in
              bson_t           *bson,        //in
              bson_t           *projected)   //out
 {
-
-    return mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+    bool result = FALSE;
+    switch (matcher->optree->base.opcode){
+        case MONGOC_MATCHER_OPCODE_UNWIND:
+        case MONGOC_MATCHER_OPCODE_PROJECTION:
+        {
+            result = mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+            break;
+        }
+        case MONGOC_MATCHER_OPCODE_REDACTION:
+        {
+            result = mongoc_matcher_redaction_execute(matcher->optree, bson, projected);
+            break;
+        }
+        default:
+            break;
+    }
+    return result;
 }
 #endif //WITH_PROJECTION
 
@@ -42,7 +58,21 @@ bsonsearch_project_json(mongoc_matcher_t *matcher,     //in
                         bson_t           *bson)        //in
 {
     bson_t * projected = bson_new();
-    mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+    switch (matcher->optree->base.opcode){
+        case MONGOC_MATCHER_OPCODE_UNWIND:
+        case MONGOC_MATCHER_OPCODE_PROJECTION:
+        {
+            mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+            break;
+        }
+        case MONGOC_MATCHER_OPCODE_REDACTION:
+        {
+            mongoc_matcher_redaction_execute(matcher->optree, bson, projected);
+            break;
+        }
+        default:
+            break;
+    }
     char * str;
     str = bson_as_json(projected, NULL);
     bson_destroy(projected);
@@ -62,7 +92,21 @@ bsonsearch_project_bson(mongoc_matcher_t *matcher,     //in
                         bson_t           *bson)        //in
 {
     bson_t * projected = bson_new();
-    mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+    switch (matcher->optree->base.opcode){
+        case MONGOC_MATCHER_OPCODE_UNWIND:
+        case MONGOC_MATCHER_OPCODE_PROJECTION:
+        {
+            mongoc_matcher_projection_execute(matcher->optree, bson, projected);
+            break;
+        }
+        case MONGOC_MATCHER_OPCODE_REDACTION:
+        {
+            mongoc_matcher_redaction_execute(matcher->optree, bson, projected);
+            break;
+        }
+        default:
+            break;
+    }
     return projected;
 }
 

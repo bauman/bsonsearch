@@ -623,6 +623,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
          _mongoc_matcher_op_destroy(op->projection.query);
       //continue to rest of projection
    }
+   case MONGOC_MATCHER_OPCODE_REDACTION:
    case MONGOC_MATCHER_OPCODE_PROJECTION:
    {
       bson_free(op->projection.path);

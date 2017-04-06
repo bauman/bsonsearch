@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.5
-Release: 16%{?dist}.db
+Release: 17%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -29,6 +29,8 @@ Source19: mongoc-matcher-op-conditional.c
 Source20: mongoc-matcher-op-conditional.h
 Source21: mongoc-matcher-op-text.c
 Source22: mongoc-matcher-op-text.h
+Source23: mongoc-redaction.c
+Source24: mongoc-redaction.h
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara, libstemmer-devel, libstemmer, aspell-devel
@@ -81,13 +83,13 @@ cp -fp %{SOURCE19} ./
 cp -fp %{SOURCE20} ./
 cp -fp %{SOURCE21} ./
 cp -fp %{SOURCE22} ./
-
+cp -fp %{SOURCE24} ./
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -shared -DWITH_STEMMER -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -shared -DWITH_STEMMER -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23}
 gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
 
 %install
@@ -108,6 +110,7 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-projection.h $RPM_BUILD_ROOT/%{_included
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-unwind.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-unwind.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-conditional.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-conditional.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-text.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-text.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-redaction.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-redaction.h
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
 install -m 644 -p $RPM_BUILD_DIR/BSONSEARCH_LICENSING.txt $RPM_BUILD_ROOT/%{_docdir}/%{name}/LICENSING.txt

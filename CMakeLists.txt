@@ -18,6 +18,7 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-bson-descendants.c
                  lib/mongoc-matcher-op-yara.c
                  lib/mongoc-projection.c
+                 lib/mongoc-redaction.c
                  lib/mongoc-matcher-op-unwind.c
                  lib/mongoc-matcher-op-conditional.c
                  lib/mongoc-matcher-op-text.c)
@@ -65,3 +66,4 @@ bsonsearch_add_test(conditional lib/tests/bsoncompare_conditional.c)
 bsonsearch_add_test(textsearch lib/tests/bsoncompare_text.c)
 bsonsearch_add_test(spellingsearch lib/tests/bsoncompare_spelling.c)
 bsonsearch_add_test(geospace lib/tests/bsoncompare_geospace.c)
+bsonsearch_add_test(redaction lib/tests/bsoncompare_redaction.c)

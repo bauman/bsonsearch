@@ -27,6 +27,7 @@
 #include "mongoc-matcher-op-yara.h"
 #endif//YARA
 #ifdef WITH_PROJECTION
+#include "mongoc-redaction.h"
 #include "mongoc-projection.h"
 #include  "mongoc-matcher-op-unwind.h"
 #endif//projection
@@ -250,6 +251,9 @@ _mongoc_matcher_parse (bson_iter_t  *iter,  /* IN */
                } else if (strcmp (key, "$unwind") == 0){
                    return _mongoc_matcher_parse_unwind(MONGOC_MATCHER_OPCODE_UNWIND,
                                                            iter, false, error);
+               } else if (strcmp (key, "$redact") == 0){
+                   return _mongoc_matcher_parse_redaction(MONGOC_MATCHER_OPCODE_REDACTION,
+                                                       iter, false, error);
                }
 #endif //WITH_PROJECTION
 #ifdef WITH_CONDITIONAL
