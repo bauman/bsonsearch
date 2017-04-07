@@ -6,7 +6,7 @@ from ctypes.util import find_library
 from hashlib import md5
 from bson.json_util import loads
 try:
-    import bsonhelper
+    from bsonsearch import bsonhelper
 except ImportError:
     pass
 
