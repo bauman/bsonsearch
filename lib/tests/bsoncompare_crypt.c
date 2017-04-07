@@ -26,6 +26,9 @@ main (int   argc,
     BSON_ASSERT(compare_json("{\"pk\": {\"$binary\": \"jkIR1Wh0kwXu7RCttJC3XZIErIK1oiJ2+VvWXhSLEh0=\", \"$type\": \"00\"}, \"enc\": {\"$binary\": \"9QdGvookp+rksHsLdMUAP6JRWzwLfbAVgyQkNy1OJwmNKLt/QCbEcQy3EiXXHhYjvVRpo+myLE6rduy3LBBxG0Z4wjkPibSqf6xrPr4T+8nm8rRzC+1G/KZTe5g48jrpgIRQ/DKsD41cDOQgrffJe4Uer4KnZkzJO6/lJlSmlFmknCSM5hbhDr7ZPBKLgBZh7qF/gLzLz1nE3A==\", \"$type\": \"00\"}}",
                              "{\"enc\": {\"$sealOpen\": {\"$keys\": {\"sk\": {\"$binary\": \"4haaLLGbtPY36fiDDyJfqH100mk6u/21iolYLhsTklo=\", \"$type\": \"00\"}, \"pk\": {\"$binary\": \"jkIR1Wh0kwXu7RCttJC3XZIErIK1oiJ2+VvWXhSLEh0=\", \"$type\": \"00\"}}, \"$query\": {\"data\": 2}}}}"));
 
+    BSON_ASSERT(compare_json("{\"pk\": {\"$binary\": \"jkIR1Wh0kwXu7RCttJC3XZIErIK1oiJ2+VvWXhSLEh0=\", \"$type\": \"00\"}, \"enc\": {\"$binary\": \"9QdGvookp+rksHsLdMUAP6JRWzwLfbAVgyQkNy1OJwmNKLt/QCbEcQy3EiXXHhYjvVRpo+myLE6rduy3LBBxG0Z4wjkPibSqf6xrPr4T+8nm8rRzC+1G/KZTe5g48jrpgIRQ/DKsD41cDOQgrffJe4Uer4KnZkzJO6/lJlSmlFmknCSM5hbhDr7ZPBKLgBZh7qF/gLzLz1nE3A==\", \"$type\": \"00\"}}",
+                             "{\"enc\": {\"$sealOpen\": {\"$keys\": {\"sk\": {\"$binary\": \"4haaLLGbtPY36fiDDyJfqH100mk6u/21iolYLhsTklo=\", \"$type\": \"00\"}, \"pk\": {\"$binary\": \"jkIR1Wh0kwXu7RCttJC3XZIErIK1oiJ2+VvWXhSLEh0=\", \"$type\": \"00\"}}, \"$query\": {\"data\": 2}}}}"));
+
 
     return 0;
 }

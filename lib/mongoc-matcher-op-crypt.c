@@ -35,20 +35,23 @@ _mongoc_matcher_op_crypt_new    (mongoc_matcher_opcode_t opcode,
                                 const char              *path,
                                 const bson_iter_t       *iter)
 {
+
     mongoc_matcher_op_t *op = NULL;
-    bool op_complete = false;
-    BSON_ASSERT (opcode == MONGOC_MATCHER_OPCODE_SEALOPEN);
-    BSON_ASSERT (iter);
-    op = (mongoc_matcher_op_t *) bson_malloc0(sizeof *op); //TODO: mlock this page.
-    op->base.opcode = opcode;
-    op->crypt.path = bson_strdup (path);
-    bson_iter_t child;
-    if (bson_iter_recurse(iter, &child)) {
-        op_complete = _mongoc_matcher_parse_crypt_loop(op, &child);
-    }
-    if (!op_complete){
-        _mongoc_matcher_op_destroy(op);
-        op = NULL;
+    if (sodium_init() >= 0) { //-1=fail, 0=success, 1=already init
+        bool op_complete = false;
+        BSON_ASSERT (opcode == MONGOC_MATCHER_OPCODE_SEALOPEN);
+        BSON_ASSERT (iter);
+        op = (mongoc_matcher_op_t *) sodium_malloc(sizeof *op);
+        op->base.opcode = opcode;
+        op->crypt.path = bson_strdup (path);
+        bson_iter_t child;
+        if (bson_iter_recurse(iter, &child)) {
+            op_complete = _mongoc_matcher_parse_crypt_loop(op, &child);
+        }
+        if (!op_complete){
+            _mongoc_matcher_op_destroy(op);
+            op = NULL;
+        }
     }
     return op;
 }

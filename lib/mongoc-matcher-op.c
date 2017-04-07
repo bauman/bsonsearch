@@ -698,6 +698,8 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    {
       bson_free(op->crypt.path);
       _mongoc_matcher_op_destroy(op->crypt.query);
+      sodium_free(op);
+      op=NULL; //allow ending bson_free to work.
       break;
    }
 #endif /* WITH_CRYPT */
