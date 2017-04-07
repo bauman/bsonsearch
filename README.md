@@ -57,6 +57,34 @@ or add from repo
 yum install python-bsonsearch
 
 
+
+Easy/lite compile (get this working first, then attempt to add options)
+========
+install the libbson, pcre, pcre-devel, and uthash-devel packages for your OS
+
+compile the light weight matcher linking against libbson-1.0
+
+```$(pkg-config --cflags --libs libbson-1.0)```
+
+link against pcre
+```-lpcre```
+
+
+make a shared object with
+
+```-shared```
+
+
+ensure the name is libbsoncomparelite.so  (the python wrapper will infer limited capability based on filename)
+
+
+```
+    gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -lpcre -shared -o libbsoncomparelite.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-bson-descendants.c
+```
+
+To add the numerous other options available in this library, follow instructions below.
+
+
 compile
 ========
 
