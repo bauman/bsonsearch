@@ -520,6 +520,13 @@ bsoncompare must be compiled using the WITH_PROJECTION macro for $unwind command
     >>>Should be False (result is True) using standard spec
        Should be False (result is False) using $unwind spec
 ```
+
+Crypto limited access querying example
+==================
+
+see  https://github.com/bauman/bsonsearch/blob/master/bsonsearch_crypto_example.ipynb
+
+
 streaming example
 ==================
 
