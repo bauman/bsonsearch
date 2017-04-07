@@ -41,6 +41,9 @@
 #ifdef WITH_CONDITIONAL
 #include "mongoc-matcher-op-conditional.h"
 #endif /*WITH_CONDITIONAL*/
+#ifdef WITH_CRYPT
+#include "mongoc-matcher-op-crypt.h"
+#endif /*WITH_CRYPT*/
 
 /*
  *--------------------------------------------------------------------------
@@ -690,6 +693,14 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
    }
 #endif /* WITH_TEXT */
+#ifdef WITH_CRYPT
+   case MONGOC_MATCHER_OPCODE_SEALOPEN:
+   {
+      bson_free(op->crypt.path);
+      _mongoc_matcher_op_destroy(op->crypt.query);
+      break;
+   }
+#endif /* WITH_CRYPT */
    default:
       break;
    }
@@ -2249,6 +2260,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_TEXT_COUNT:
       return _mongoc_matcher_op_text_match(&op->text, bson);
 #endif /*WITH_TEXT*/
+#ifdef WITH_CRYPT
+   case MONGOC_MATCHER_OPCODE_SEALOPEN:
+      return _mongoc_matcher_op_sealopen_match(op, bson);
+#endif /*WITH_CRYPT*/
    default:
       break;
    }

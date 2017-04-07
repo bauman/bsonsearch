@@ -31,7 +31,9 @@
 #include <aspell.h>
 #endif /*WITH_ASPELL*/
 #endif /*WITH_TEXT*/
-
+#ifdef WITH_CRYPT
+#include <sodium.h>
+#endif /*WITH_CRYPT*/
 BSON_BEGIN_DECLS
 
 
@@ -91,6 +93,10 @@ typedef enum
    MONGOC_MATCHER_OPCODE_UNWIND,
    MONGOC_MATCHER_OPCODE_REDACTION,
 #endif //WITH_PROJECTION
+#ifdef WITH_CRYPT
+   MONGOC_MATCHER_OPCODE_SEALOPEN, 
+#endif /*WITH_CRYPT*/
+
    MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
 
@@ -181,6 +187,19 @@ struct _mongoc_matcher_op_projection_t
 };
 #endif //WITH_PROJECTION
 
+#ifdef WITH_CRYPT
+typedef struct _mongoc_matcher_op_crypt_t mongoc_matcher_op_crypt_t;
+struct _mongoc_matcher_op_crypt_t
+{
+   mongoc_matcher_op_base_t base;
+   char * path;
+   char  pk[crypto_box_PUBLICKEYBYTES];
+   char  sk[crypto_box_SECRETKEYBYTES];
+   mongoc_matcher_op_t *query;
+};
+#endif /*WITH_CRYPT*/
+
+
 struct _mongoc_matcher_op_exists_t
 {
    mongoc_matcher_op_base_t base;
@@ -245,6 +264,11 @@ union _mongoc_matcher_op_t
 #ifdef WITH_TEXT
    mongoc_matcher_op_text_t text;
 #endif /*WITH_TEXT*/
+#ifdef WITH_CRYPT
+   mongoc_matcher_op_crypt_t crypt;
+#endif /*WITH_CRYPT*/
+
+
 };
 
 

@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.3.5
-Release: 17%{?dist}.db
+Release: 18%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -31,10 +31,12 @@ Source21: mongoc-matcher-op-text.c
 Source22: mongoc-matcher-op-text.h
 Source23: mongoc-redaction.c
 Source24: mongoc-redaction.h
+Source25: mongoc-matcher-op-crypt.c
+Source26: mongoc-matcher-op-crypt.h
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
-BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara, libstemmer-devel, libstemmer, aspell-devel
-Requires: libbson == %{version}, pcre, yara, libstemmer, aspell, aspell-en
+BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara, libstemmer-devel, libstemmer, aspell-devel, libsodium-devel
+Requires: libbson == %{version}, pcre, yara, libstemmer, aspell, aspell-en, libsodium
 Provides: libbsoncompare.so()(64bit)
 
 %description
@@ -84,12 +86,13 @@ cp -fp %{SOURCE20} ./
 cp -fp %{SOURCE21} ./
 cp -fp %{SOURCE22} ./
 cp -fp %{SOURCE24} ./
+cp -fp %{SOURCE26} ./
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -shared -DWITH_STEMMER -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -lsodium -shared -DWITH_STEMMER -DWITH_CRYPT -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23} %{SOURCE25}
 gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
 
 %install
@@ -111,6 +114,7 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-unwind.h $RPM_BUILD_ROOT/%{_i
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-conditional.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-conditional.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-text.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-text.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-redaction.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-redaction.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-crypt.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-crypt.h
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
 install -m 644 -p $RPM_BUILD_DIR/BSONSEARCH_LICENSING.txt $RPM_BUILD_ROOT/%{_docdir}/%{name}/LICENSING.txt

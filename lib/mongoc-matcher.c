@@ -34,6 +34,9 @@
 #ifdef WITH_CONDITIONAL
 #include "mongoc-matcher-op-conditional.h"
 #endif /*WITH_CONDITIONAL*/
+#ifdef WITH_CRYPT
+#include "mongoc-matcher-op-crypt.h"
+#endif /*WITH_CRYPT*/
 
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
@@ -118,6 +121,12 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
       } else if (strcmp(key, "$text") == 0) {
           op = _mongoc_matcher_text_new(path, &child);
 #endif //WITH_TEXT
+#ifdef WITH_CRYPT
+      } else if (strcmp(key, "$sealOpen") == 0) {
+         op = _mongoc_matcher_op_crypt_new (MONGOC_MATCHER_OPCODE_SEALOPEN, path,
+                                              &child);
+#endif /*WITH_CRYPT*/
+
       } else if (strcmp(key, "$in") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_IN, path,
                                               &child);
