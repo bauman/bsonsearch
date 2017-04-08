@@ -1551,6 +1551,15 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
          const bson_oid_t * right = bson_iter_oid(iter);
          return (bson_oid_compare(right, left)>0);
       }
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
+   {
+      time_t t = NULL;
+      const bson_oid_t * right = bson_iter_oid(iter);
+      t = bson_oid_get_time_t(right);
+      int64_t oid_time = t * 1000;
+      int64_t compare_time = bson_iter_date_time(compare_iter);
+      return (oid_time > compare_time);
+   }
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _GT_COMPARE (_double, _double);
@@ -1655,7 +1664,15 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
       const bson_oid_t * right = bson_iter_oid(iter);
       return (bson_oid_compare(right, left)>=0);
    }
-
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
+   {
+      time_t t = NULL;
+      const bson_oid_t * right = bson_iter_oid(iter);
+      t = bson_oid_get_time_t(right);
+      int64_t oid_time = t * 1000;
+      int64_t compare_time = bson_iter_date_time(compare_iter);
+      return (oid_time >= compare_time);
+   }
      /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _GTE_COMPARE (_double, _double);
@@ -1841,6 +1858,15 @@ _mongoc_matcher_op_lt_match (mongoc_matcher_op_compare_t *compare, /* IN */
          const bson_oid_t * right = bson_iter_oid(iter);
          return (bson_oid_compare(right, left)<0);
       }
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
+      {
+         time_t t = NULL;
+         const bson_oid_t * right = bson_iter_oid(iter);
+         t = bson_oid_get_time_t(right);
+         int64_t oid_time = t * 1000;
+         int64_t compare_time = bson_iter_date_time(compare_iter);
+         return (oid_time < compare_time);
+      }
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _LT_COMPARE (_double, _double);
@@ -1944,6 +1970,15 @@ _mongoc_matcher_op_lte_match (mongoc_matcher_op_compare_t *compare, /* IN */
          const bson_oid_t * right = bson_iter_oid(iter);
          return (bson_oid_compare(right, left)<=0);
       }
+   case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
+   {
+      time_t t = NULL;
+      const bson_oid_t * right = bson_iter_oid(iter);
+      t = bson_oid_get_time_t(right);
+      int64_t oid_time = t * 1000;
+      int64_t compare_time = bson_iter_date_time(compare_iter);
+      return (oid_time <= compare_time);
+   }
    /* Double on Left Side */
    case _TYPE_CODE(BSON_TYPE_DOUBLE, BSON_TYPE_DOUBLE):
       return _LTE_COMPARE (_double, _double);
