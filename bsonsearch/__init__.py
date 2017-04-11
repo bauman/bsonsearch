@@ -64,7 +64,7 @@ class bsoncompare(object):
         except OSError:
             lib_path = find_library("bsoncomparelite")
             if not lib_path:
-                lite_path = "libbsoncomparelite.so"
+                lib_path = "libbsoncomparelite.so"
             self.bc = ctypes.CDLL(lib_path) #libbsoncompare rpm.
 
         if self.CAPABILITY > 5:
