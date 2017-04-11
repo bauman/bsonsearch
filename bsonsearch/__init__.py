@@ -5,6 +5,7 @@ from ctypes import cast as c_cast
 from ctypes.util import find_library
 from hashlib import md5
 from bson.json_util import loads
+from bson.binary import Binary
 try:
     from bsonsearch import bsonhelper
 except ImportError:
@@ -33,6 +34,23 @@ try:
 except ImportError:
     yara = None
 
+try:
+    import IPy
+    import struct
+    from bson.binary import Binary
+    def pack_ip(ip_string):
+        ip     = IPy.IP(ip_string)
+        ip_int = ip.int()
+        ip_bin = Binary(struct.pack("QQ", ip_int/(2**64), ip_int%(2**64)), 0x80+ip.version())
+        return ip_bin
+    def ip_inrange_query(namespace, ip_string, netmask):
+        assert (namespace)
+        ip_bin = pack_ip(ip_string)
+        nm_bin = pack_ip(netmask)
+        assert ip_bin.subtype == nm_bin.subtype
+        return {namespace: {"$inIPrange": [ip_bin, nm_bin]}}
+except ImportError:
+    pack_ip = None
 
 class bsoncompare(object):
     def __init__(self):
