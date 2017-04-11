@@ -12,6 +12,7 @@ add_definitions(-DWITH_STEMMER)
 add_definitions(-DWITH_ASPELL)
 add_definitions(-DWITH_ASPELL)
 add_definitions(-DWITH_CRYPT)
+add_definitions(-DWITH_IP)
 
 set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-matcher.c
@@ -24,7 +25,8 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/mongoc-matcher-op-unwind.c
                  lib/mongoc-matcher-op-conditional.c
                  lib/mongoc-matcher-op-crypt.c
-                 lib/mongoc-matcher-op-text.c)
+                 lib/mongoc-matcher-op-text.c
+                 lib/mongoc-matcher-op-ip.c)
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
@@ -72,3 +74,4 @@ bsonsearch_add_test(textsearch lib/tests/bsoncompare_text.c)
 bsonsearch_add_test(spellingsearch lib/tests/bsoncompare_spelling.c)
 bsonsearch_add_test(geospace lib/tests/bsoncompare_geospace.c)
 bsonsearch_add_test(redaction lib/tests/bsoncompare_redaction.c)
+bsonsearch_add_test(ipaddrs lib/tests/bsoncompare_binary_ip.c)

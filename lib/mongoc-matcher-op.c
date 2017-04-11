@@ -44,7 +44,9 @@
 #ifdef WITH_CRYPT
 #include "mongoc-matcher-op-crypt.h"
 #endif /*WITH_CRYPT*/
-
+#ifdef WITH_IP
+#include "mongoc-matcher-op-ip.h"
+#endif /* WITH_IP */
 /*
  *--------------------------------------------------------------------------
  *
@@ -703,6 +705,13 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
    }
 #endif /* WITH_CRYPT */
+#ifdef WITH_IP
+   case MONGOC_MATCHER_OPCODE_INIPRANGE:
+   {
+      bson_free(op->ip.path);
+      break;
+   }
+#endif /* WITH_IP */
    default:
       break;
    }
@@ -2301,6 +2310,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_SEALOPEN:
       return _mongoc_matcher_op_sealopen_match(op, bson);
 #endif /*WITH_CRYPT*/
+#ifdef WITH_IP
+   case MONGOC_MATCHER_OPCODE_INIPRANGE:
+      return _mongoc_matcher_op_iniprange_match(op, bson);
+#endif /*WITH_IP*/
    default:
       break;
    }
