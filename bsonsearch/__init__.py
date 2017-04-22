@@ -39,16 +39,44 @@ try:
     import struct
     from bson.binary import Binary
     def pack_ip(ip_string):
+        '''
+
+        :param ip_string: String representation of ipv4 or ipv6 address ("127.0.0.1" or "::1"
+        :return: Binary encapsulated and packed 16 byte integer
+        '''
         ip     = IPy.IP(ip_string)
         ip_int = ip.int()
-        ip_bin = Binary(struct.pack("QQ", ip_int/(2**64), ip_int%(2**64)), 0x80+ip.version())
+        ip_bin = Binary(struct.pack(">QQ", ip_int/(2**64), ip_int%(2**64)), 0x80+ip.version())
         return ip_bin
     def ip_inrange_query(namespace, ip_string, netmask):
+        '''
+        builds the $inIPRange
+        :param namespace:
+        :param ip_string:
+        :param netmask:
+        :return:
+        '''
         assert (namespace)
         ip_bin = pack_ip(ip_string)
         nm_bin = pack_ip(netmask)
         assert ip_bin.subtype == nm_bin.subtype
         return {namespace: {"$inIPrange": [ip_bin, nm_bin]}}
+
+    def ip_inrangeset_query(namespace, list_of_ip_netmask_tuples):
+        '''
+
+        :param namespace:
+        :param list_of_ip_netmask_tuples: [(ip1,mask1), (ip2,mask2)...]
+        :return:dict
+        '''
+        setlist = []
+        assert (namespace)
+        for ip_string, netmask in list_of_ip_netmask_tuples:
+            ip_bin = pack_ip(ip_string)
+            nm_bin = pack_ip(netmask)
+            setlist.append( [ip_bin,  nm_bin])
+        assert ip_bin.subtype == nm_bin.subtype
+        return {namespace: {"$inIPrangeset": setlist}}
 except ImportError:
     pack_ip = None
 
