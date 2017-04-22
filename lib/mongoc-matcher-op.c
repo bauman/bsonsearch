@@ -706,9 +706,13 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
    }
 #endif /* WITH_CRYPT */
 #ifdef WITH_IP
+   case MONGOC_MATCHER_OPCODE_INIPRANGESET:
    case MONGOC_MATCHER_OPCODE_INIPRANGE:
    {
       bson_free(op->ip.path);
+      if (op->ip.next){
+         _mongoc_matcher_op_destroy(op->ip.next);
+      }
       break;
    }
 #endif /* WITH_IP */
@@ -2312,6 +2316,7 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
 #endif /*WITH_CRYPT*/
 #ifdef WITH_IP
    case MONGOC_MATCHER_OPCODE_INIPRANGE:
+   case MONGOC_MATCHER_OPCODE_INIPRANGESET:
       return _mongoc_matcher_op_iniprange_match(op, bson);
 #endif /*WITH_IP*/
    default:

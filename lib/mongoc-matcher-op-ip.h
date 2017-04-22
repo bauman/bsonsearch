@@ -34,11 +34,15 @@ BSON_BEGIN_DECLS
 #define MONGOC_MATCHER_OP_IP_BYTES 16
 BSON_END_DECLS
 
-#define MONGOC_MATCHER_OP_IP_CRITERIA(i, o, i1, i2){for(i = 0; i < MONGOC_MATCHER_OP_IP_BYTES; ++i){o[i] = i1[i] & i2[1];}}
+#define MONGOC_MATCHER_OP_IP_CRITERIA(i, o, i1, i2){for(i = 0; i < MONGOC_MATCHER_OP_IP_BYTES; ++i){o[i] = i1[i] & i2[i];}}
 
 mongoc_matcher_op_t *
-_mongoc_matcher_op_ip_new    (const char              *path,
+_mongoc_matcher_op_ip_new    (mongoc_matcher_opcode_t opcode,
+                              const char              *path,
                               const bson_iter_t       *iter);
+bool
+_mongoc_matcher_op_iniprange_build_ip(mongoc_matcher_op_t *op,
+                                      const bson_iter_t   *iter);
 bool
 _mongoc_matcher_op_iniprange_match(mongoc_matcher_op_t *op,
                                    const bson_t         *bson);
@@ -47,6 +51,13 @@ bool
 _mongoc_matcher_op_iniprange_match_iter (mongoc_matcher_op_ip_t *ip, /* IN */
                                          bson_iter_t               *iter);    /* IN */
 
+bool
+_mongoc_matcher_op_iniprangeset_match_iter (mongoc_matcher_op_ip_t *ip, /* IN */
+                                            bson_iter_t               *iter);    /* IN */
+
+bool
+_mongoc_matcher_op_iniprangeset_build_ip(mongoc_matcher_op_t *op,
+                                         const bson_iter_t   *iter);
 
 #endif //MONGOC_MATCHER_OP_IP_H
 #endif /*WITH_IP*/

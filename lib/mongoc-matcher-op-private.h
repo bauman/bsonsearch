@@ -98,6 +98,7 @@ typedef enum
 #endif /*WITH_CRYPT*/
 #ifdef WITH_IP
     MONGOC_MATCHER_OPCODE_INIPRANGE,
+    MONGOC_MATCHER_OPCODE_INIPRANGESET,
 #endif /*WITH_IP*/
    MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
@@ -202,6 +203,11 @@ struct _mongoc_matcher_op_crypt_t
 #endif /*WITH_CRYPT*/
 
 #ifdef WITH_IP
+typedef struct _mongoc_matcher_op_ip_criteria_hashtable_t mongoc_matcher_op_ip_criteria_hashtable_t;
+struct _mongoc_matcher_op_ip_criteria_hashtable_t {
+    uint8_t criteria[16]; //MONGOC_MATCHER_OP_IP_BYTES
+    UT_hash_handle hh;
+};
 typedef struct _mongoc_matcher_op_ip_t mongoc_matcher_op_ip_t;
 struct _mongoc_matcher_op_ip_t
 {
@@ -212,7 +218,9 @@ struct _mongoc_matcher_op_ip_t
     uint8_t base_addr[16];     //MONGOC_MATCHER_OP_IP_BYTES
     uint8_t netmask[16];     //MONGOC_MATCHER_OP_IP_BYTES
     uint8_t criteria[16]; //MONGOC_MATCHER_OP_IP_BYTES
+    mongoc_matcher_op_t *next;
 };
+
 #endif /*WITH_IP*/
 
 struct _mongoc_matcher_op_exists_t

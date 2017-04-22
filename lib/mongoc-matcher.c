@@ -130,7 +130,12 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
 #endif /*WITH_CRYPT*/
 #ifdef WITH_IP
       } else if (strcmp(key, "$inIPrange") == 0) {
-          op = _mongoc_matcher_op_ip_new (path,
+          op = _mongoc_matcher_op_ip_new (MONGOC_MATCHER_OPCODE_INIPRANGE,
+                                          path,
+                                          &child);
+      } else if (strcmp(key, "$inIPrangeset") == 0) {
+          op = _mongoc_matcher_op_ip_new (MONGOC_MATCHER_OPCODE_INIPRANGESET,
+                                          path,
                                           &child);
 #endif /*WITH_CRYPT*/
       } else if (strcmp(key, "$in") == 0) {
