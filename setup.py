@@ -23,7 +23,7 @@ module1 = Extension('bsonsearch.bsonhelper',
                     include_dirs=["/usr/include/libbson-1.0/"])
 
 setup (name = 'python-bsonsearch',
-        version = '1.3.5',
+        version = '1.6.2',
         description = 'compare bson documents',
         maintainer = "Dan Bauman",
         packages=["bsonsearch"],
