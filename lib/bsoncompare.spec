@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.6.2
-Release: 11%{?dist}.db
+Release: 12%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -96,7 +96,7 @@ cp -fp %{SOURCE28} ./
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
 gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -lsodium -shared -DWITH_STEMMER -DWITH_CRYPT -DWITH_IP -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23} %{SOURCE25} %{SOURCE27}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10}
 
 %install
 mkdir -p $RPM_BUILD_ROOT/%{_usr}/%{_lib}

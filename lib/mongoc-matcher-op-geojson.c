@@ -295,8 +295,6 @@ _mongoc_matcher_op_geowithin_new     ( const char              *path,   /* IN */
         } else if (strcmp(key, "$polygon")==0 &&
                 BSON_ITER_HOLDS_ARRAY(&within_iter) &&
                 _mongoc_matcher_op_geowithin_polygon_iter_values(within_iter, op)) {
-            op->near.near_type = MONGOC_MATCHER_NEAR_2D;
-            op->base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHINPOLY;
             return op;
         }
     }
@@ -323,10 +321,11 @@ _mongoc_matcher_op_geowithin_new     ( const char              *path,   /* IN */
  * Returns:
  *       mongoc_matcher_op_t which has the box values populated in op->near
  *       bool:  true (op is correctly populated)
- *              false (the numbers in op should not be trusted)
+ *              false (input invalid and op is cleared and freed
+ *                       caller should not deref op)
  *
  * Notes:
- *      see http://geojson.org/geojson-spec.html#examples forr example
+ *      see http://geojson.org/geojson-spec.html#examples for example
  *
  * Side effects:
  *       None.
@@ -340,21 +339,31 @@ _mongoc_matcher_op_geowithin_polygon_iter_values     ( bson_iter_t           wit
 {
     bson_iter_t box_iter;
     mongoc_matcher_op_t **current_op;
+    bool success = true;
     current_op = &op;
     op->near.maxd = 0;
+    op->near.near_type = MONGOC_MATCHER_NEAR_2D;
+    op->base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHINPOLY;
+    op->near.pointers = (void **)bson_malloc0(MONGOC_MAX_POLYGON_POINTS * sizeof(void *));
     if (bson_iter_recurse(&within_iter, &box_iter)){
         while (bson_iter_next(&box_iter)){
-            op->near.maxd++;
             mongoc_matcher_op_t *next_point;
             next_point = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *next_point);
             next_point->near.base.opcode = MONGOC_MATCHER_OPCODE_GEOWITHINPOLY;
             next_point->near.near_type = MONGOC_MATCHER_NEAR_UNDEFINED;
             _mongoc_matcher_op_geowithin_polygon_iter_point(box_iter, next_point);//todo: should check this response
-            (*current_op)->logical.left = next_point;
-            current_op = &(*current_op)->logical.left;
+            (*current_op)->near.next = next_point;
+            op->near.pointers[(uint64_t)op->near.maxd] = next_point;
+            current_op = &(*current_op)->near.next;
+            op->near.maxd++;
+            if (op->near.maxd >= MONGOC_MAX_POLYGON_POINTS){
+                _mongoc_matcher_op_destroy(op);
+                success = false;
+                break;
+            }
         }
     }
-    return true;
+    return success;
 }
 /*
  *--------------------------------------------------------------------------
@@ -639,30 +648,24 @@ get_near_poly(mongoc_matcher_op_t *op,      //in
               int dimension,                //in
               double * output)              //out
 {
-    switch (depth){
-        case 0:
-        {
-            switch (dimension){
-                case 1:
-                {
-                    (*output) = op->near.x;
-                    return true;
-                }
-                case 2:
-                {
-                    (*output) = op->near.y;
-                    return true;
-                }
-                default:
-                    return false;
+    if (op->near.pointers[depth] != NULL){
+        mongoc_matcher_op_near_t * near  = (mongoc_matcher_op_near_t*) op->near.pointers[depth];
+        switch (dimension){
+            case 1:
+            {
+                (*output) = near->x;
+                return true;
             }
-        }
-        default:
-            if (op->logical.left != NULL)
-                return get_near_poly(op->logical.left, --depth, dimension, output);
-            else
+            case 2:
+            {
+                (*output) = near->y;
+                return true;
+            }
+            default:
                 return false;
+        }
     }
+    return false;
 }
 /*
  *--------------------------------------------------------------------------
@@ -712,16 +715,16 @@ point_in_poly(double nvert,
               mongoc_matcher_op_t *op,
               double testx, double testy)
 {
-    uint8_t i, j;
+    uint32_t i=0, j=0;
     bool c = false;
     if (nvert <= MONGOC_MAX_POLYGON_POINTS)
     {
         for (i = 0, j = nvert-1; i < nvert; j = i++) {
             double verty_i, verty_j, vertx_i, vertx_j;
-            if ( get_near_poly(op->logical.left, i, 2, &verty_i)&&
-                 get_near_poly(op->logical.left, j, 2, &verty_j) &&
-                 get_near_poly(op->logical.left, i, 1, &vertx_i) &&
-                 get_near_poly(op->logical.left, j, 1, &vertx_j) &&
+            if ( get_near_poly(op, i, 2, &verty_i)&&
+                 get_near_poly(op, j, 2, &verty_j) &&
+                 get_near_poly(op, i, 1, &vertx_i) &&
+                 get_near_poly(op, j, 1, &vertx_j) &&
                  ((verty_i>testy) != (verty_j>testy)) &&
                  (testx < (vertx_j-vertx_i) * (testy-verty_i) / (verty_j-verty_i) + vertx_i) )
                 c = !c;

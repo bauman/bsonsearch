@@ -30,7 +30,7 @@ BSON_BEGIN_DECLS
 
 #define MONGOC_EARTH_RADIUS_M 6371000
 #define RADIAN_MAGIC_NUMBER 0.01745329251 //pi/180
-#define MONGOC_MAX_POLYGON_POINTS 32
+#define MONGOC_MAX_POLYGON_POINTS 2048
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_geonear_new     ( const char      *path,   /* IN */

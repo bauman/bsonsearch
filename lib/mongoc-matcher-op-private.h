@@ -266,6 +266,8 @@ struct _mongoc_matcher_op_near_t
     double t; //normally for time, hijacked by some geo functions
     double maxd; //distance
     double mind; //distance
+    mongoc_matcher_op_t * next;
+    void ** pointers;
 };
 
 union _mongoc_matcher_op_t

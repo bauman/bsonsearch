@@ -607,8 +607,19 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
-      if (op->logical.left)
-         _mongoc_matcher_op_destroy (op->logical.left); //continue to clear near path
+   {
+      int32_t i = 0;
+      mongoc_matcher_op_t * nearop = NULL;
+      if (op->near.pointers){
+         for (i=0; i<MONGOC_MAX_POLYGON_POINTS; i++){
+            nearop = (mongoc_matcher_op_t *) op->near.pointers[i];
+            if (nearop) {
+               _mongoc_matcher_op_destroy(nearop);
+            }
+         }
+         bson_free(op->near.pointers);
+      }
+   }//no break, intentionall fall through to free path
    case MONGOC_MATCHER_OPCODE_NEAR:
    case MONGOC_MATCHER_OPCODE_GEOWITHIN:
    case MONGOC_MATCHER_OPCODE_GEOUNDEFINED:
