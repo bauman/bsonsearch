@@ -47,6 +47,8 @@ _mongoc_matcher_op_ip_new    (mongoc_matcher_opcode_t opcode,
             success = _mongoc_matcher_op_iniprangeset_build_ip(op, iter);
             break;
         }
+        default:
+            break;
     }
     if (!success){
         _mongoc_matcher_op_destroy(op);
@@ -153,6 +155,8 @@ _mongoc_matcher_op_iniprange_match(mongoc_matcher_op_t *op,
                     {
                         break;
                     }
+                    default:
+                        break;
                 }
 
                 skip = ++checked;
