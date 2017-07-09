@@ -607,6 +607,7 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       bson_free (op->size.path);
       break;
    case MONGOC_MATCHER_OPCODE_GEOWITHINPOLY:
+   case MONGOC_MATCHER_OPCODE_GEONEARBOUNDARY:
    {
       int32_t i = 0;
       mongoc_matcher_op_t * nearop = NULL;
@@ -2295,6 +2296,8 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
       return _mongoc_matcher_op_strlen_match (&op->size, bson);
    case MONGOC_MATCHER_OPCODE_NEAR:
       return _mongoc_matcher_op_near (&op->near, bson);
+   case MONGOC_MATCHER_OPCODE_GEONEARBOUNDARY:
+      return _mongoc_matcher_op_near_boundary (op, bson);
    case MONGOC_MATCHER_OPCODE_GEONEAR:
       return _mongoc_matcher_op_geonear (&op->near, bson);
    case MONGOC_MATCHER_OPCODE_GEOWITHIN:

@@ -30,7 +30,15 @@ BSON_BEGIN_DECLS
 
 #define MONGOC_EARTH_RADIUS_M 6371000
 #define RADIAN_MAGIC_NUMBER 0.01745329251 //pi/180
+#define DEGREE_MAGIC_NUMBER 57.29578 
+#define HALF_PI  1.5707963267949
 #define MONGOC_MAX_POLYGON_POINTS 2048
+
+#define MONGOC_GEOJSON_POINT "Point"
+#define MONGOC_GEOJSON_POINT_L 5
+
+#define MONGOC_GEOJSON_LINESTRING "LineString"
+#define MONGOC_GEOJSON_LINESTRING_L 10
 
 mongoc_matcher_op_t *
 _mongoc_matcher_op_geonear_new     ( const char      *path,   /* IN */
@@ -46,6 +54,11 @@ bool  _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_it
                                                    mongoc_matcher_op_t   *op) ; /*OUT*/
 bool _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,  /* IN */
                                                      mongoc_matcher_op_t   *op) ; /*OUT*/
+
+bool
+_mongoc_matcher_op_geonear_parse_coordinates     ( bson_iter_t           *coordinate_iter,  /* IN */
+                                                   mongoc_matcher_op_t   *op);  /*IN/OUT*/
+
 bool
 _mongoc_matcher_op_geowithin_polygon_iter_values     ( bson_iter_t           within_iter,  /* IN */
                                                        mongoc_matcher_op_t   *op) ; /*OUT*/
@@ -70,8 +83,22 @@ point_in_poly(double nvert,
 
 bool _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
                                  const bson_t                *bson) ;/* IN */
+bool
+_mongoc_matcher_op_near_boundary (mongoc_matcher_op_t         *op, /* IN */
+                                      const bson_t                *bson); /* IN */
 bool _mongoc_matcher_op_geowithin (mongoc_matcher_op_near_t    *near, /* IN */
                                    const bson_t                *bson); /* IN */
+
+bool
+bc_get_bearing(double lona, double lata, /* in */
+               double lonb, double latb, /* in */
+               double * output);         /* out */
+
+bool
+bc_crossarc( double lat1, double lon1, /* in */
+             double lat2, double lon2, /* in */
+             double lat3, double lon3, /* in */
+             double *output);           /* out */
 BSON_END_DECLS
 
 

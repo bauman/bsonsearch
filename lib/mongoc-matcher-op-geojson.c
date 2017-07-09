@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2016 Bauman
+ * Copyright (c) 2016-2017 Bauman
  * The MIT License (MIT)
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
@@ -60,7 +60,11 @@ _mongoc_matcher_op_geonear_new     ( const char              *path,   /* IN */
     if (!bson_iter_recurse (child, &near_iter) ){
         return NULL;
     }
-    _mongoc_matcher_op_geonear_iter_values(near_iter, op);
+    bool success = _mongoc_matcher_op_geonear_iter_values(near_iter, op);
+    if (!success){
+        _mongoc_matcher_op_destroy(op);
+        op = NULL;  //This will throw a segfault as it moves up the chain.
+    }
     return op;
 }
 
@@ -106,6 +110,63 @@ _mongoc_matcher_op_geonear (mongoc_matcher_op_near_t    *near, /* IN */
     }
     return retval;
 }
+/*
+ *--------------------------------------------------------------------------
+ *
+ * _mongoc_matcher_op_near_boundary --
+ *
+ *      called by the mongoc-matcher to determine
+ *                                      if a point is near a boundary
+ *
+ * Returns:
+ *      bool: true if the points are within maxDistance of the boundary
+ *
+ * Side effects:
+ *       None.
+ *
+ *--------------------------------------------------------------------------
+ */
+bool
+_mongoc_matcher_op_near_boundary (mongoc_matcher_op_t         *op, /* IN */
+                                  const bson_t                *bson) /* IN */
+{
+    bool retval = false;
+    bson_iter_t iter;
+    bson_iter_t desc;
+    mongoc_matcher_op_t *right_op;
+    double distance = -1; //distance must be > minD (0) to pass the compare.
+    BSON_ASSERT (op);
+    BSON_ASSERT (bson);
+
+    if (bson_iter_init (&iter, bson) &&
+        bson_iter_find_descendant (&iter, op->near.path, &desc) &&
+        BSON_ITER_HOLDS_DOCUMENT(&iter))
+    {
+        right_op = (mongoc_matcher_op_t *) bson_malloc0(sizeof *right_op);
+        right_op->base.opcode = MONGOC_MATCHER_OPCODE_GEONEARBOUNDARY;
+        double lonA, latA, lonB, latB, lonX, latX;
+        if (_mongoc_matcher_op_geonear_parse_geometry(desc, right_op) &&
+                op->near.next){
+            lonX = right_op->near.x; latX = right_op->near.y;
+            mongoc_matcher_op_t *start_op = op;
+            lonA = start_op->near.x; latA = start_op->near.y;
+            start_op = start_op->near.next;
+            do {
+                lonB = start_op->near.x;
+                latB = start_op->near.y;
+                bool ok = bc_crossarc(latA, lonA, latB, lonB, latX, lonX, &distance);
+                if (ok && (distance <= op->near.maxd) && (distance >= op->near.mind)){
+                    retval = true;
+                    break; //know the answer, no sense in continuing
+                }
+                start_op = start_op->near.next;
+            } while (start_op->near.next);
+        }
+        _mongoc_matcher_op_destroy(right_op);
+    }
+    return retval;
+}
+
 
 /*
  *--------------------------------------------------------------------------
@@ -166,6 +227,12 @@ _mongoc_matcher_op_geonear_iter_values     ( bson_iter_t           near_iter,  /
  *          prior to this call.
  *
  *       example bson_iter_t pointer:
+  *          {$geometry: {...,"coordinates": [x1,y1]}}
+ *                     ^
+ *          -----------^
+ *
+ *          or
+ *
  *          {$geometry: {...,"coordinates": [[x1,y1],[x2,y2],...,[xN, yN]]}}
  *                     ^
  *          -----------^
@@ -182,6 +249,8 @@ bool
 _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,  /* IN */
                                                 mongoc_matcher_op_t   *op)  /*IN/OUT*/
 {
+    bool success = true;
+    uint64_t i = 0;
     bson_iter_t geometry_iter;
     if (!bson_iter_recurse (&near_iter, &geometry_iter)) {
         return false;
@@ -190,23 +259,77 @@ _mongoc_matcher_op_geonear_parse_geometry     ( bson_iter_t           near_iter,
         const char * key = bson_iter_key (&geometry_iter);
         if (strcmp(key, "coordinates")==0){
             //better be longitude/latitude
-            bson_iter_t coordinate_iter;
-            if (!bson_iter_recurse (&geometry_iter, &coordinate_iter) ||
-                    !bson_iter_next(&coordinate_iter)||
-                    !_mongoc_matcher_op_near_cast_number_to_double(&coordinate_iter, &op->near.x))
-                return false;
-            op->near.x *= RADIAN_MAGIC_NUMBER;
-            if (!bson_iter_next(&coordinate_iter) ||
-                    !_mongoc_matcher_op_near_cast_number_to_double(&coordinate_iter, &op->near.y))
-                return false;
-            else {op->near.near_type = MONGOC_MATCHER_NEAR_2D;}
-            op->near.y *= RADIAN_MAGIC_NUMBER;
-        } else if (strcmp(key, "type")==0){ //compiler should nuke this if until it's filled out.
-            //TODO: THIS LIBRARY ONLY HANDLES POINTS.  More Types need added.
+            bson_iter_t coordinate_iter, next_coord_iter;
+            if (bson_iter_recurse (&geometry_iter, &coordinate_iter) &&
+                    bson_iter_next(&coordinate_iter)){
+                switch (bson_iter_type(&coordinate_iter)) {
+                    case BSON_TYPE_ARRAY:
+                    {
+                        op->near.base.opcode = MONGOC_MATCHER_OPCODE_GEONEARBOUNDARY;
+                        mongoc_matcher_op_t * current_op = op;
+                        op->near.pointers = (void **)bson_malloc0(MONGOC_MAX_POLYGON_POINTS * sizeof(void *));
+                        do {
+                            mongoc_matcher_op_t * next_op = NULL;
+                            if (bson_iter_recurse (&coordinate_iter, &next_coord_iter) &&
+                                    bson_iter_next(&next_coord_iter)) {
+                                success &= _mongoc_matcher_op_geonear_parse_coordinates(&next_coord_iter, current_op);
+                                next_op = (mongoc_matcher_op_t *)bson_malloc0 (sizeof *op);
+                                current_op->near.next = next_op;
+                                next_op->base.opcode = current_op->base.opcode;
+                                op->near.pointers[i++] = next_op;
+                                current_op = next_op;
+                                if (i >= MONGOC_MAX_POLYGON_POINTS){
+                                    success = false;
+                                    break;
+                                }
+                            }
+                        } while (bson_iter_next(&coordinate_iter));
+                        break;
+                    }
+                    case BSON_TYPE_INT32:
+                    case BSON_TYPE_INT64:
+                    case BSON_TYPE_DOUBLE:
+                    {
+                        success &= _mongoc_matcher_op_geonear_parse_coordinates(&coordinate_iter, op);
+                        break;
+                    }
+                    default:
+                        break;
+                }
+            }
+        } else if (strcmp(key, "type")==0 && BSON_ITER_HOLDS_UTF8(&geometry_iter)){ //compiler should nuke this if until it's filled out.
+            //TODO: IMPLICITLY ASSUME POINT unless otherwise
+            uint32_t str_len= 0;
+            const char * point_type = bson_iter_utf8(&geometry_iter, &str_len);
+            if (strncmp(MONGOC_GEOJSON_LINESTRING, point_type, MONGOC_GEOJSON_LINESTRING_L) == 0){
+               op->near.base.opcode = MONGOC_MATCHER_OPCODE_GEONEARBOUNDARY; 
+            }
+            //TODO: More Types need added.
         }
+    }
+    return success;
+}
+
+
+bool
+_mongoc_matcher_op_geonear_parse_coordinates     ( bson_iter_t           *coordinate_iter,  /* IN */
+                                                   mongoc_matcher_op_t   *op)  /*IN/OUT*/
+{
+    if (_mongoc_matcher_op_near_cast_number_to_double(coordinate_iter, &op->near.x) &&
+        bson_iter_next(coordinate_iter) &&
+        _mongoc_matcher_op_near_cast_number_to_double(coordinate_iter, &op->near.y))
+    {
+        op->near.near_type = MONGOC_MATCHER_NEAR_2D;
+        op->near.x *= RADIAN_MAGIC_NUMBER;
+        op->near.y *= RADIAN_MAGIC_NUMBER;
+    } else {
+        return false;
     }
     return true;
 }
+
+
+
 /*
  *--------------------------------------------------------------------------
  *
@@ -621,6 +744,45 @@ _mongoc_matcher_op_geowithinpoly (mongoc_matcher_op_t    *op, /* IN */
  * The below section of code is in great need of optimization
  * ---------------------------------------------------------------
  */
+
+bool
+bc_crossarc( double lat1, double lon1,
+             double lat2, double lon2,
+             double lat3, double lon3,
+             double *output)
+{
+    bool result = true;
+    double bear12 = 0; double bear13 = 0;
+    double dis13 = 0; double dis12 = 0; double dis14 = 0;
+    double dxt = 0;
+    bc_get_bearing(lon1,lat1, lon2, lat2, &bear12);
+    bc_get_bearing(lon1,lat1, lon3, lat3, &bear13);
+    haversine_distance(lon1,lat1, lon3, lat3, &dis13);
+    if (fabs(bear13-bear12)>(HALF_PI)){
+        *output = dis13;
+    } else {
+        dxt = asin( sin(dis13/MONGOC_EARTH_RADIUS_M) * sin(bear13 - bear12) ) * MONGOC_EARTH_RADIUS_M;
+        haversine_distance(lon1,lat1, lon2, lat2, &dis12);
+        dis14 = acos( cos(dis13/MONGOC_EARTH_RADIUS_M) / cos(dxt/MONGOC_EARTH_RADIUS_M) ) * MONGOC_EARTH_RADIUS_M;
+        if ( dis14 > dis12 ){
+            haversine_distance(lon2, lat2,lon3,lat3, output);
+        } else {
+            *output = fabs(dxt);
+        }
+    }
+    return result;
+}
+
+
+bool
+bc_get_bearing(double lon1, double lat1,
+               double lon2, double lat2,
+               double * output)
+{
+    double result = true;
+    *output = atan2( sin(lon2-lon1)*cos(lat2) , cos(lat1)*sin(lat2) - sin(lat1)*cos(lat2)*cos(lon2-lon1) );
+    return result;
+}
 
 /*
  *--------------------------------------------------------------------------

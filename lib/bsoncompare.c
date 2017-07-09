@@ -24,7 +24,25 @@
 
 struct pattern_to_regex *global_compiled_regexes = NULL;
 
+uint32_t
+bsonsearch_capability() // [ UTILS(8) | YARA(4) | PROJECTION(2) | BASIC(1) ]
+{
+    uint32_t capability = 1;
+    //-O2 should optimize this
 #ifdef WITH_PROJECTION
+    capability |= 2;
+#endif
+#ifdef WITH_YARA
+    capability |= 4;
+#endif
+#ifdef WITH_UTILS
+    capability |= 8;
+#endif
+    return capability;
+}
+
+#ifdef WITH_PROJECTION
+
 bool
 project_bson(mongoc_matcher_t *matcher,     //in
              bson_t           *bson,        //in
@@ -133,6 +151,17 @@ double bsonsearch_haversine_distance_degrees(double lon1, double lat1, double lo
     if (!haversine_distance(lon1*RADIAN_MAGIC_NUMBER, lat1*RADIAN_MAGIC_NUMBER, /*Defined in mongoc-matcher-op-geojson */
                             lon2*RADIAN_MAGIC_NUMBER, lat2*RADIAN_MAGIC_NUMBER,
                             &result)){
+        result = (double)-1;
+    }
+    return result;
+}
+double bsonsearch_get_crossarc_degrees(double lon1, double lat1, double lon2, double lat2, double lon3, double lat3)
+{
+    double result;
+    if (!bc_crossarc( lat1*RADIAN_MAGIC_NUMBER, lon1*RADIAN_MAGIC_NUMBER,
+                      lat2*RADIAN_MAGIC_NUMBER,  lon2*RADIAN_MAGIC_NUMBER,
+                      lat3*RADIAN_MAGIC_NUMBER,  lon3*RADIAN_MAGIC_NUMBER,
+                      &result)){
         result = (double)-1;
     }
     return result;

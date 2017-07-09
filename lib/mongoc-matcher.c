@@ -137,7 +137,7 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
           op = _mongoc_matcher_op_ip_new (MONGOC_MATCHER_OPCODE_INIPRANGESET,
                                           path,
                                           &child);
-#endif /*WITH_CRYPT*/
+#endif /* WITH_IP */
       } else if (strcmp(key, "$in") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_IN, path,
                                               &child);
