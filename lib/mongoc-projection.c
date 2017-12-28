@@ -331,7 +331,7 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,        /*in */
                                   bson_t              *bson,      /*in */
                                   bson_t              *projected) /*in/out */
 {
-    assert(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION || op->base.opcode == MONGOC_MATCHER_OPCODE_UNWIND);
+    BSON_ASSERT(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION || op->base.opcode == MONGOC_MATCHER_OPCODE_UNWIND);
     bson_t arrlist;
     bool result = true;
     bson_init (projected);

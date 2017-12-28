@@ -24,12 +24,12 @@ int
 main (int   argc,
       char *argv[])
 {
-    BSON_ASSERT(compare_json("{\"hello\": \"world\"}",
-                             "{\"$cond\": {\"then\": {\"world\": \"hello\"}, \"else\": {\"$cond\": {\"then\": {\"hello\": \"world\"}, \"else\": {\"hello\": {\"$exists\": true}}, \"if\": {\"hello\": {\"$exists\": true}}}}, \"if\": {\"world\": {\"$exists\": true}}}}"));
+    //BSON_ASSERT(compare_json("{\"hello\": \"world\"}",
+    //                         "{\"$cond\": {\"then\": {\"world\": \"hello\"}, \"else\": {\"$cond\": {\"then\": {\"hello\": \"world\"}, \"else\": {\"hello\": {\"$exists\": true}}, \"if\": {\"hello\": {\"$exists\": true}}}}, \"if\": {\"world\": {\"$exists\": true}}}}"));
 
     BSON_ASSERT(compare_json("{\"hello\": \"world\"}",
-                             "{\"$cond\":{\"if\": {\"hello\":{\"$exists\":true}}, \"then\": {\"hello\":\"world\"}, \"else\": {\"hello\":{\"$exists\":true}} }}}"));
+                             "{\"$cond\":{\"if\": {\"hello\":{\"$exists\":true}}, \"then\": {\"hello\":\"world\"}, \"else\": {\"hello\":{\"$exists\":true}} }}"));
     BSON_ASSERT(compare_json("{\"hello\": \"world\"}",
-                             "{\"$cond\":{\"if\": {\"hello\":{\"$exists\":false}}, \"then\": {\"hello\":\"world\"}, \"else\": {\"hello\":{\"$exists\":true}} }}}"));
+                             "{\"$cond\":{\"if\": {\"hello\":{\"$exists\":false}}, \"then\": {\"hello\":\"world\"}, \"else\": {\"hello\":{\"$exists\":true}} }}"));
     return 0;
 }

@@ -34,6 +34,8 @@
 #ifdef WITH_CRYPT
 #include <sodium.h>
 #endif /*WITH_CRYPT*/
+#include "mongoc-matcher-op-modules-private.h"
+
 BSON_BEGIN_DECLS
 
 
@@ -101,6 +103,9 @@ typedef enum
     MONGOC_MATCHER_OPCODE_INIPRANGE,
     MONGOC_MATCHER_OPCODE_INIPRANGESET,
 #endif /*WITH_IP*/
+#ifdef WITH_MODULES
+    MONGOC_MATCHER_OPCODE_MODULE,
+#endif /*WITH_MODULES*/
    MONGOC_MATCHER_OPCODE_UNDEFINED,
 } mongoc_matcher_opcode_t;
 
@@ -224,6 +229,16 @@ struct _mongoc_matcher_op_ip_t
 
 #endif /*WITH_IP*/
 
+#ifdef WITH_MODULES
+typedef struct _mongoc_matcher_op_outermodule_t   mongoc_matcher_op_outermodule_t;
+struct _mongoc_matcher_op_outermodule_t
+{
+    mongoc_matcher_op_base_t base;
+    char * path;
+    mongoc_matcher_op_module_t config;
+};
+#endif /*WITH_MODULES*/
+
 struct _mongoc_matcher_op_exists_t
 {
    mongoc_matcher_op_base_t base;
@@ -296,6 +311,9 @@ union _mongoc_matcher_op_t
 #ifdef WITH_IP
     mongoc_matcher_op_ip_t ip;
 #endif /* WITH_IP */
+#ifdef WITH_MODULES
+    mongoc_matcher_op_outermodule_t  module;
+#endif /* WITH_MODULES */
 };
 
 

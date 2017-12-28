@@ -40,6 +40,10 @@
 #ifdef WITH_IP
 #include "mongoc-matcher-op-ip.h"
 #endif /*WITH_IP*/
+#ifdef WITH_MODULES
+#include "mongoc-matcher-op-modules.h"
+#endif /* WITH_MODULES */
+
 #include "mongoc-matcher-private.h"
 #include "mongoc-matcher-op-private.h"
 
@@ -138,6 +142,10 @@ _mongoc_matcher_parse_compare (bson_iter_t  *iter,  /* IN */
                                           path,
                                           &child);
 #endif /* WITH_IP */
+#ifdef WITH_MODULES
+      } else if (strcmp(key, "$module") == 0) {
+          op = _mongoc_matcher_op_module_new (path, &child);
+#endif /* WITH_MODULES */
       } else if (strcmp(key, "$in") == 0) {
          op = _mongoc_matcher_op_compare_new (MONGOC_MATCHER_OPCODE_IN, path,
                                               &child);

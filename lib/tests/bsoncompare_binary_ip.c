@@ -28,7 +28,7 @@ main (int   argc,
     BSON_ASSERT(compare_json("{\"i6\": {\"$binary\": \"EREiIjMzRERVVWZmd3eIiA==\", \"$type\": \"86\"}}",
                              "{\"i6\": {\"$inIPrange\": [{\"$binary\": \"EREiIjMzRERVVWZmd3eIiA==\", \"$type\": \"86\"}, {\"$binary\": \"/////////////////////w==\", \"$type\": \"86\"}]}}"));
 
-    BSON_ASSERT(compare_json("{\"i4\": {\"$binary\": \"AAAAAAAAAAAAAAAACgsMDQ==\", \"$type\": \"84\"}}",
+    BSON_ASSERT(!compare_json("{\"i4\": {\"$binary\": \"AAAAAAAAAAAAAAAACgsMDQ==\", \"$type\": \"84\"}}",
                              "{\"i4\": {\"$inIPrange\": [{\"$binary\": \"AAAAAAAAAAAAAAAACgoAAA==\", \"$type\": \"84\"}, {\"$binary\": \"AAAAAAAAAAAAAAAA/////w==\", \"$type\": \"84\"}]}}"));
 
     BSON_ASSERT(compare_json("{\"i4\": {\"$binary\": \"AAAAAAAAAAAUFKjAAAAAAA==\", \"$type\": \"84\"}}",

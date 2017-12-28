@@ -1,6 +1,6 @@
 Name: libbsoncompare		
-Version: 1.6.2
-Release: 15%{?dist}.db
+Version: 1.8.0
+Release: 2%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -35,6 +35,13 @@ Source25: mongoc-matcher-op-crypt.c
 Source26: mongoc-matcher-op-crypt.h
 Source27: mongoc-matcher-op-ip.c
 Source28: mongoc-matcher-op-ip.h
+Source29: mongoc-matcher-op-modules.c
+Source30: mongoc-matcher-op-modules.h
+Source31: mongoc-matcher-op-modules-private.h
+Source32: matcher-module-between.c
+Source33: matcher-module-between.h
+Source34: matcher-module-store.c
+Source35: matcher-module-store.h
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara, libstemmer-devel, libstemmer, aspell-devel, libsodium-devel
@@ -90,12 +97,16 @@ cp -fp %{SOURCE22} ./
 cp -fp %{SOURCE24} ./
 cp -fp %{SOURCE26} ./
 cp -fp %{SOURCE28} ./
+cp -fp %{SOURCE30} ./
+cp -fp %{SOURCE32} ./
+cp -fp %{SOURCE33} ./
+cp -fp %{SOURCE35} ./
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -lsodium -shared -DWITH_STEMMER -DWITH_CRYPT -DWITH_IP -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23} %{SOURCE25} %{SOURCE27}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -lsodium -shared -DWITH_STEMMER -DWITH_CRYPT -DWITH_IP -DWITH_MODULES -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23} %{SOURCE25} %{SOURCE27} %{SOURCE29} %{SOURCE32} %{SOURCE34}
 gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10}
 
 %install
@@ -118,7 +129,11 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-conditional.h $RPM_BUILD_ROOT
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-text.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-text.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-redaction.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-redaction.h
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-crypt.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-crypt.h
-install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-crypt.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-ip.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-ip.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-ip.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-modules.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-modules.h
+install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-modules-private.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-modules-private.h
+install -m 644 -p $RPM_BUILD_DIR/matcher-module-between.h $RPM_BUILD_ROOT/%{_includedir}/matcher-module-between.h
+install -m 644 -p $RPM_BUILD_DIR/matcher-module-store.h $RPM_BUILD_ROOT/%{_includedir}/matcher-module-store.h
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
 install -m 644 -p $RPM_BUILD_DIR/BSONSEARCH_LICENSING.txt $RPM_BUILD_ROOT/%{_docdir}/%{name}/LICENSING.txt

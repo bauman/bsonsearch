@@ -47,6 +47,9 @@
 #ifdef WITH_IP
 #include "mongoc-matcher-op-ip.h"
 #endif /* WITH_IP */
+#ifdef WITH_MODULES
+#include "mongoc-matcher-op-modules.h"
+#endif /* WITH_MODULES */
 /*
  *--------------------------------------------------------------------------
  *
@@ -728,6 +731,13 @@ _mongoc_matcher_op_destroy (mongoc_matcher_op_t *op) /* IN */
       break;
    }
 #endif /* WITH_IP */
+#ifdef WITH_MODULES
+   case MONGOC_MATCHER_OPCODE_MODULE:
+   {
+      _mongoc_matcher_op_module_destroy(op);
+      break;
+   }
+#endif /* WITH_MODULES */
    default:
       break;
    }
@@ -2333,6 +2343,10 @@ _mongoc_matcher_op_match (mongoc_matcher_op_t *op,   /* IN */
    case MONGOC_MATCHER_OPCODE_INIPRANGESET:
       return _mongoc_matcher_op_iniprange_match(op, bson);
 #endif /*WITH_IP*/
+#ifdef WITH_MODULES
+   case MONGOC_MATCHER_OPCODE_MODULE:
+      return _mongoc_matcher_op_module_match(op, bson);
+#endif /* WITH_MODULES */
    default:
       break;
    }

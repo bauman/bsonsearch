@@ -65,7 +65,7 @@ mongoc_matcher_redaction_execute(mongoc_matcher_op_t *op,        /*in */
                                   bson_t              *bson,      /*in */
                                   bson_t              *projected) /*in/out */
 {
-    bool result = FALSE;
+    bool result = false;
     BSON_ASSERT (op->base.opcode == MONGOC_MATCHER_OPCODE_REDACTION );
     bson_iter_t iter;
     bson_init (projected);

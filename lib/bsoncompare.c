@@ -18,6 +18,9 @@
 #include "mongoc-matcher-op-yara.h"
 #endif //WITH_YARA && WITH_UTILS
 #endif //WITH_UTILS
+#ifdef WITH_MODULES
+#include "mongoc-matcher-op-modules.h"
+#endif
 
 // gcc -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-matcher-op-geojson.c mongoc-matcher-op-yara.c
 
@@ -191,6 +194,9 @@ bsonsearch_startup()
 #ifdef WITH_YARA
     result += yr_initialize();
 #endif //WITH_YARA
+#ifdef WITH_MODULES
+    result += _mongoc_matcher_op_module_startup();
+#endif
     return result;
 }
 
@@ -202,6 +208,9 @@ bsonsearch_shutdown()
 #ifdef WITH_YARA
     result += yr_finalize();
 #endif //WITH_YARA
+#ifdef WITH_MODULES
+    result += _mongoc_matcher_op_module_shutdown();
+#endif
     return result;
 }
 

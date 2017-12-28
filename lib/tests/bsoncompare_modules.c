@@ -1,6 +1,7 @@
+
+#include "mongoc-matcher-op-modules.h"
 #include <stdio.h>
 #include <bsoncompare.h>
-#include <bson.h>
 
 int compare_json(const char *json,
                  const char *jsonspec ){
@@ -12,9 +13,10 @@ int compare_json(const char *json,
     spec = bson_new_from_json (jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
     const uint8_t *doc_bson = bson_get_data(doc);
+
     int yes = compare(spec_bson, spec->len, doc_bson, doc->len);
-    bson_free(spec);
-    bson_free(doc);
+    bson_destroy(doc);
+    bson_destroy(spec);
     return yes;
 }
 
@@ -23,10 +25,10 @@ int
 main (int   argc,
       char *argv[])
 {
+    int started = bsonsearch_startup();
 
-    BSON_ASSERT(compare_json("{\"dt\": {\"$date\": 1454621111904}}",
-                             "{\"dt\": {\"$date\": 1454621111904}}"));
-
-
+    BSON_ASSERT(compare_json("{\"hello\": [{\"world\":900},{\"world\":1}]}",
+                             "{\"hello.world\":{\"$module\":{\"name\":\"between\", \"config\":{\"high\":5000, \"low\":0}}}}"));
+    bsonsearch_shutdown();
     return 0;
 }
