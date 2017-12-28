@@ -51,7 +51,7 @@ project_bson(mongoc_matcher_t *matcher,     //in
              bson_t           *bson,        //in
              bson_t           *projected)   //out
 {
-    bool result = FALSE;
+    bool result = false;
     switch (matcher->optree->base.opcode){
         case MONGOC_MATCHER_OPCODE_UNWIND:
         case MONGOC_MATCHER_OPCODE_PROJECTION:
