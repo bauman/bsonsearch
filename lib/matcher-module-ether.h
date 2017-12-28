@@ -16,7 +16,7 @@
 #include <arpa/inet.h>
 
 #define MODULE_ETHER_COMMAND "ether"
-#define MODULE_ETHER_IPV4_255_MASK -2147483647 //Subtract 1 and cast... see limits.h for x86
+#define MODULE_ETHER_IPV4_255_MASK 4294967295LL
 
 typedef struct _matcher_container_ether_t matcher_container_ether_t;
 typedef struct _module_ether_compare module_ether_compare;
