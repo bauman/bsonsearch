@@ -1,6 +1,6 @@
 Name: libbsoncompare		
 Version: 1.8.0
-Release: 2%{?dist}.db
+Release: 3%{?dist}.db
 Summary: compares bson docs	
 
 Group:	 bauman
@@ -42,6 +42,10 @@ Source32: matcher-module-between.c
 Source33: matcher-module-between.h
 Source34: matcher-module-store.c
 Source35: matcher-module-store.h
+Source36: matcher-module-math.c
+Source37: matcher-module-math.h
+Source38: matcher-module-ether.c
+Source39: matcher-module-ether.h
 
 BuildRoot: %{_tmppath}/%{name}-%{version}-%{release}-buildroot
 BuildRequires: gcc, libbson-devel == %{version}, libbson == %{version}, pcre-devel, uthash-devel, yara, libstemmer-devel, libstemmer, aspell-devel, libsodium-devel
@@ -98,15 +102,21 @@ cp -fp %{SOURCE24} ./
 cp -fp %{SOURCE26} ./
 cp -fp %{SOURCE28} ./
 cp -fp %{SOURCE30} ./
+cp -fp %{SOURCE31} ./
 cp -fp %{SOURCE32} ./
 cp -fp %{SOURCE33} ./
+cp -fp %{SOURCE34} ./
 cp -fp %{SOURCE35} ./
+cp -fp %{SOURCE36} ./
+cp -fp %{SOURCE37} ./
+cp -fp %{SOURCE38} ./
+cp -fp %{SOURCE39} ./
 #%setup -q
 
 %build
 #rm -rf %{buildroot}
 mkdir -p %{buildroot}
-gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -lsodium -shared -DWITH_STEMMER -DWITH_CRYPT -DWITH_IP -DWITH_MODULES -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23} %{SOURCE25} %{SOURCE27} %{SOURCE29} %{SOURCE32} %{SOURCE34}
+gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -lyara -lstemmer -laspell -lsodium -shared -DWITH_STEMMER -DWITH_CRYPT -DWITH_IP -DWITH_MODULES -DWITH_ASPELL -DWITH_TEXT -DWITH_CONDITIONAL -DWITH_PROJECTION -D WITH_UTILS -D WITH_YARA -D WITH_MODULES -D WITH_ETHER -o $RPM_BUILD_DIR/libbsoncompare.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10} %{SOURCE12} %{SOURCE14} %{SOURCE17} %{SOURCE19} %{SOURCE21} %{SOURCE23} %{SOURCE25} %{SOURCE27} %{SOURCE29} %{SOURCE32} %{SOURCE34} %{SOURCE36} %{SOURCE38}
 gcc %optflags -I/usr/include/libbson-1.0 -lbson-1.0 -lpcre -shared -o $RPM_BUILD_DIR/libbsoncomparelite.so -fPIC %{SOURCE0} %{SOURCE1} %{SOURCE2} %{SOURCE9} %{SOURCE10}
 
 %install
@@ -134,6 +144,8 @@ install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-modules.h $RPM_BUILD_ROOT/%{_
 install -m 644 -p $RPM_BUILD_DIR/mongoc-matcher-op-modules-private.h $RPM_BUILD_ROOT/%{_includedir}/mongoc-matcher-op-modules-private.h
 install -m 644 -p $RPM_BUILD_DIR/matcher-module-between.h $RPM_BUILD_ROOT/%{_includedir}/matcher-module-between.h
 install -m 644 -p $RPM_BUILD_DIR/matcher-module-store.h $RPM_BUILD_ROOT/%{_includedir}/matcher-module-store.h
+install -m 644 -p $RPM_BUILD_DIR/matcher-module-math.h $RPM_BUILD_ROOT/%{_includedir}/matcher-module-math.h
+install -m 644 -p $RPM_BUILD_DIR/matcher-module-ether.h $RPM_BUILD_ROOT/%{_includedir}/matcher-module-ether.h
 
 mkdir -p $RPM_BUILD_ROOT/%{_docdir}/%{name}
 install -m 644 -p $RPM_BUILD_DIR/BSONSEARCH_LICENSING.txt $RPM_BUILD_ROOT/%{_docdir}/%{name}/LICENSING.txt

@@ -51,7 +51,7 @@ mongoc_matcher_module_callback_t
 matcher_module_ether_search_i4_list(mongoc_matcher_op_t * op, bson_iter_t * iter,
                                     void * usermem, matcher_container_ether_t * md);
 matcher_ether_opcode_t
-matcher_module_ether_get_opcode(const uint8_t *type, uint32_t len);
+matcher_module_ether_get_opcode(const char *type, uint32_t len);
 
 bool
 matcher_module_ether_get_query(matcher_container_ether_t *md, bson_iter_t *query);

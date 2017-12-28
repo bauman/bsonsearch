@@ -21,7 +21,7 @@ matcher_module_ether_startup(mongoc_matcher_op_t * op, bson_iter_t * config)
         const char * key = bson_iter_key (config);
         if (BSON_ITER_HOLDS_UTF8(config) && strcmp(key, "type") == 0){
             uint32_t len;
-            const uint8_t * type = bson_iter_utf8(config, &len);
+            const char * type = bson_iter_utf8(config, &len);
             md->opcode = matcher_module_ether_get_opcode(type, len);
             have_type = true;
         } else if (BSON_ITER_HOLDS_ARRAY(config) && strcmp(key, "query") == 0){
@@ -56,7 +56,7 @@ matcher_module_ether_get_query(matcher_container_ether_t *md, bson_iter_t *query
                 s =  (module_ether_list_ip4*)bson_malloc0(sizeof(*s));
                 BSON_ASSERT(BSON_ITER_HOLDS_UTF8(query));
                 uint32_t len;
-                const uint8_t * tstr = bson_iter_utf8(query, &len);
+                const char * tstr = bson_iter_utf8(query, &len);
                 result &= inet_aton(tstr, &target);
                 s->addr = target.s_addr;
                 HASH_ADD_INT(md->addrset, addr, s);
@@ -107,18 +107,18 @@ matcher_module_ether_get_query_data(matcher_container_ether_t *md, bson_iter_t *
     bson_iter_next(query);
     mask->s_addr = MODULE_ETHER_IPV4_255_MASK;
     BSON_ASSERT(BSON_ITER_HOLDS_UTF8(query));
-    const uint8_t * tstr = bson_iter_utf8(query, &len);
+    const char * tstr = bson_iter_utf8(query, &len);
     goodip = inet_aton(tstr, target);
     BSON_ASSERT(goodip);
     if (bson_iter_next(query) && BSON_ITER_HOLDS_UTF8(query)){
-        const uint8_t * nmstr = bson_iter_utf8(query, &len);
+        const char * nmstr = bson_iter_utf8(query, &len);
         goodmask = inet_aton(nmstr, mask);
         BSON_ASSERT(goodmask);
     }
     return result;
 }
 matcher_ether_opcode_t
-matcher_module_ether_get_opcode(const uint8_t *type, uint32_t len)
+matcher_module_ether_get_opcode(const char *type, uint32_t len)
 {
     matcher_ether_opcode_t result = MATCHER_ETHER_UNDEFINED;
     if (len >= 5 && len < 20){
@@ -212,7 +212,7 @@ matcher_module_ether_search_i4_list(mongoc_matcher_op_t * op, bson_iter_t * iter
                 }
                 case MATCHER_ETHER_DEST_LIST:{
                     HASH_FIND_INT(md->addrset, &iph->daddr, s);
-                    struct in_addr dst;
+                    //struct in_addr dst;
                     //dst.s_addr = iph->daddr;
                     //char * ds = bson_strdup(inet_ntoa(dst));
                     if (s) {cb = MATCHER_MODULE_CALLBACK_FOUND;}
