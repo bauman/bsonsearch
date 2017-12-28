@@ -105,7 +105,7 @@ matcher_module_ether_get_query_data(matcher_container_ether_t *md, bson_iter_t *
     bool goodip, goodmask;
     uint32_t len;
     bson_iter_next(query);
-    mask->s_addr = (uint32_t)MODULE_ETHER_IPV4_255_MASK;
+    mask->s_addr = (uint32_t)(MODULE_ETHER_IPV4_255_MASK - 1);
     BSON_ASSERT(BSON_ITER_HOLDS_UTF8(query));
     const char * tstr = bson_iter_utf8(query, &len);
     goodip = inet_aton(tstr, target);

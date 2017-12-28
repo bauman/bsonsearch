@@ -31,7 +31,7 @@ main (int   argc,
         BSON_ASSERT(compare_json("{ \"arr\" : { \"$binary\" : { \"base64\": \"qGC2JlwgCAAn9gzECABFEEBI6ApAAEAG4PXAqFg2wKhYGAAW7McL7DTmTwx9KoAYBZhx2gAAAQEIChYLl5g0Mjly\", \"subType\" : \"00\" } }}",
                                   "{\"arr\":{\"$module\":{\"name\":\"ether\", \"config\":{\"type\":\"dstiplist\", \"query\":[ \"192.168.88.1\", \"192.168.88.24\", \"192.168.88.3\", \"192.168.88.52\"] }}}}"));
 
-        /*
+
         BSON_ASSERT(!compare_json("{ \"arr\" : { \"$binary\" : { \"base64\": \"qGC2JlwgCAAn9gzECABFEEBI6ApAAEAG4PXAqFg2wKhYGAAW7McL7DTmTwx9KoAYBZhx2gAAAQEIChYLl5g0Mjly\", \"subType\" : \"00\" } }}",
                                   "{\"arr\":{\"$module\":{\"name\":\"ether\", \"config\":{\"type\":\"srciplist\", \"query\":[ \"192.168.88.1\", \"192.168.88.2\", \"192.168.88.3\", \"192.168.88.52\"] }}}}"));
         BSON_ASSERT(compare_json("{ \"arr\" : { \"$binary\" : { \"base64\": \"qGC2JlwgCAAn9gzECABFEEBI6ApAAEAG4PXAqFg2wKhYGAAW7McL7DTmTwx9KoAYBZhx2gAAAQEIChYLl5g0Mjly\", \"subType\" : \"00\" } }}",
@@ -39,8 +39,8 @@ main (int   argc,
 
         BSON_ASSERT(compare_json("{ \"arr\" : { \"$binary\" : { \"base64\": \"qGC2JlwgCAAn9gzECABFEEBI6ApAAEAG4PXAqFg2wKhYGAAW7McL7DTmTwx9KoAYBZhx2gAAAQEIChYLl5g0Mjly\", \"subType\" : \"00\" } }}",
                                  "{\"arr\":{\"$module\":{\"name\":\"ether\", \"config\":{\"type\":\"srcip&dstip\", \"query\":[ [\"192.168.88.54\",\"255.255.255.255\"],[\"192.168.88.54\",\"255.255.255.0\"] ] }}}}"));
-        */
-    } while (i<1);
+        /**/
+    } while (i<10);
 
 
 
