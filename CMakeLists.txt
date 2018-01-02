@@ -46,7 +46,6 @@ TARGET_LINK_LIBRARIES(libbsonsearch yara)
 TARGET_LINK_LIBRARIES(libbsonsearch stemmer)
 TARGET_LINK_LIBRARIES(libbsonsearch aspell)
 TARGET_LINK_LIBRARIES(libbsonsearch sodium)
-TARGET_LINK_LIBRARIES(libbsonsearch accelip)
 enable_testing()
 
 
