@@ -51,7 +51,20 @@ _matcher_module_store_startup()
     num_modules +=1;
     //--------------------------------------------------------
 #endif/* WITH_ETHER */
-
+#ifdef WITH_IP
+    //--IP-----------------------------------------------
+    s =  (module_storage*)bson_malloc0(sizeof(*s));
+    s->name = bson_strdup(MODULE_IP_COMMAND);
+    s->opcode = MATCHER_MODULE_OPCODE_IP;
+    s->m_new = (void*)&matcher_module_ip_startup;
+    s->m_prep = NULL;
+    s->m_search = (void*)&matcher_module_ip_search;
+    s->m_cleanup = NULL;
+    s->m_destroy = (void*)&matcher_module_ip_destroy;
+    HASH_ADD_STR(global_module_storage_NAME, name, s);
+    num_modules +=1;
+    //--------------------------------------------------------
+#endif/* WITH_IP */
 
     return num_modules;
 }

@@ -7,6 +7,7 @@
 #include "matcher-module-between.h"
 #include "matcher-module-math.h"
 #include "matcher-module-ether.h"
+#include "matcher-module-ip.h"
 
 uint32_t
 _matcher_module_store_startup();
