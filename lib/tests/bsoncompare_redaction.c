@@ -88,12 +88,12 @@ main (int   argc,
 {
 
     BSON_ASSERT(project_json("{\"a\":\"aa\", \"b\": {\"bb\":\"b\"}}",
-                             "{\"$redact\":{\"a\":1,\"c\":1}}}",
+                             "{\"$redact\":{\"a\":1,\"c\":1}}",
                              "{ \"b\" : [ { \"bb\" : \"b\" } ] }"));
 
 
     BSON_ASSERT(project_json("{\"a\":\"aa\", \"b\":\"b\"}",
-                             "{\"$redact\":{\"a\":1,\"c\":1}}}",
+                             "{\"$redact\":{\"a\":1,\"c\":1}}",
                              "{ \"b\" : [ \"b\" ] }"));
 
 

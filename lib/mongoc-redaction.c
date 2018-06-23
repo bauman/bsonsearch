@@ -53,7 +53,7 @@ _mongoc_matcher_parse_redaction (mongoc_matcher_opcode_t  opcode,  /* IN */
         char *matcher_hash_key_persist = bson_strdup(tmp->projection.path);
         s = ( mongoc_matcher_op_str_hashtable_t *)malloc(sizeof( mongoc_matcher_op_str_hashtable_t ));
         s->matcher_hash_key = matcher_hash_key_persist;
-        HASH_ADD_STR(found_in_set, matcher_hash_key, s);
+        HASH_ADD_KEYPTR(hh, found_in_set, s->matcher_hash_key, strlen(s->matcher_hash_key), s);
         tmp = tmp->projection.next;
     } ;
     op->projection.pathlist = found_in_set;

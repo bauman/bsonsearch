@@ -20,7 +20,7 @@ _matcher_module_store_startup()
     s->m_search = (void*)&matcher_module_between_search;
     s->m_cleanup = NULL;
     s->m_destroy = (void*)&matcher_module_between_destroy;
-    HASH_ADD_STR(global_module_storage_NAME, name, s);
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
     num_modules +=1;
     //--------------------------------------------------------
 #ifdef WITH_MATH
@@ -33,7 +33,7 @@ _matcher_module_store_startup()
     s->m_search = (void*)&matcher_module_math_sum_search;
     s->m_cleanup = (void*)&matcher_module_math_sum_cleanup;
     s->m_destroy = (void*)&matcher_module_math_sum_destroy;
-    HASH_ADD_STR(global_module_storage_NAME, name, s);
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
     num_modules +=1;
     //--------------------------------------------------------
 #endif /*WITH_MATH */
@@ -47,7 +47,7 @@ _matcher_module_store_startup()
     s->m_search = (void*)&matcher_module_ether_search;
     s->m_cleanup = NULL;
     s->m_destroy = (void*)&matcher_module_ether_destroy;
-    HASH_ADD_STR(global_module_storage_NAME, name, s);
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
     num_modules +=1;
     //--------------------------------------------------------
 #endif/* WITH_ETHER */
@@ -61,7 +61,7 @@ _matcher_module_store_startup()
     s->m_search = (void*)&matcher_module_ip_search;
     s->m_cleanup = NULL;
     s->m_destroy = (void*)&matcher_module_ip_destroy;
-    HASH_ADD_STR(global_module_storage_NAME, name, s);
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
     num_modules +=1;
     //--------------------------------------------------------
 #endif/* WITH_IP */

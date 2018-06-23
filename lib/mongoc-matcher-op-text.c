@@ -129,7 +129,7 @@ _populate_mongoc_matcher_populate_wordlist(mongoc_matcher_op_t * op,
         char * matcher_hash_key = bson_strdup((const char * )matcher_hash_key_cst);
         s = ( mongoc_matcher_op_str_hashtable_t *)malloc(sizeof( mongoc_matcher_op_str_hashtable_t ));
         s->matcher_hash_key = matcher_hash_key;
-        HASH_ADD_STR(op->text.wordlist, matcher_hash_key, s);
+        HASH_ADD_KEYPTR(hh, op->text.wordlist, s->matcher_hash_key, strlen(s->matcher_hash_key), s);
         pch = strtok (NULL, op->text.stop_word);
     }
     free(pch);

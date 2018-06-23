@@ -146,7 +146,7 @@ _mongoc_matcher_op_inset_new (const char              *path,   /* IN */
             const char * matcher_hash_key = bson_iter_utf8(&right_array, &str_len);
             char *matcher_hash_key_persist = bson_strdup(matcher_hash_key);
             s->matcher_hash_key = matcher_hash_key_persist;
-            HASH_ADD_STR(op->compare.inset, matcher_hash_key, s);
+            HASH_ADD_KEYPTR(hh, op->compare.inset, s->matcher_hash_key, strlen(s->matcher_hash_key), s);
          }
       }
    }
@@ -1383,7 +1383,7 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
                                NULL);                /* use default character tables */
             s->pattern = pattern_persist;
             s->re = re; //Even if the compile fails, cache it anyway so we're not recompiling, it'll pass below
-            HASH_ADD_STR(global_compiled_regexes, pattern, s);
+            HASH_ADD_KEYPTR(hh, global_compiled_regexes, s->pattern, strlen(s->pattern), s);
          }
          else
          {

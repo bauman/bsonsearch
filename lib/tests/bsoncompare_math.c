@@ -26,7 +26,7 @@ main (int   argc,
 {
     int started = bsonsearch_startup();
 
-    int i = 99999000;
+    int i = 99;
     while (i > 0){
         i--;
         BSON_ASSERT(compare_json("{\"hello\": [20, 35]}",

@@ -93,9 +93,9 @@ main (int   argc,
         // Results in duplicate values being apended at the end in complex cases
         //FIX THIS  |
         //          V
-        BSON_ASSERT(!test_bson_api("{\"a\":[{\"b\":[{\"c\":1}]},{\"b\":[{\"c\":2}]}]}",
+        BSON_ASSERT(test_bson_api("{\"a\":[{\"b\":[{\"c\":1}]},{\"b\":[{\"c\":2}]}]}",
                                   "{\"$project\":{\"a\":{\"$foundin\":[\"a.b.c\"]}}}",
-                                  "{ \"a\" : [ 1, 2 ] }"));
+                                  "{ \"a\" : [ 1, 2, 2 ] }"));
         //                        "{ \"a\" : [ 1, 2, 2 ] }" <- duplicate 2 is added
         //                                                     because traversing this mess is hard
     }while(false);//*/
@@ -172,37 +172,37 @@ main (int   argc,
     do
     {
         BSON_ASSERT(test_json_api("{\"a\":{\"aa\":[2, 33]}, \"b\":\"b\"}",
-                             "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
+                             "{\"$project\":{\"a.aa\":1,\"c\":1}}",
                              "{ \"a.aa\" : [ 2, 33 ], \"c\" : [  ] }"));
     }while(false); //true to leak test
 
     //test regex
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", {\"$options\": \"\", \"$regex\": \"oRl\"}]}, \"b\":\"b\"}",
-                             "{\"$project\":{\"a.aa\":1}}}",
+                             "{\"$project\":{\"a.aa\":1}}",
                              "{ \"a.aa\" : [ \"ii\", { \"$regex\" : \"oRl\", \"$options\" : \"\" } ] }"));
 
     //test document
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"ii\", 33]}, \"b\":\"b\"}",
-                             "{\"$project\":{\"a\":1}}}",
+                             "{\"$project\":{\"a\":1}}",
                              "{ \"a\" : [ { \"aa\" : [ \"ii\", 33 ] } ] }"));
     //test complex descent
     BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"a\", 33]}, {\"aa\":999}], \"b\":\"b\"}",
-                             "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
+                             "{\"$project\":{\"a.aa\":1,\"c\":1}}",
                              "{ \"a.aa\" : [ \"a\", 33, 999 ], \"c\" : [  ] }"));
 
     //test project as
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
-                             "{\"$project\":{\"a.aa\":\"a_aa\",\"c\":1}}}",
+                             "{\"$project\":{\"a.aa\":\"a_aa\",\"c\":1}}",
                              "{ \"a_aa\" : [ \"a\", 33 ], \"c\" : [  ] }"));
 
     //test direct descent
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
-                             "{\"$project\":{\"a.aa\":1,\"c\":1}}}",
+                             "{\"$project\":{\"a.aa\":1,\"c\":1}}",
                              "{ \"a.aa\" : [ \"a\", 33 ], \"c\" : [  ] }"));
 
     //test root keys
     BSON_ASSERT(project_json("{\"a\":\"aa\", \"b\":\"b\"}",
-                             "{\"$project\":{\"a\":1,\"c\":1}}}",
+                             "{\"$project\":{\"a\":1,\"c\":1}}",
                              "{ \"a\" : [ \"aa\" ], \"c\" : [  ] }"));
 
     //test date_time

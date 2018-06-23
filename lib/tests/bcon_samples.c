@@ -32,7 +32,7 @@ main (int   argc,
     oid_thinks_time = bson_oid_get_time_t (&oid);
     printf ("The OID was fixed to time %u\n", (unsigned) oid_thinks_time);//prove it
 */
-/*
+
     query = BCON_NEW ("ping", BCON_INT32 (1));
     query = BCON_NEW("$and","[",
                      "{", "a", BCON_INT32(1), "}",
@@ -45,13 +45,14 @@ main (int   argc,
                                  "{", "yyyyyy", "{", "$ne", BCON_UTF8 ("xxxxxxx"), "}", "}","]"
                     );
     query = BCON_NEW("$and","[",
+                     "{", "timestamp", "{", "$eq", BCON_INT64(1111111111112), "}", "}",
                      "{", "timestamp", "{", "$gte", BCON_INT64(1111111111111), "}", "}",
                      "{", "timestamp", "{", "$lt", BCON_INT64(1111111111110), "}", "}","]");
     //prove it looks right
-*/
-    size_t *s;
+
+    size_t s;
     char * as_json;
-    as_json = bson_as_json(query, NULL);
+    as_json = bson_as_json(query, &s);
     printf("%s\n", as_json);
     return 0;
 }

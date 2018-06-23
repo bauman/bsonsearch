@@ -224,7 +224,7 @@ _mongoc_matcher_parse_projection_complex (bson_iter_t             *iter,    /* I
                         const char * matcher_hash_key_local = bson_iter_utf8(&found_list, &str_len);
                         char *matcher_hash_key_persist = bson_strdup(matcher_hash_key_local);
                         s->matcher_hash_key = matcher_hash_key_persist;
-                        HASH_ADD_STR(found_in_set, matcher_hash_key, s);
+                        HASH_ADD_KEYPTR(hh, found_in_set, s->matcher_hash_key, strlen(s->matcher_hash_key), s);
                     }
                 }
             }
