@@ -20,7 +20,7 @@
 #include <pcre.h>
 #include <bson.h>
 #include <math.h>
-#include <bson-types.h>
+#include <bson/bson-types.h>
 #include "bsoncompare.h"
 #include "mongoc-matcher-op-geojson.h"
 #include "mongoc-bson-descendants.h"
