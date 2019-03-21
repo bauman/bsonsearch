@@ -1,5 +1,5 @@
 Name: libbsoncompare		
-Version: 1.13.0
+Version: 1.14.0
 Release: 1%{?dist}.db
 Summary: compares bson docs	
 

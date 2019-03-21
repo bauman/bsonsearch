@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-#include <bcon.h>
+#include <bson/bson.h>
 #include <mongoc-matcher.h>
 
 
