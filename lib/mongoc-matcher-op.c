@@ -1588,7 +1588,7 @@ _mongoc_matcher_op_gt_match (mongoc_matcher_op_compare_t *compare, /* IN */
       }
    case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
    {
-      time_t t = NULL;
+      time_t t = {0};
       const bson_oid_t * right = bson_iter_oid(iter);
       t = bson_oid_get_time_t(right);
       int64_t oid_time = t * 1000;
@@ -1701,7 +1701,7 @@ _mongoc_matcher_op_gte_match (mongoc_matcher_op_compare_t *compare, /* IN */
    }
    case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
    {
-      time_t t = NULL;
+      time_t t = {0};
       const bson_oid_t * right = bson_iter_oid(iter);
       t = bson_oid_get_time_t(right);
       int64_t oid_time = t * 1000;
@@ -1895,7 +1895,7 @@ _mongoc_matcher_op_lt_match (mongoc_matcher_op_compare_t *compare, /* IN */
       }
    case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
       {
-         time_t t = NULL;
+         time_t t = {0};
          const bson_oid_t * right = bson_iter_oid(iter);
          t = bson_oid_get_time_t(right);
          int64_t oid_time = t * 1000;
@@ -2007,7 +2007,7 @@ _mongoc_matcher_op_lte_match (mongoc_matcher_op_compare_t *compare, /* IN */
       }
    case _TYPE_CODE(BSON_TYPE_DATE_TIME, BSON_TYPE_OID):
    {
-      time_t t = NULL;
+      time_t t = {0};
       const bson_oid_t * right = bson_iter_oid(iter);
       t = bson_oid_get_time_t(right);
       int64_t oid_time = t * 1000;
