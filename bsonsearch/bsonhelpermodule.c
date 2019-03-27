@@ -76,8 +76,24 @@ static PyMethodDef BsonHelperMethods[] =
      {NULL, NULL, 0, NULL}
 };
 
-PyMODINIT_FUNC
+/*
+ PyMODINIT_FUNC
 initbsonhelper(void)
 {
      (void) Py_InitModule("bsonhelper", BsonHelperMethods);
+}
+*/
+static struct PyModuleDef bsonhelperdef =
+        {
+                PyModuleDef_HEAD_INIT,
+                "bsonhelper", /* name of module */
+                "usage: bsonhelper.bson_as_string\n", /* module documentation, may be NULL */
+                -1,   /* size of per-interpreter state of the module, or -1 if the module keeps state in global variables. */
+                BsonHelperMethods
+        };
+
+PyMODINIT_FUNC
+PyInit_bsonhelper(void)
+{
+    return PyModule_Create(&bsonhelperdef);
 }
