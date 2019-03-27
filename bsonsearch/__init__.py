@@ -129,8 +129,7 @@ class bsoncompare(object):
             self.bc.bsonsearch_haversine_distance_degrees.restype = c_double
             self.bc.bsonsearch_get_crossarc_degrees.argtypes = [c_double, c_double, c_double, c_double, c_double, c_double]
             self.bc.bsonsearch_get_crossarc_degrees.restype = c_double
-            self.bc.bsonsearch_yara_gte1_hit_raw.argtypes = [c_void_p, c_char_p, c_uint]
-            self.bc.bsonsearch_yara_gte1_hit_raw.restype = c_bool
+
             self.bc.bsonsearch_free_project_str.argtypes = [c_void_p]
             self.bc.bsonsearch_free_project_str.restype = c_uint
 
@@ -139,6 +138,12 @@ class bsoncompare(object):
 
             self.bc.bsonsearch_project_bson.argtypes = [c_void_p, c_void_p]
             self.bc.bsonsearch_project_bson.restype = c_void_p
+
+            try:
+                self.bc.bsonsearch_yara_gte1_hit_raw.argtypes = [c_void_p, c_char_p, c_uint]
+                self.bc.bsonsearch_yara_gte1_hit_raw.restype = c_bool
+            except AttributeError:
+                pass
 
 
         self.matchers = {} #keys = string, value = c-pointers
