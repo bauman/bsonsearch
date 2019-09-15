@@ -1,3 +1,5 @@
+[![Build Status](https://travis-ci.org/bauman/bsonsearch.svg?branch=py3)](https://travis-ci.org/bauman/bsonsearch)
+
 License
 ================
 This code is licensed under permissive Apache 2 and MIT license.
