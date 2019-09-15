@@ -1,0 +1,22 @@
+sudo: required
+
+language: c
+
+
+branches:
+  only:
+    - py3
+    - ctest
+
+install:
+  - sudo apt-get install make gcc libpcre3-dev libpcre3 tree libbson libbson-dev uthash-dev libsodium-dev yara yara-dev
+
+
+
+script:
+  - sudo mkdir /usr/include/libbson-1.0/bson && cp /usr/include/libbson-1.0/*.h /usr/include/libbson-1.0/bson/.
+  - cmake .
+  - make
+  - ls -alh
+
+
