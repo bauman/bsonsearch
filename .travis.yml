@@ -3,11 +3,6 @@ sudo: required
 language: c
 
 
-branches:
-  only:
-    - py3
-    - ctest
-
 install:
   - sudo apt-get install make gcc libpcre3-dev libpcre3 tree libbson libbson-dev uthash-dev libsodium-dev yara yara-dev
 
