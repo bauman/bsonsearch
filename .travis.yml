@@ -32,5 +32,18 @@ script:
   - ./compare-box
   - ./inset
   - ./yara-test
+  - ./projection-test
+  - ./unwind_compare
+  - ./type-checking
+  - ./exists-check
+  - ./strlen-check
+  - ./cryptcheck
+  - ./textsearch
+  - ./spellingsearch
+  - ./geospace
+  - ./ipaddrs
+  - ./mathmodule
+  - ./ethermodule
+  - ./ipmodule
 
 
