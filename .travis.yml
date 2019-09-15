@@ -18,5 +18,19 @@ script:
   - cmake .
   - make
   - tree
+  - echo "all the tests should exit 0 if they work"
+  - ./bcon-sample
+  - ./compare-equal
+  - ./mongodbtests
+  - ./compare-regex-equal
+  - ./gte-compare
+  - ./size-compare
+  - ./near-compare
+  - ./dt-compare
+  - ./oid-compare
+  - ./geonear-compare
+  - ./compare-box
+  - ./inset
+  - ./yara-test
 
 
