@@ -28,7 +28,7 @@ try:
         compiled_rule = yara.compile(source=source)
         return YARA_DICT(compiled_rule)
     def YARA_SOURCE_STR(source):
-        assert isinstance(source, basestring)
+        assert isinstance(source, bytes)
         return {"$yara":{"source":source}}
 
 except ImportError:
@@ -174,7 +174,7 @@ class bsoncompare(object):
         if isinstance(matcher_id, list) or isinstance(matcher_id, dict):
             matcher_ids = [matcher_id_ for matcher_id_ in matcher_id]
             [self.destroy_matcher(matcher_ids_) for matcher_ids_ in matcher_ids]
-        elif isinstance(matcher_id, basestring):
+        elif isinstance(matcher_id, bytes):
             if matcher_id not in self.matchers:
                 return True #let caller believe it's been deleted.
             if matcher_id in self.matchers:
@@ -184,7 +184,7 @@ class bsoncompare(object):
     def generate_matcher(self, spec):
         if isinstance(spec, dict):
             encoded_spec = bson.BSON.encode(spec)
-        elif isinstance(spec, basestring):
+        elif isinstance(spec, bytes):
             encoded_spec = spec
         elif spec is None:
             raise ValueError("SPEC must not be empty")
@@ -202,7 +202,7 @@ class bsoncompare(object):
         if isinstance(doc_id, list) or isinstance(doc_id, dict):
             doc_ids = [doc_id_ for doc_id_ in doc_id]
             [self.destroy_doc(doc_ids_) for doc_ids_ in doc_ids]
-        elif isinstance(doc_id, basestring):
+        elif isinstance(doc_id, bytes):
             if doc_id not in self.docs:
                 return True
             if doc_id in self.docs:
@@ -215,7 +215,7 @@ class bsoncompare(object):
     def generate_doc(self, doc):
         if isinstance(doc, dict):
             encoded_doc = bson.BSON.encode(doc)
-        elif isinstance(doc, basestring):
+        elif isinstance(doc, bytes):
             encoded_doc = doc
         elif doc is None:
             raise ValueError("DOC must not be empty")
@@ -241,7 +241,7 @@ class bsoncompare(object):
         matcher = self.matchers[matcher_id]
         if isinstance(document, dict):
             encoded_document = bson.BSON.encode(document)
-        elif isinstance(document, basestring):
+        elif isinstance(document, bytes):
             encoded_document = document
         else:
             raise ValueError
@@ -255,9 +255,9 @@ class bsoncompare(object):
     def project_bson(self, matcher_id, doc_id):
         '''
 
-        :param matcher_id: <basestring> id for the matcher pointer
+        :param matcher_id: <bytes> id for the matcher pointer
         :param doc_id:
-        :return: <basestring> bson representation of the requested projection
+        :return: <bytes> bson representation of the requested projection
         '''
         matcher  = self.matchers[matcher_id] #pointer
         document = self.docs[doc_id] #pointer
@@ -279,7 +279,7 @@ class bsoncompare(object):
 
         :param matcher_id:
         :param doc_id:
-        :return: <basestring> json representation of the requested projection
+        :return: <bytes> json representation of the requested projection
         '''
         matcher  = self.matchers[matcher_id] #pointer
         document = self.docs[doc_id] #pointer
