@@ -16,6 +16,9 @@ add_definitions(-DWITH_IP)
 add_definitions(-DWITH_MODULES)
 add_definitions(-DWITH_MATH)
 add_definitions(-DWITH_ETHER)
+add_definitions(-DWITH_DISCO)
+add_definitions(-DALLOW_FILESYSTEM)
+
 
 
 set(SOURCE_FILES lib/bsoncompare.c
@@ -36,7 +39,9 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/matcher-module-between.c
                  lib/matcher-module-math.c
                  lib/matcher-module-ether.c
-                 lib/matcher-module-ip.c)
+                 lib/matcher-module-ip.c
+                 lib/matcher-module-disco.c
+        )
 
 
 add_library(libbsonsearch SHARED ${SOURCE_FILES})
@@ -46,6 +51,7 @@ TARGET_LINK_LIBRARIES(libbsonsearch yara)
 TARGET_LINK_LIBRARIES(libbsonsearch stemmer)
 TARGET_LINK_LIBRARIES(libbsonsearch aspell)
 TARGET_LINK_LIBRARIES(libbsonsearch sodium)
+TARGET_LINK_LIBRARIES(libbsonsearch discodb)
 enable_testing()
 
 
@@ -89,3 +95,4 @@ bsonsearch_add_test(modulebase lib/tests/bsoncompare_modules.c)
 bsonsearch_add_test(mathmodule lib/tests/bsoncompare_math.c)
 bsonsearch_add_test(ethermodule lib/tests/bsoncompare_ether.c)
 bsonsearch_add_test(ipmodule lib/tests/bsoncompare_module_ip.c)
+bsonsearch_add_test(discomodule lib/tests/bsonsearch_discodb.c)
