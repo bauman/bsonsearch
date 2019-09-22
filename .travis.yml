@@ -17,8 +17,9 @@ install:
   - echo "don't have a discodb installer for ubuntu, build from source and install"
   - cwd=`pwd`
   - cd /tmp
-  - git pull https://github.com/bauman/discodb.git
-  - cd discodb
+  - wget https://github.com/bauman/discodb/archive/0.8.tar.gz
+  - tar -zxvf 0.8.tar.gz
+  - cd discodb-0.8
   - cmake .
   - make
   - sudo install libdiscodb.so /usr/lib/
