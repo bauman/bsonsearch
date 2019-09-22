@@ -14,7 +14,6 @@ install:
   - wget http://pkgs.bauman.space/discodb/cjk.ddb
   - wget http://pkgs.bauman.space/discodb/myths.ddb
   - mv *.ddb /tmp/.
-  - sudo mv sample.ddb /tmp/sample.ddb
   - echo "don't have a discodb installer for ubuntu, build from source and install"
   - git pull https://github.com/bauman/discodb.git
   - cd discodb
