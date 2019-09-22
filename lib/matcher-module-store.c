@@ -65,6 +65,20 @@ _matcher_module_store_startup()
     num_modules +=1;
     //--------------------------------------------------------
 #endif/* WITH_IP */
+#ifdef WITH_DISCO
+    //--sum-----------------------------------------------
+    s =  (module_storage*)bson_malloc0(sizeof(*s));
+    s->name = bson_strdup(MODULE_DISCO_COMMAND);
+    s->opcode = MATCHER_MODULE_OPCODE_DISCO;
+    s->m_new = (void*)&matcher_module_disco_startup;
+    s->m_prep = (void*)&matcher_module_disco_prep;
+    s->m_search = (void*)&matcher_module_disco_search;
+    s->m_cleanup = (void*)&matcher_module_disco_cleanup;
+    s->m_destroy = (void*)&matcher_module_disco_destroy;
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
+    num_modules +=1;
+    //--------------------------------------------------------
+#endif /*WITH_DISCO */
 
     return num_modules;
 }

@@ -8,7 +8,20 @@ language: c
 
 install:
   - sudo apt-get install -y tree libpcre3-dev libpcre3 tree libbson-dev libbson-1.0-0 libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en libsodium23 uthash-dev libsodium-dev libyara3 libyara-dev
-
+  - echo "pulling a test file so the test works"
+  - wget http://pkgs.bauman.space/discodb/sample.ddb
+  - wget http://pkgs.bauman.space/discodb/animals.ddb
+  - wget http://pkgs.bauman.space/discodb/cjk.ddb
+  - wget http://pkgs.bauman.space/discodb/myths.ddb
+  - mv *.ddb /tmp/.
+  - sudo mv sample.ddb /tmp/sample.ddb
+  - echo "don't have a discodb installer for ubuntu, build from source and install"
+  - git pull https://github.com/bauman/discodb.git
+  - cd discodb
+  - cmake .
+  - make
+  - sudo install libdiscodb.so /usr/lib/
+  - sudo install src/*.h /usr/include/
 
 
 script:
@@ -45,5 +58,6 @@ script:
   - ./mathmodule
   - ./ethermodule
   - ./ipmodule
+  - ./discomodule
 
 
