@@ -15,12 +15,15 @@ install:
   - wget http://pkgs.bauman.space/discodb/myths.ddb
   - mv *.ddb /tmp/.
   - echo "don't have a discodb installer for ubuntu, build from source and install"
+  - cwd=`pwd`
+  - cd /tmp
   - git pull https://github.com/bauman/discodb.git
   - cd discodb
   - cmake .
   - make
   - sudo install libdiscodb.so /usr/lib/
   - sudo install src/*.h /usr/include/
+  - cd $cwd
 
 
 script:
