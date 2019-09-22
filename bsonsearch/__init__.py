@@ -30,9 +30,18 @@ try:
     def YARA_SOURCE_STR(source):
         assert isinstance(source, bytes)
         return {"$yara":{"source":source}}
-
 except ImportError:
     yara = None
+
+
+try:
+    import discodb
+
+    def DISCODB_CNF_TO_DICT(cnf_string):
+        return discodb.Q.parse(cnf_string).deploy()
+except ImportError:
+    discodb = None
+
 
 try:
     import IPy
