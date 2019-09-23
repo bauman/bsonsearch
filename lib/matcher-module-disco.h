@@ -51,6 +51,9 @@ struct _matcher_container_disco_holder_t {
 #ifdef ALLOW_FILESYSTEM
     int db_fd;
 #endif
+    char * precache_data;
+    uint64_t precache_data_len;
+    bool precache;
     bson_type_t type;
 };
 

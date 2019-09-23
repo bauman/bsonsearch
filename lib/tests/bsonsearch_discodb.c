@@ -37,6 +37,13 @@ main (int   argc,
     int32_t rounds = 1;
     do {
 
+
+        // Passes  BECAUSE string whale is in mammals and aquatic
+        BSON_ASSERT(compare_json("{\"hello\": {\"world\":\"Nýx\"}}",
+                                 "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$ddb\": \"/tmp/myths.ddb\", \"$Q\": {\"num_clauses\": 2, \"clauses\": [{\"num_terms\": 1, \"terms\": [{\"entry\": \"Greek\", \"nnot\": false}]}, {\"num_terms\": 1, \"terms\": [{\"entry\": \"Primordial\", \"nnot\": false}]}], \"precache\": true }}}}}"));
+
+
+
         // Passes  BECAUSE string whale is in mammals and aquatic
         BSON_ASSERT(compare_json("{\"hello\": {\"world\":\"Nýx\"}}",
                                  "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$Q\": {\"num_clauses\": 2, \"clauses\": [{\"num_terms\": 1, \"terms\": [{\"entry\": \"Greek\", \"nnot\": false}]}, {\"num_terms\": 1, \"terms\": [{\"entry\": \"Primordial\", \"nnot\": false}]}]}, \"$ddb\": \"/tmp/myths.ddb\"}}}}"));
