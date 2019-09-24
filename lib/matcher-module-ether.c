@@ -203,8 +203,8 @@ matcher_module_ether_search_i4_list(mongoc_matcher_op_t * op, bson_iter_t * iter
         bson_iter_binary(iter, &subtype, &binary_len, &binary);
         if (binary_len >= sizeof(struct iphdr) + sizeof(struct ethhdr)) { //SIZEOF hopefully compiler optimized
             struct iphdr *iph = (struct iphdr *) (binary + sizeof(struct ethhdr));
+            module_ether_list_ip4 *s = NULL;
             switch (md->opcode) {
-                module_ether_list_ip4 *s = NULL;
                 case MATCHER_ETHER_SOURCE_LIST: {
                     HASH_FIND_INT(md->addrset, &iph->saddr, s);
                     if (s) {cb = MATCHER_MODULE_CALLBACK_FOUND;}

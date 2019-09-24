@@ -177,8 +177,26 @@ matcher_module_disco_unload_clauses(matcher_container_disco_holder_t* md, bson_i
                     && BSON_ITER_HOLDS_ARRAY(&child)){
                 md->clauses = (struct ddb_query_clause *)calloc(md->clauses_len, sizeof(struct ddb_query_clause));
                 matcher_module_disco_loop_clauses(md, &child);
+            } else if (strcmp(key, "precache") == 0
+                       && BSON_ITER_HOLDS_BOOL(&child)){
+                md->precache = bson_iter_bool(&child);
+                if (md->precache && md->db && md->clauses && md->clauses_len){
+                    struct ddb_cons * cons = ddb_cons_new();
+                    struct ddb_cursor * cur = ddb_query(md->db, md->clauses, md->clauses_len);
+                    struct ddb_entry xentry = {.data="-", .length=1};
+                    const struct ddb_entry * ventry;
+                    int ddb_errno;
+                    while ((ventry = ddb_next(cur, &ddb_errno))){
+                        ddb_cons_add(cons, ventry, &xentry);
+                    }
+                    ddb_free_cursor(cur);
+                    md->precache_data = ddb_cons_finalize(cons, &md->precache_data_len, 0);
+                    ddb_cons_free(cons);
+                    ddb_free(md->db);
+                    md->db = ddb_new();
+                    ddb_loads(md->db, md->precache_data, md->precache_data_len);
+                }
             }
-            int j = strlen(key);
         }
     }
     return result;
@@ -362,16 +380,29 @@ matcher_module_disco_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void *
         else if (binary && md->compare == MATCHER_MODULE_DISCO_VALUE_MATCHES_Q) {
             ud->kentry.data = (const char *)binary;
             ud->kentry.length = binary_len;
-            struct ddb_cursor * cur = ddb_query(md->db, md->clauses, md->clauses_len);
-            int ddb_errno;
-            while ((ud->ventry = ddb_next(cur, &ddb_errno))){
-                if (ud->kentry.length == ud->ventry->length &&
-                    strncmp(ud->kentry.data, ud->ventry->data, ud->kentry.length) == 0){
+            if (md->precache){
+                // START THIS HAS BECOME KEY.EXISTS NOW, READY FOR FUNCTION
+                struct ddb_cursor * cur = ddb_getitem(md->db, &ud->kentry);
+                int ddb_errno;
+                while ((ud->ventry = ddb_next(cur, &ddb_errno))){
                     cb = MATCHER_MODULE_CALLBACK_FOUND;
-                    break;
+                    break; // because stop once we know it's there
                 }
+                ddb_free_cursor(cur);
+                // END THIS HAS BECOME KEY.EXISTS NOW, READY FOR FUNCTION
+            } else {
+                struct ddb_cursor * cur = ddb_query(md->db, md->clauses, md->clauses_len);
+                int ddb_errno;
+                while ((ud->ventry = ddb_next(cur, &ddb_errno))){
+                    if (ud->kentry.length == ud->ventry->length &&
+                        strncmp(ud->kentry.data, ud->ventry->data, ud->kentry.length) == 0){
+                        cb = MATCHER_MODULE_CALLBACK_FOUND;
+                        break;
+                    }
+                }
+                ddb_free_cursor(cur);
             }
-            ddb_free_cursor(cur);
+
         }
         //  --Consider move to a "value_only" static function?
         // ----------------------------------------------------------------------
@@ -397,6 +428,7 @@ matcher_module_disco_destroy(mongoc_matcher_op_t *op){
     matcher_container_disco_holder_t *md;
     md = (matcher_container_disco_holder_t *) op->module.config.container.module_data;
     ddb_free(md->db);
+    md->db = NULL;
     uint32_t i = 0, j=0;
     for (i=0; i<md->clauses_len; i++){
         if (md->clauses[i].terms){
@@ -405,12 +437,17 @@ matcher_module_disco_destroy(mongoc_matcher_op_t *op){
     }
     if (md->clauses){
         free(md->clauses);
+        md->clauses = NULL;
     }
 #ifdef ALLOW_FILESYSTEM
     if (md->db_fd > 0){
         close(md->db_fd);  // maybe check this is 0 ,<- means actually closed?
     }
 #endif
+    if (md->precache_data){
+        free(md->precache_data);
+        md->precache_data = NULL;
+    }
     bson_free(md);
     return result;
 }
