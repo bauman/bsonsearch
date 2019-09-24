@@ -191,6 +191,7 @@ matcher_module_disco_unload_clauses(matcher_container_disco_holder_t* md, bson_i
                     }
                     ddb_free_cursor(cur);
                     md->precache_data = ddb_cons_finalize(cons, &md->precache_data_len, 0);
+                    ddb_cons_free(cons);
                     ddb_free(md->db);
                     md->db = ddb_new();
                     ddb_loads(md->db, md->precache_data, md->precache_data_len);
