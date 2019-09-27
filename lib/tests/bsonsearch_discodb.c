@@ -39,6 +39,11 @@ main (int   argc,
 
 
         // Passes  BECAUSE string whale is in mammals and aquatic
+        BSON_ASSERT(compare_json("{\"hello\": {\"world\":[\"not in the database\", \"Nýx\", \"Shouldnt get here\"]}}",
+                                 "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$ddb\": \"/tmp/myths.ddb\", \"$Q\": {\"num_clauses\": 2, \"clauses\": [{\"num_terms\": 1, \"terms\": [{\"entry\": \"Greek\", \"nnot\": false}]}, {\"num_terms\": 1, \"terms\": [{\"entry\": \"Primordial\", \"nnot\": false}]}], \"precache\": true }}}}}"));
+
+
+        // Passes  BECAUSE string whale is in mammals and aquatic
         BSON_ASSERT(compare_json("{\"hello\": {\"world\":\"Nýx\"}}",
                                  "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$ddb\": \"/tmp/myths.ddb\", \"$Q\": {\"num_clauses\": 2, \"clauses\": [{\"num_terms\": 1, \"terms\": [{\"entry\": \"Greek\", \"nnot\": false}]}, {\"num_terms\": 1, \"terms\": [{\"entry\": \"Primordial\", \"nnot\": false}]}], \"precache\": true }}}}}"));
 
