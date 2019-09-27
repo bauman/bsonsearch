@@ -23,6 +23,18 @@ _matcher_module_store_startup()
     HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
     num_modules +=1;
     //--------------------------------------------------------
+    //--sample-----------------------------------------------
+    s =  (module_storage*)bson_malloc0(sizeof(*s));
+    s->name = bson_strdup(MODULE_SAMPLE_COMMAND);
+    s->opcode = MATCHER_MODULE_OPCODE_SAMPLE;
+    s->m_new = (void*)&matcher_module_sample_startup;
+    s->m_prep = NULL;
+    s->m_search = (void*)&matcher_module_sample_search;
+    s->m_cleanup = NULL;
+    s->m_destroy = (void*)&matcher_module_sample_destroy;
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
+    num_modules +=1;
+    //--------------------------------------------------------
 #ifdef WITH_MATH
     //--sum-----------------------------------------------
     s =  (module_storage*)bson_malloc0(sizeof(*s));

@@ -63,5 +63,6 @@ script:
   - ./ethermodule
   - ./ipmodule
   - ./discomodule
+  - ./samplingmodule
 
 
