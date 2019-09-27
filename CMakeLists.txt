@@ -41,6 +41,7 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/matcher-module-ether.c
                  lib/matcher-module-ip.c
                  lib/matcher-module-disco.c
+                 lib/matcher-module-sample.c
         )
 
 
@@ -96,3 +97,4 @@ bsonsearch_add_test(mathmodule lib/tests/bsoncompare_math.c)
 bsonsearch_add_test(ethermodule lib/tests/bsoncompare_ether.c)
 bsonsearch_add_test(ipmodule lib/tests/bsoncompare_module_ip.c)
 bsonsearch_add_test(discomodule lib/tests/bsonsearch_discodb.c)
+bsonsearch_add_test(samplingmodule lib/tests/bsonsearch_sample.c)

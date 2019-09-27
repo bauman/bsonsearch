@@ -9,6 +9,8 @@
 #include "matcher-module-ether.h"
 #include "matcher-module-ip.h"
 #include "matcher-module-disco.h"
+#include "matcher-module-sample.h"
+
 
 uint32_t
 _matcher_module_store_startup();
