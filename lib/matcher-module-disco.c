@@ -267,7 +267,7 @@ matcher_module_disco_startup(mongoc_matcher_op_t * op, bson_iter_t * config){
             }
 
         } else {
-
+            // some other key, who knows... skip it
         }
     }
     if (md->state != MODULE_DISCO_G2G){
@@ -310,6 +310,15 @@ matcher_module_disco_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void *
             case BSON_TYPE_UTF8:{
                 binary = (const uint8_t *) bson_iter_utf8(iter, &binary_len);
                 break;
+            }
+            case BSON_TYPE_ARRAY:{
+                bson_iter_t child;
+                bson_iter_recurse(iter, &child);
+                while(cb == MATCHER_MODULE_CALLBACK_CONTINUE && bson_iter_next(&child)){
+                    cb = matcher_module_disco_search(op, &child, usermem);
+                }
+                return cb;  // This sucks
+                // break;   // Should be break and the rest of this function should be another function
             }
             default:
                 break;
