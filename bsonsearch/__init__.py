@@ -36,6 +36,20 @@ except ImportError:
 
 try:
     import discodb
+    def DISCO_CONFIG(**kwargs):
+        config = bson.son.SON()
+        config['$ddb'] = kwargs["ddb"]
+        config['$Q'] = discodb.Q.parse(kwargs["cnf"]).deploy()
+        config['precache'] = kwargs.get("precache", False)
+        spec = {
+            kwargs["ns"]: {
+                "$module": {
+                    "name": "disco",
+                    "config": config
+                }
+            }
+        }
+        return spec
 
     def DISCODB_CNF_TO_DICT(cnf_string):
         return discodb.Q.parse(cnf_string).deploy()
