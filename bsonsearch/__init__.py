@@ -36,10 +36,59 @@ except ImportError:
 
 try:
     import discodb
+    DISCO_VALUE_ONLY = "$valueonly"
+    DISCO_KEY_EXISTS = "$keyexists"
+    DISCO_VALUE_IS = "$valueis"
+    DISCO_CNF_QUERY = "$Q"
+    DISCO_DDB_FILE = "$ddb"
+
+    def DISCO_VALUE_IS_CONFIG(**kwargs):
+        spec = {
+            kwargs["ns"]: {
+                "$module": {
+                    "name": "disco",
+                    "config": {
+                        DISCO_VALUE_IS: kwargs['value'],
+                        DISCO_DDB_FILE: kwargs["ddb"]
+                    }
+                }
+            }
+        }
+        return spec
+
+    def DISCO_VALUE_ONLY_CONFIG(**kwargs):
+        spec = {
+            kwargs["ns"]: {
+                "$module": {
+                    "name": "disco",
+                    "config": {
+                        DISCO_VALUE_ONLY: kwargs['value'],
+                        DISCO_DDB_FILE: kwargs["ddb"]
+                    }
+                }
+            }
+        }
+        return spec
+
+    def DISCO_KEY_EXISTS_CONFIG(**kwargs):
+        spec = {
+            kwargs["ns"]: {
+                "$module": {
+                    "name": "disco",
+                    "config": {
+                        DISCO_KEY_EXISTS: 0,
+                        DISCO_DDB_FILE: kwargs["ddb"]
+                    }
+                }
+            }
+        }
+        return spec
+
+
     def DISCO_QUERY_CONFIG(**kwargs):
         config = bson.son.SON()
         config['$ddb'] = kwargs["ddb"]
-        config['$Q'] = discodb.Q.parse(kwargs["cnf"]).deploy()
+        config[DISCO_CNF_QUERY] = discodb.Q.parse(kwargs["cnf"]).deploy()
         config['precache'] = kwargs.get("precache", False)
         spec = {
             kwargs["ns"]: {
