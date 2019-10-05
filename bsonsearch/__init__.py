@@ -163,12 +163,10 @@ class bsoncompare(object):
 
     def __exit__(self, exc_type, exc_value, traceback):
         response = self.shutdown()
-        assert(response == 0)
         return
 
     def startup(self):
         response = self.bc.bsonsearch_startup()
-        assert(response == 0)
         return self
 
 
