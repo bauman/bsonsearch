@@ -36,7 +36,7 @@ except ImportError:
 
 try:
     import discodb
-    def DISCO_CONFIG(**kwargs):
+    def DISCO_QUERY_CONFIG(**kwargs):
         config = bson.son.SON()
         config['$ddb'] = kwargs["ddb"]
         config['$Q'] = discodb.Q.parse(kwargs["cnf"]).deploy()
