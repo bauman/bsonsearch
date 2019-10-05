@@ -1,5 +1,22 @@
 [![Build Status](https://travis-ci.org/bauman/bsonsearch.svg?branch=py3)](https://travis-ci.org/bauman/bsonsearch)
 
+Playground
+================
+Plenty of examples are available with the python API within the dockerized playground
+```bash
+docker pull bauman/bsonsearch:notebook
+docker run -ti --rm -p8888:8888 --name bsearch_playground  bauman/bsonsearch:notebook
+
+```
+Basics folder contains some overview information
+
+http://localhost:8888/tree/basics
+
+
+Modules folder contains examples using plugin modules (currently yara and discodb)
+
+http://localhost:8888/tree/modules
+
 License
 ================
 This code is licensed under permissive Apache 2 and MIT license.
@@ -28,9 +45,6 @@ This repo continues the effort for a minimally functional and complimentary bson
 
 The officially supported [server matching engine](https://github.com/mongodb/mongo/tree/master/src/mongo/db/matcher) will always be far superior option.
 
-speed comparison against json
-==========
-https://github.com/bauman/bsonsearch/blob/master/data/bsonsearch_vs_ujson_and_dict_search.ipynb
 
 
 
@@ -555,6 +569,12 @@ Crypto limited access querying example
 ==================
 
 see  https://github.com/bauman/bsonsearch/blob/master/bsonsearch_crypto_example.ipynb
+
+
+speed comparison against json
+==========
+https://github.com/bauman/bsonsearch/blob/master/data/bsonsearch_vs_ujson_and_dict_search.ipynb
+
 
 
 streaming example

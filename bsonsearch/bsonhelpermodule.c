@@ -62,7 +62,11 @@ bson_as_string(PyObject* self, PyObject* args)
 
     if (PyArg_ParseTuple(args, "L", &bson_object)){
         const uint8_t *doc_bson = bson_get_data(bson_object);
+#if PY_MAJOR_VERSION >= 3
+        PyObject * result =  Py_BuildValue("y#", doc_bson, bson_object->len);
+#else
         PyObject * result =  Py_BuildValue("s#", doc_bson, bson_object->len);
+#endif
         bson_destroy(bson_object);
         bson_free(bson_object);
         return result;
