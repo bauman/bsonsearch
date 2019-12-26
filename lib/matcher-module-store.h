@@ -9,6 +9,7 @@
 #include "matcher-module-ether.h"
 #include "matcher-module-ip.h"
 #include "matcher-module-disco.h"
+#include "matcher-module-duk.h"
 #include "matcher-module-sample.h"
 
 

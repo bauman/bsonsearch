@@ -91,6 +91,20 @@ _matcher_module_store_startup()
     num_modules +=1;
     //--------------------------------------------------------
 #endif /*WITH_DISCO */
+#ifdef WITH_DUKJS
+    //--sum-----------------------------------------------
+    s =  (module_storage*)bson_malloc0(sizeof(*s));
+    s->name = bson_strdup(MODULE_DUKJS_COMMAND);
+    s->opcode = MATCHER_MODULE_OPCODE_DUKJS;
+    s->m_new = (void*)&matcher_module_duk_startup;
+    s->m_prep = (void*)&matcher_module_duk_prep;
+    s->m_search = (void*)&matcher_module_duk_search;
+    s->m_cleanup = (void*)&matcher_module_duk_cleanup;
+    s->m_destroy = (void*)&matcher_module_duk_destroy;
+    HASH_ADD_KEYPTR(hh, global_module_storage_NAME, s->name, strlen(s->name), s);
+    num_modules +=1;
+    //--------------------------------------------------------
+#endif /*WITH_DUKJS */
 
     return num_modules;
 }
