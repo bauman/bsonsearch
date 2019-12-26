@@ -18,6 +18,7 @@ add_definitions(-DWITH_MATH)
 add_definitions(-DWITH_ETHER)
 add_definitions(-DWITH_DISCO)
 add_definitions(-DALLOW_FILESYSTEM)
+add_definitions(-DWITH_DUKJS)
 
 
 
@@ -42,6 +43,7 @@ set(SOURCE_FILES lib/bsoncompare.c
                  lib/matcher-module-ip.c
                  lib/matcher-module-disco.c
                  lib/matcher-module-sample.c
+                 lib/matcher-module-duk.c
         )
 
 
@@ -53,6 +55,7 @@ TARGET_LINK_LIBRARIES(libbsonsearch stemmer)
 TARGET_LINK_LIBRARIES(libbsonsearch aspell)
 TARGET_LINK_LIBRARIES(libbsonsearch sodium)
 TARGET_LINK_LIBRARIES(libbsonsearch discodb)
+TARGET_LINK_LIBRARIES(libbsonsearch duktape)
 enable_testing()
 
 
@@ -98,3 +101,4 @@ bsonsearch_add_test(ethermodule lib/tests/bsoncompare_ether.c)
 bsonsearch_add_test(ipmodule lib/tests/bsoncompare_module_ip.c)
 bsonsearch_add_test(discomodule lib/tests/bsonsearch_discodb.c)
 bsonsearch_add_test(samplingmodule lib/tests/bsonsearch_sample.c)
+bsonsearch_add_test(dukjs lib/tests/bsonsearch_duk.c)

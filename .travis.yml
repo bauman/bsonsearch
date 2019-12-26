@@ -7,7 +7,7 @@ language: c
 
 
 install:
-  - sudo apt-get install -y tree libpcre3-dev libpcre3 tree libbson-dev libbson-1.0-0 libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en libsodium23 uthash-dev libsodium-dev libyara3 libyara-dev
+  - sudo apt-get install -y tree libpcre3-dev libpcre3 tree libbson-dev libbson-1.0-0 libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en libsodium23 uthash-dev libsodium-dev libyara3 libyara-dev duktape-dev libduktape202  duktape
   - echo "pulling a test file so the test works"
   - wget http://pkgs.bauman.space/discodb/sample.ddb
   - wget http://pkgs.bauman.space/discodb/animals.ddb
@@ -64,5 +64,6 @@ script:
   - ./ipmodule
   - ./discomodule
   - ./samplingmodule
+  - ./dukjs
 
 
