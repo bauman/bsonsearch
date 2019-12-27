@@ -57,5 +57,5 @@ struct _matcher_container_duk_usermem_t {
 
 
 #endif /* MATCHER_MODULE_DISCO_H */
-#endif /* WITH_DISCO */
+#endif /* WITH_DUKJS */
 #endif /* WITH_MODULES */
