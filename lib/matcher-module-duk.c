@@ -46,9 +46,11 @@ matcher_module_duk_startup(mongoc_matcher_op_t * op, bson_iter_t * config){
     bool result = false;
     matcher_container_duk_holder_t *md;
     md = (matcher_container_duk_holder_t*) bson_malloc0(sizeof *md);
+    BSON_ASSERT(md);
     md->compare = MATCHER_MODULE_DUK_UNDEFINED;
     md->ctx = duk_create_heap_default(); // This might still be null ... tf
-
+    BSON_ASSERT(md->ctx);
+    md->state = MODULE_DUKJS_HAS_NONE;
     while (bson_iter_next(config)) {
         const char *key = bson_iter_key(config);
         if (strcmp(key, "code") == 0) {
@@ -70,6 +72,7 @@ void *
 matcher_module_duk_prep(mongoc_matcher_op_t *op){
     matcher_container_duk_usermem_t *ud; // user data
     ud = (matcher_container_duk_usermem_t*) bson_malloc0(sizeof *ud);
+    BSON_ASSERT(ud);
     return (void*)ud;
 }
 
@@ -78,7 +81,6 @@ matcher_module_duk_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void * u
     mongoc_matcher_module_callback_t cb = MATCHER_MODULE_CALLBACK_CONTINUE;
     matcher_container_duk_holder_t *md;
     matcher_container_duk_usermem_t *ud;
-    bson_subtype_t subtype;
     uint32_t binary_len;
     const uint8_t * binary = NULL;
     md = (matcher_container_duk_holder_t*) op->module.config.container.module_data;
@@ -159,5 +161,5 @@ matcher_module_duk_destroy(mongoc_matcher_op_t *op){
 }
 
 
-#endif /* WITH_DISCO */
+#endif /* WITH_DUKJS */
 #endif /* WITH_MODULES */
