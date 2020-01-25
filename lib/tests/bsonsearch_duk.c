@@ -57,7 +57,24 @@ main (int   argc,
         BSON_ASSERT(compare_json("{\"hello\": {\"world\":{\"a\": \"variable\"}}}",
                                  "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  d = JSON.parse(data);\\n  return d.a == 'variable' ;\\n}\\n\"}}}}}"));
 
+        BSON_ASSERT(compare_json("{\"hello\": [{\"world\":\"not the right string variable\"}, {\"world\":\"variable\"}]}",
+                                 "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n    return data == 'variable' ;\\n}\\n\"}}}}}"));
 
+        BSON_ASSERT(compare_json("{\"hello\": [ {\"world\":{\"a\": \"not the right variable\"}}, {\"world\":{\"a\": \"variable\"}} ] }",
+                                 "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  d = JSON.parse(data);\\n  return d.a == 'variable' ;\\n}\\n\"}}}}}"));
+
+        BSON_ASSERT(!compare_json("{\"hello\": [ {\"world\":{\"a\": \"not the right variable\"}}, {\"nottherightkeybutgoodvalue\":{\"a\": \"variable\"}}, {\"world\":{\"a\": \"another wrong value\"}} ] }",
+                                  "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  d = JSON.parse(data);\\n  return d.a == 'variable' ;\\n}\\n\"}}}}}"));
+
+
+        /////////////////////////////////
+        // This one is arguable, for now, leaving this to the matcher author to deal with.
+        BSON_ASSERT(!compare_json("{\"hello\": [ {\"world\":{\"a\": \"not the right variable\"}}, {\"world\": \"variable\"} ] }",
+                                 "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  d = JSON.parse(data);\\n  return d.a == 'variable' ;\\n}\\n\"}}}}}"));
+        // Notice the actual javascript change that accounts for both cases and successfully matches
+        BSON_ASSERT(compare_json("{\"hello\": [ {\"world\":{\"a\": \"not the right variable\"}}, {\"world\": \"variable\"} ] }",
+                                 "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  try { d = JSON.parse(data); return d.a == 'variable'; } catch (e) { return data == 'variable'; }\\n}\\n\"}}}}}"));
+        /////////////////////////////////
         rounds--;
     } while (rounds > 0);
 
