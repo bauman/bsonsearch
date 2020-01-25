@@ -29,6 +29,8 @@ static mongoc_matcher_module_callback_t
 duk_make_the_matches_call(matcher_container_duk_holder_t *md){
     mongoc_matcher_module_callback_t cb = MATCHER_MODULE_CALLBACK_CONTINUE;
     if (duk_pcall(md->ctx, 1 /*nargs*/) != 0) {
+        // I don't like introducing writing stderr.
+        // no better ideas though :-(
         fprintf(stderr, "%s\n", duk_safe_to_string(md->ctx, -1));
         cb = MATCHER_MODULE_CALLBACK_CONTINUE;
     } else {
@@ -76,6 +78,19 @@ matcher_module_duk_prep(mongoc_matcher_op_t *op){
     return (void*)ud;
 }
 
+
+static void
+matcher_module_duk_free_son(matcher_container_duk_usermem_t* ud){
+    if (ud->bson_data){
+        bson_free(ud->bson_data);
+        ud->bson_data = NULL;
+    }
+    if (ud->json_data){
+        bson_free(ud->json_data);
+        ud->json_data = NULL;
+    }
+}
+
 mongoc_matcher_module_callback_t
 matcher_module_duk_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void * usermem){
     mongoc_matcher_module_callback_t cb = MATCHER_MODULE_CALLBACK_CONTINUE;
@@ -87,7 +102,6 @@ matcher_module_duk_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void * u
     ud = (matcher_container_duk_usermem_t*) usermem;
 
     // DO THE SEARCH
-    // usrmem ddb_entry is exactly like bson_binary  any binary string and a length
     if (iter){
         bson_type_t btype = bson_iter_type(iter);
         duk_push_global_object(md->ctx);
@@ -115,7 +129,7 @@ matcher_module_duk_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void * u
                 break;
         }
         cb = duk_make_the_matches_call(md);
-
+        matcher_module_duk_free_son(ud);
         //  --Consider move to a "value_only" static function?
         // ----------------------------------------------------------------------
     } else {
@@ -132,14 +146,7 @@ matcher_module_duk_cleanup(mongoc_matcher_op_t *op, void * usermem){
     mongoc_matcher_module_callback_t cb = MATCHER_MODULE_CALLBACK_CONTINUE;
     matcher_container_duk_usermem_t *ud;
     ud = (matcher_container_duk_usermem_t*) usermem;
-    if (ud->bson_data){
-        bson_free(ud->bson_data);
-        ud->bson_data = NULL;
-    }
-    if (ud->json_data){
-        bson_free(ud->json_data);
-        ud->json_data = NULL;
-    }
+    matcher_module_duk_free_son(ud);
     bson_free(usermem);
     return cb;
 }
