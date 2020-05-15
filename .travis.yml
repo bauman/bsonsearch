@@ -32,7 +32,7 @@ install:
   - tar -zxvf v4.0.1.tar.gz
   - cd yara-4.0.1/
   - autoreconf -fiv
-  -./configure --prefix=/usr/local --enable-magic
+  - ./configure --prefix=/usr/local --enable-magic
   - make
   - sudo make install
   - cd ..
