@@ -44,9 +44,6 @@ install:
   - make
   - sudo make install
   - cd $cwd
-
-
-
 script:
   - echo "mongodb changed import paths in newer versions"
   - sudo mkdir /usr/include/libbson-1.0/bson
