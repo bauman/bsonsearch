@@ -1,9 +1,10 @@
 cmake_minimum_required(VERSION 3.3)
 project(bsonsearch)
 
-INCLUDE_DIRECTORIES(/usr/include/ /usr/include/libbson-1.0/ lib/ lib/acceleration/)
-LINK_DIRECTORIES(/usr/lib64/ lib/acceleration/)
+INCLUDE_DIRECTORIES(/usr/include/ /usr/local/include/libbson-1.0/ /usr/include/libbson-1.0/ lib/ lib/acceleration/)
+LINK_DIRECTORIES(/usr/local/lib/ /usr/lib64/ /usr/local/lib/ lib/acceleration/)
 add_definitions(-DWITH_YARA)
+add_definitions(-DHAVE_STDBOOL_H)
 add_definitions(-DWITH_PROJECTION)
 add_definitions(-DWITH_UTILS)
 add_definitions(-DWITH_CONDITIONAL)

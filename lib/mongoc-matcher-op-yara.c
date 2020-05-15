@@ -33,6 +33,7 @@
  *--------------------------------------------------------------------------
  */
 int yara_callback(
+        YR_SCAN_CONTEXT* context,
         int message,
         void* message_data,
         void* user_data)
