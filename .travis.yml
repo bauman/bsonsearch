@@ -51,7 +51,7 @@ script:
   - sudo cp /usr/include/libbson-1.0/*.h /usr/include/libbson-1.0/bson/.
   - cmake .
   - make
-  - tree
+  - ls -alh
   - echo "all the tests should exit 0 if they work"
   - ./bcon-sample
   - ./compare-equal
