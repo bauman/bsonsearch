@@ -7,7 +7,7 @@ language: c
 
 
 install:
-  - sudo apt-get install -y tree cmake libtool flex autoconf automake libpcre3-dev libpcre3 tree libbson-dev libbson-1.0-0 libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en libsodium23 uthash-dev libsodium-dev duktape-dev libduktape202  duktape
+  - sudo apt-get install -y tree wget cmake libtool flex autoconf automake libpcre3-dev libpcre3 tree libbson-dev libbson-1.0-0 libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en libsodium23 uthash-dev libsodium-dev duktape-dev libduktape202  duktape
   - echo "pulling a test file so the test works"
   - wget http://pkgs.bauman.space/discodb/sample.ddb
   - wget http://pkgs.bauman.space/discodb/animals.ddb
@@ -26,7 +26,8 @@ install:
   - sudo install libdiscodb.so /usr/lib/
   - sudo install src/*.h /usr/include/
   - cd $cwd
-  - mkdir builddeps && cd builddeps
+  - mkdir builddeps
+  - cd builddeps
   - wget https://github.com/VirusTotal/yara/archive/v4.0.1.tar.gz
   - tar -zxvf v4.0.1.tar.gz
   - cd yara-4.0.1/
