@@ -1,6 +1,5 @@
 #include <bsoncompare.h>
-#include <bson.h>
-#include <bcon.h>
+#include <bson/bson.h>
 
 //valgrind -v --leak-check=full <this>
 bool
