@@ -22,8 +22,6 @@ int
 main (int   argc,
       char *argv[])
 {
-    double ok = bsonsearch_get_crossarc_degrees(10, 20, 10, 21, 10.5, 20.5);
-
     //switch max points to 2 in geojson.h and this should segfault
     //BSON_ASSERT(compare_json("{\"loc\": {\"type\": \"Point\", \"coordinates\": [60.000, 10.000]}}",
     //                         "{\"loc\": {\"$near\": {\"$minDistance\": 0.0, \"$geometry\": {\"type\": \"LineString\", \"coordinates\": [ [59.99999, 11.0000], [59.99999, 12.000], [59.99999, 13.000], [59.99999, 15.000]] }, \"$maxDistance\": 1000000.0}}}"));

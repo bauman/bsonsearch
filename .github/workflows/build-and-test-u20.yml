@@ -1,0 +1,77 @@
+name: Build
+
+on:
+  push:
+    branches:
+    - py3
+    - dan
+jobs:
+  build:
+    runs-on:
+      - bsonsearch-runner
+      - focal
+    steps:
+      - uses: actions/checkout@v2
+      - name: update system
+        run:
+          sudo apt-get update -y;
+          sudo apt-get upgrade -y;
+      - name: install c dependency
+        run:
+          sudo apt-get install -y tree libssl-dev openssl libtool flex autoconf automake ;
+          sudo apt-get install -y libmagic1 libmagic-dev libpcre3-dev libpcre3 ;
+          sudo apt-get install -y libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en
+          sudo apt-get install -y uthash-dev libsodium23 libsodium-dev duktape-dev libduktape205  duktape;
+          sudo apt-get install -y wget libcmph-dev cmake make build-essential;
+          wget http://pkgs.bauman.space/discodb/sample.ddb -O /tmp/sample.ddb;
+          wget http://pkgs.bauman.space/discodb/animals.ddb -O /tmp/animals.ddb;
+          wget http://pkgs.bauman.space/discodb/cjk.ddb -O /tmp/cjk.ddb;
+          wget http://pkgs.bauman.space/discodb/myths.ddb -O /tmp/myths.ddb;
+          echo "don't have a yara, bson, or discodb installer for ubuntu, build from source and install";
+          cwd=`pwd`;
+          cd /tmp;
+          sudo apt-get install -y libcmph-dev libcmph0;
+          rm -rf 0.9.1.tar.gz discodb-0.9.1;
+          wget https://github.com/bauman/discodb/archive/0.9.1.tar.gz;
+          tar -zxvf 0.9.1.tar.gz;
+          cd discodb-0.9.1;
+          rm -rf cmake-release;
+          mkdir cmake-release && cd cmake-release;
+          cmake -DCMAKE_BUILD_TYPE=Release ..;
+          make;
+          make test;
+          sudo install libdiscodb.so /usr/lib/libdiscodb.so ;
+          sudo install ../src/*.h /usr/include/. ;
+          cd /tmp;
+          wget https://github.com/VirusTotal/yara/archive/v4.0.5.tar.gz ;
+          tar -zxvf v4.0.5.tar.gz ;
+          cd yara-4.0.5 ;
+          autoreconf -fiv ;
+          ./configure --prefix=/usr/local --with-crypto --enable-magic;
+          make;
+          sudo make install;
+          cd /tmp;
+          wget https://github.com/mongodb/mongo-c-driver/releases/download/1.17.4/mongo-c-driver-1.17.4.tar.gz ;
+          tar -zxvf mongo-c-driver-1.17.4.tar.gz;
+          cd mongo-c-driver-1.17.4;
+          mkdir cmake-build;
+          cd cmake-build;
+          cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF -DENABLE_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..;
+          make;
+          sudo make install;
+          cd $cwd;
+      - name: build release library
+        run:
+          rm -rf cmake-release;
+          mkdir cmake-release && cd cmake-release;
+          cmake -DCMAKE_BUILD_TYPE=Release ..;
+          make;
+          make test;
+          sudo make install;
+      - name: install python dependency
+        run:
+          sudo apt-get install -y python3-pymongo python3-dev python3-wheel python3-pip
+      - name: build python library
+        run:
+          python3 setup.py bdist_wheel ;
+          find . -name "*.so" | xargs -P1 -n1 ldd ;

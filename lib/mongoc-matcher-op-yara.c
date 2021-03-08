@@ -273,7 +273,10 @@ _mongoc_matcher_op_yara_new     ( const char              *path,   /* IN */
                                 //call yara.compile on the source string
                                 op = _mongoc_matcher_op_yara_new_op_from_string(path, &yara_config_iter);
                             } else if ( strcmp(key, "filename")==0 ) {
+#ifdef ALLOW_FILESYSTEM
                                 //call yara.compile on the source string file handle
+
+#endif /* ALLOW_FILESYSTEM */
                             }
                             break;
                         }
@@ -462,16 +465,15 @@ binary_read(
         void* user_data) {
     size_t i;
     mongoc_matcher_op_binary_flo *binary_user_data = (mongoc_matcher_op_binary_flo *)user_data;
-
     for (i = 0; i < count; i++)
     {
         if (binary_user_data->cursor_pos < binary_user_data->binary_len)
         {
-            if ((uint32_t) size + binary_user_data->cursor_pos > binary_user_data->binary_len) {
-                size = (size_t)(binary_user_data->binary_len - binary_user_data->cursor_pos);
+            if ((int64_t)size + binary_user_data->cursor_pos > binary_user_data->binary_len) {
+                size = (size_t) (binary_user_data->binary_len - binary_user_data->cursor_pos);
             }
             memcpy((char *) ptr + i * size,
-                   binary_user_data->binary + binary_user_data->cursor_pos + i * size,
+                   binary_user_data->binary + binary_user_data->cursor_pos,
                    size);
             binary_user_data->cursor_pos += (uint32_t) size;
         }

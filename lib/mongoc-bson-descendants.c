@@ -129,10 +129,10 @@ bson_iter_find_descendants (bson_iter_t *iter,       /* INOUT */
                         if (found_descendant_array && (*skip==0)){
                             break;
                         } else {
-                            found_descendant_array = false;
-                            if (*skip > 0) {
+                            if (found_descendant_array && (*skip > 0)){
                                 (*skip)--;
                             }
+                            found_descendant_array = false;
                         }
                     }
                 }

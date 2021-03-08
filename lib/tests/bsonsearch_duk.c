@@ -69,9 +69,12 @@ main (int   argc,
 
         /////////////////////////////////
         // This one is arguable, for now, leaving this to the matcher author to deal with.
+        // the module will load data variable with 'variable' (not valid json - valid is '"variable"')
+        // and will error trying to parse it.
         BSON_ASSERT(!compare_json("{\"hello\": [ {\"world\":{\"a\": \"not the right variable\"}}, {\"world\": \"variable\"} ] }",
                                  "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  d = JSON.parse(data);\\n  return d.a == 'variable' ;\\n}\\n\"}}}}}"));
         // Notice the actual javascript change that accounts for both cases and successfully matches
+        // catch the json.parse exception and check the string variable as well.
         BSON_ASSERT(compare_json("{\"hello\": [ {\"world\":{\"a\": \"not the right variable\"}}, {\"world\": \"variable\"} ] }",
                                  "{\"hello.world\":{\"$module\":{\"name\":\"dukjs\", \"config\":{\"entrypoint\": \"matches\", \"code\": {\"$code\": \"\\nfunction matches(data) {\\n  try { d = JSON.parse(data); return d.a == 'variable'; } catch (e) { return data == 'variable'; }\\n}\\n\"}}}}}"));
         /////////////////////////////////

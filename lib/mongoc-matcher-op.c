@@ -26,6 +26,7 @@
 #include "mongoc-bson-descendants.h"
 #include "mongoc-matcher-private.h"
 
+
 #ifdef WITH_TEXT
 #include "mongoc-matcher-op-text.h"
 #ifdef WITH_ASPELL
@@ -1404,7 +1405,6 @@ _mongoc_matcher_iter_eq_match (bson_iter_t *compare_iter, /* IN */
          if (rc >= 0) { match = true; }
          return match;
       }
-
    /* UTF8 on Left Side */
    case _TYPE_CODE(BSON_TYPE_UTF8, BSON_TYPE_UTF8):
       {

@@ -36,8 +36,15 @@ main (int   argc,
     bsonsearch_startup();
     int32_t rounds = 1;
     do {
-
-
+        /* $Q is easiest obtained using the python module
+         *      from discodb import Q
+         *      from json import dumps
+         *      q = Q.parse("A")
+         *      dumps(a.deploy())
+         *
+         *          '{"num_clauses": 1, "clauses": [{"num_terms": 1, "terms": [{"entry": "A", "nnot": false}]}]}'
+         *
+         */
         // Passes  BECAUSE string whale is in mammals and aquatic
         BSON_ASSERT(compare_json("{\"hello\": {\"world\":[\"not in the database\", \"Nýx\", \"Shouldnt get here\"]}}",
                                  "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$ddb\": \"/tmp/myths.ddb\", \"$Q\": {\"num_clauses\": 2, \"clauses\": [{\"num_terms\": 1, \"terms\": [{\"entry\": \"Greek\", \"nnot\": false}]}, {\"num_terms\": 1, \"terms\": [{\"entry\": \"Primordial\", \"nnot\": false}]}], \"precache\": true }}}}}"));
@@ -66,7 +73,7 @@ main (int   argc,
                                   "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$Q\": {\"num_clauses\": 1, \"clauses\": [{\"num_terms\": 2, \"terms\": [{\"entry\": \"aquatic\", \"nnot\": false}, {\"entry\": \"pets\", \"nnot\": false}]}]}, \"$ddb\": \"/tmp/animals.ddb\"}}}}"));
 
 
-        // Fails  BECAUSE string whale is in a mamal but is aquatic and the query includes not aquatic
+        // Fails  BECAUSE string whale is in a mammal but is aquatic and the query includes not aquatic
         BSON_ASSERT(!compare_json("{\"hello\": {\"world\":\"whale\"}}",
                                   "{\"hello.world\":{\"$module\":{\"name\":\"disco\", \"config\":{\"$Q\": {\"num_clauses\": 2, \"clauses\": [{\"num_terms\": 1, \"terms\": [{\"entry\": \"mammals\", \"nnot\": false}]}, {\"num_terms\": 1, \"terms\": [{\"entry\": \"aquatic\", \"nnot\": true}]}]}, \"$ddb\": \"/tmp/animals.ddb\"}}}}"));
 
