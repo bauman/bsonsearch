@@ -77,23 +77,23 @@ yum install python-bsonsearch
 Easy/lite compile (get this working first, then attempt to add options)
 ========
 install the libbson, pcre, pcre-devel, and uthash-devel packages for your OS
-
-compile the light weight matcher linking against libbson-1.0
-
-```$(pkg-config --cflags --libs libbson-1.0)```
-
-link against pcre
-```-lpcre```
-
-
-make a shared object with
-
-```-shared```
-
-
-ensure the name is libbsoncomparelite.so  (the python wrapper will infer limited capability based on filename)
-
-
+```bash   
+    mkdir -p cmake-build-lite && cd cmake-build-lite
+    cmake -DCMAKE_BUILD_TYPE=Release\
+          -D include-yara=OFF \
+          -D include-modules=OFF \
+          -D include-text=OFF \
+          -D include-projection=OFF \
+          -D include-utils=OFF \
+          -D include-conditional=OFF \
+          -D include-ip=OFF \
+          -D include-crypt=OFF \
+          ..
+    make
+    make test
+    sudo make install
+```
+or without cmake support
 ```
     gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -lpcre -shared -o libbsoncomparelite.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-bson-descendants.c
 ```
@@ -146,10 +146,23 @@ YARA signature matching requirements:
 - WITH_YARA macro at compile time
 
 
+to perform the automated testing, download these files into /tmp
+```bash
+          wget http://pkgs.bauman.space/discodb/sample.ddb -O /tmp/sample.ddb;
+          wget http://pkgs.bauman.space/discodb/animals.ddb -O /tmp/animals.ddb;
+          wget http://pkgs.bauman.space/discodb/cjk.ddb -O /tmp/cjk.ddb;
+          wget http://pkgs.bauman.space/discodb/myths.ddb -O /tmp/myths.ddb;
+```
+otherwise the discodb module test will fail
+```bash
+    mkdir cmake-release && cd cmake-release;
+    cmake -DCMAKE_BUILD_TYPE=Release ..;
+    make;
+    make test;
+    sudo make install; 
+```
 
-
-
-
+or without cmake support
 ```
     gcc -Wall $(pkg-config --cflags --libs libbson-1.0) -lpcre -shared -o libbsoncompare.so -fPIC bsoncompare.c mongoc-matcher.c mongoc-matcher-op.c mongoc-matcher-op-geojson.c mongoc-bson-descendants.c
 ```
@@ -174,8 +187,8 @@ comparison value in spec can be utf8 string, int/long, regex, compiled yara (if 
     c=[ {"a":0},{"a":1},{"a":2}]#dict
     c2=[bson.BSON.encode(x) for x in c] #already bson
     matcher = bc.generate_matcher(b)
-    print [bc.match(matcher, x) for x in c]
-    print [bc.match(matcher, x) for x in c2]
+    print([bc.match(matcher, x) for x in c])
+    print([bc.match(matcher, x) for x in c2])
     bc.destroy_matcher(matcher)
 ```
 
@@ -189,7 +202,7 @@ You may still want to manage memory by cleaning up your own documents, mathers, 
         doc_id = bc.generate_doc(doc)
         spec = {"a": "hello world"}
         matcher = bc.generate_matcher(spec)
-        print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
+        print(bc.match_doc(matcher, doc_id))
         bc.destroy_doc(doc_id) #destroy the document (with/__exit__ will clean this up if you forget)
         bc.destroy_matcher(matcher) #destroy the spec (with/__exit__ will clean this up if you forget)
 ```
@@ -217,9 +230,12 @@ $inset uses a set/hashtable to perform O(1) lookups compared to $in which does a
     spec = {"a":{"$inset":["test1", "test2"]}} #ideal for list of many (>100) things.
     doc  = {"a":"test2"}
     matcher = bc.generate_matcher(b) #list->set length impacts time it takes to convert to set during this call.
-    print [bc.match(matcher, x) for x in c]
+    print([bc.match(matcher, x) for x in c])
     bc.destroy_matcher(matcher)
 ```
+
+https://nbviewer.jupyter.org/github/bauman/bsonsearch/blob/master/bsoncompare_inset_operator.ipynb
+
 
 YARA within SPEC
 ==================
@@ -238,6 +254,8 @@ The cost of outsourcing the logic is only offset if:
 * you don't want to move yara rules into bsoncompare logic
 
 see [comparing yara logic to bsoncompare regex logic](compare_with_yara_vs_regex.ipynb)
+or [same notebook on jupyter if github fails to render](https://nbviewer.jupyter.org/github/bauman/bsonsearch/blob/master/compare_with_yara_vs_regex.ipynb)
+
 
 libyara-devel is required at compile time and libbsonsearch must be compiled with -lyara and passed -DWITH_YARA macro at compile time to enable.
 
@@ -270,7 +288,7 @@ libyara-devel is required at compile time and libbsonsearch must be compiled wit
     spec = {"a": {"$yara":bson.Binary(compiled_binary_rule.getvalue())}}
     matcher = bc.generate_matcher(spec)
 
-    print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
+    print(bc.match_doc(matcher, doc_id))
     bc.destroy_doc(doc_id) #destroy the document
     bc.destroy_matcher(matcher) #destroy the spec
     bc.bc.bsonsearch_shutdown() # handles yara shutdown
@@ -300,7 +318,7 @@ if you have yara-python installed on the system, you can use the bsoncompare hel
     spec = {"msg": bsonsearch.YARA_COMPILE_STR(rule)} #see __init__.py for yara helpers
     matcher = bc.generate_matcher(spec)
 
-    print bc.match_doc(matcher, doc_id) #this will segfault if signature invalid or no yara support in libbsonsearch
+    print(bc.match_doc(matcher, doc_id))
     bc.destroy_doc(doc_id) #destroy the document
     bc.destroy_matcher(matcher) #destroy the spec
     bc.bc.bsonsearch_shutdown() # handles yara shutdown
@@ -323,7 +341,7 @@ bsonsearch supports the use of compiled regex using libpcre.  The only regex opt
     doc_id = bc.generate_doc(doc)
     spec = {"a": re.compile("orl")}
     matcher = bc.generate_matcher(spec)
-    print bc.match_doc(matcher, doc_id)
+    print(bc.match_doc(matcher, doc_id))
     bc.destroy_doc(doc_id) #destroy the document
     bc.destroy_matcher(matcher) #destroy the spec
     bc.destroy_regexes() #BSONCOMPARE caches compiled regex (caller MUST explicitly destroy the cache)
@@ -352,9 +370,9 @@ ipython notebook
     spec = {"a.b":{"$in":[7, 6, 5]},
             "c.d":"dan"}
     query = bc.convert_to_and(spec, doc_id)
-    print query
+    print(query)
     matcher = bc.generate_matcher(query)
-    print bc.match_doc(matcher, doc_id)
+    print(bc.match_doc(matcher, doc_id))
     bc.destroy_doc(doc_id)
     bc.destroy_doc(bc.docs)
     bc.destroy_matcher(bc.matchers)
@@ -456,7 +474,7 @@ Currently supports 2D or 3D calculations.
     spec = bson.BSON.encode(spec)
     
     matcher = bc.generate_matcher(spec)
-    print bc.match_doc(matcher, doc_id) #--True--
+    print(bc.match_doc(matcher, doc_id)) #--True--
     
     bc.destroy_doc(bc.docs)
     bc.destroy_matcher(bc.matchers)
@@ -497,7 +515,7 @@ Grid units are in meters
             }
            }
     matcher = bc.generate_matcher(spec)
-    print bc.match_doc(matcher, doc_id) #Same coordinate, evaluates to 0
+    print(bc.match_doc(matcher, doc_id)) #Same coordinate, evaluates to 0
 
     bc.destroy_doc(bc.docs)
     bc.destroy_matcher(bc.matchers)
@@ -555,8 +573,8 @@ bsoncompare must be compiled using the WITH_PROJECTION macro for $unwind command
     incorrect_matcher = bc.generate_matcher(incorrect_spec)
     correct_matcher = bc.generate_matcher(correct_spec)
 
-    print "Should be False (result is %s) using standard spec" %bc.match_doc(incorrect_matcher, doc_id)
-    print "Should be False (result is %s) using $unwind spec"  %bc.match_doc(correct_matcher, doc_id)
+    print("Should be False (result is %s) using standard spec" %bc.match_doc(incorrect_matcher, doc_id))
+    print("Should be False (result is %s) using $unwind spec"  %bc.match_doc(correct_matcher, doc_id))
 
     bc.destroy_doc(bc.docs)
     bc.destroy_matcher(bc.matchers)
@@ -570,12 +588,18 @@ Crypto limited access querying example
 
 see  https://github.com/bauman/bsonsearch/blob/master/bsonsearch_crypto_example.ipynb
 
+or via jupyter if github fails to render
+
+https://nbviewer.jupyter.org/github/bauman/bsonsearch/blob/py3/bsonsearch_crypto_example.ipynb
+
 
 speed comparison against json
 ==========
 https://github.com/bauman/bsonsearch/blob/master/data/bsonsearch_vs_ujson_and_dict_search.ipynb
 
+or via jupyter if github fails to render
 
+https://nbviewer.jupyter.org/github/bauman/bsonsearch/blob/master/data/bsonsearch_vs_ujson_and_dict_search.ipynb
 
 streaming example
 ==================
@@ -596,7 +620,7 @@ This amounts to nothing more than a full table scan through a single mongod but 
     f = open("/home/dan/enron/enron.bson", 'rb')
     stream = KeyValueBSONInput(fh=f, decode=False)
     for doc in stream:
-        print bc.match(matcher, doc)
+        print(bc.match(matcher, doc))
     f.close()
     bc.destroy_matcher(matcher)
 ```

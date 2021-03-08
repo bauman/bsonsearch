@@ -30,7 +30,7 @@ main (int   argc,
 
         BSON_ASSERT(!compare_json("{\"dt\": {\"$oid\": \"56b42b5be138236ac3127eda\"}}",
                                   "{\"dt\": {\"$oid\": \"56b42b5be138236ac3000000\"}}"));
-    }while(true);
+    }while(0);
 
 
 

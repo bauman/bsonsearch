@@ -65,6 +65,8 @@ matcher_module_duk_startup(mongoc_matcher_op_t * op, bson_iter_t * config){
     }
     if (md->state != MODULE_DUKJS_G2G){
         md->compare = MATCHER_MODULE_DUK_INVALID;
+    } else {
+        result = true;
     }
     op->module.config.container.module_data = (void*)md;
     return result;

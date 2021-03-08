@@ -242,9 +242,11 @@ matcher_module_disco_startup(mongoc_matcher_op_t * op, bson_iter_t * config){
                     const uint8_t * binary = NULL;
                     md->db = ddb_new(); // verify this isn't null
                     bson_iter_binary(config, &subtype, &binary_len, &binary);
-                    int load_success = ddb_loads(md->db, (char*)binary, binary_len);
+                    int load_error = ddb_loads(md->db, (char*)binary, binary_len);
                     //debug_print_info(md->db);
-                    md->state = md->state | MODULE_DISCO_HAS_DDB;
+                    if (!load_error) {
+                        md->state = md->state | MODULE_DISCO_HAS_DDB;
+                    }
                     break;
                 }
                 case BSON_TYPE_UTF8: {
@@ -257,8 +259,10 @@ matcher_module_disco_startup(mongoc_matcher_op_t * op, bson_iter_t * config){
                     const char * assumed_path =  bson_iter_utf8(config, &assumed_path_len); // check this looks right?
                     md->db_fd = open(assumed_path, O_RDONLY); //check this isn't -1?
                     md->db = ddb_new(); // check this isn't null
-                    ddb_load(md->db, md->db_fd); // check this is valid
-                    md->state = md->state | MODULE_DISCO_HAS_DDB;
+                    int load_error = ddb_load(md->db, md->db_fd); // check this is valid
+                    if (!load_error){
+                        md->state = md->state | MODULE_DISCO_HAS_DDB;
+                    }
 #endif
                     break; //  Outside the pre-processor block so it doesnt fall to default if default changes later
                 }
@@ -271,7 +275,9 @@ matcher_module_disco_startup(mongoc_matcher_op_t * op, bson_iter_t * config){
         }
     }
     if (md->state != MODULE_DISCO_G2G){
-        md->compare = MATCHER_MODULE_DISCO_INVALID;
+        md->compare = MATCHER_MODULE_DISCO_INVALID;  //result = false, explain why
+    } else {
+        result = true;
     }
     op->module.config.container.module_data = (void*)md;
     return result;

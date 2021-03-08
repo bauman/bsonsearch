@@ -87,19 +87,18 @@ int
 main (int   argc,
       char *argv[])
 {
-    //too many embedded dict are failing.
+    //FIXED: too many embedded dict are failing.
     do {
         //project follows at least once checking.
         // Results in duplicate values being apended at the end in complex cases
-        //FIX THIS  |
+        //FIX THIS  |  (Presumed Fixed Now)
         //          V
         BSON_ASSERT(test_bson_api("{\"a\":[{\"b\":[{\"c\":1}]},{\"b\":[{\"c\":2}]}]}",
                                   "{\"$project\":{\"a\":{\"$foundin\":[\"a.b.c\"]}}}",
-                                  "{ \"a\" : [ 1, 2, 2 ] }"));
-        //                        "{ \"a\" : [ 1, 2, 2 ] }" <- duplicate 2 is added
+                                  "{ \"a\" : [ 1, 2 ] }"));
+        //                        "{ \"a\" : [ 1, 2, 2 ] }" <- duplicate 2 is added (used to double up on last one)
         //                                                     because traversing this mess is hard
     }while(false);//*/
-
     //test $any command with list projections
     do {
         BSON_ASSERT(test_bson_api("{\"a\": {\"x\": {\"f\":1}, \"y\": {\"f\":2}, \"z\": {\"f\":3}}}",
