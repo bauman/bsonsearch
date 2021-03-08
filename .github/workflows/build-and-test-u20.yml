@@ -43,7 +43,7 @@ jobs:
           sudo install libdiscodb.so /usr/lib/libdiscodb.so ;
           sudo install ../src/*.h /usr/include/. ;
           cd /tmp;
-          rm -rf v4*
+          rm -rf v4* ;
           wget https://github.com/VirusTotal/yara/archive/v4.0.5.tar.gz ;
           tar -zxvf v4.0.5.tar.gz ;
           cd yara-4.0.5 ;
