@@ -43,6 +43,7 @@ jobs:
           sudo install libdiscodb.so /usr/lib/libdiscodb.so ;
           sudo install ../src/*.h /usr/include/. ;
           cd /tmp;
+          rm -rf v4*
           wget https://github.com/VirusTotal/yara/archive/v4.0.5.tar.gz ;
           tar -zxvf v4.0.5.tar.gz ;
           cd yara-4.0.5 ;
@@ -51,10 +52,11 @@ jobs:
           make;
           sudo make install;
           cd /tmp;
+          rm -rf mongo-c-deiver* ;
           wget https://github.com/mongodb/mongo-c-driver/releases/download/1.17.4/mongo-c-driver-1.17.4.tar.gz ;
           tar -zxvf mongo-c-driver-1.17.4.tar.gz;
           cd mongo-c-driver-1.17.4;
-          mkdir cmake-build;
+          mkdir -p cmake-build;
           cd cmake-build;
           cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF -DENABLE_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..;
           make;
