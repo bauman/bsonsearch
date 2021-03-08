@@ -73,5 +73,5 @@ jobs:
           sudo apt-get install -y python3-pymongo python3-dev python3-wheel python3-pip
       - name: build python library
         run:
-          python3 setup.py bdist_wheel ;
+          python3 setup.py build ;
           find . -name "*.so" | xargs -P1 -n1 ldd ;
