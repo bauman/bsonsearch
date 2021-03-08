@@ -47,7 +47,7 @@ jobs:
           tar -zxvf v4.0.5.tar.gz ;
           cd yara-4.0.5 ;
           autoreconf -fiv ;
-          ./configure --prefix=/usr/local --with-crypto --enable-magic;
+          ./configure --prefix=/usr/ --with-crypto --enable-magic;
           make;
           sudo make install;
           cd /tmp;
@@ -56,7 +56,7 @@ jobs:
           cd mongo-c-driver-1.17.4;
           mkdir cmake-build;
           cd cmake-build;
-          cmake -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF -DENABLE_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..;
+          cmake -DCMAKE_INSTALL_PREFIX=/usr -DENABLE_AUTOMATIC_INIT_AND_CLEANUP=OFF -DENABLE_TESTS=OFF -DCMAKE_BUILD_TYPE=Release ..;
           make;
           sudo make install;
           cd $cwd;
