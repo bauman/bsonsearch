@@ -21,7 +21,7 @@ jobs:
           sudo apt-get install -y tree libssl-dev openssl libtool flex autoconf automake ;
           sudo apt-get install -y libmagic1 libmagic-dev libpcre3-dev libpcre3 ;
           sudo apt-get install -y libstemmer0d libstemmer-dev libsodium-dev libaspell-dev aspell aspell-en;
-          sudo apt-get install -y uthash-dev libsodium23 libsodium-dev libprotobuf-c-dev libprotobuf-c1 duktape-dev libduktape205  duktape;
+          sudo apt-get install -y pkg-config uthash-dev libsodium23 libsodium-dev libprotobuf-c-dev libprotobuf-c1 duktape-dev libduktape205  duktape;
           sudo apt-get install -y wget libcmph-dev cmake make build-essential;
           wget http://pkgs.bauman.space/discodb/sample.ddb -O /tmp/sample.ddb;
           wget http://pkgs.bauman.space/discodb/animals.ddb -O /tmp/animals.ddb;
