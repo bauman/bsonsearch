@@ -4,6 +4,7 @@
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "bsoncompare.h"
+#include "mongoc-matcher-private.h"
 
 typedef struct {
     PyObject_HEAD
@@ -47,6 +48,23 @@ Utils_regex_destroy(Utils *self, PyObject *args, PyObject *kwds)
     return PyLong_FromLong(result);
 }
 
+static PyObject *
+Utils_to_bson(Utils *self, PyObject *args, PyObject *kwds)
+{
+    const char * json = NULL;
+    Py_ssize_t json_len;
+    if (!PyArg_ParseTuple(args, "s#", &json, &json_len)) {
+        return NULL;
+    }
+    bson_t  *bson_object = generate_doc_from_json((const uint8_t*)json, json_len);
+    const uint8_t *doc_bson = bson_get_data(bson_object);
+
+    PyObject * result =  Py_BuildValue("y#", doc_bson, bson_object->len);
+    bson_destroy(bson_object);
+    bson_free((void *)doc_bson);
+
+    return result;
+}
 
 static PyObject *
 Utils_haversine_distance(Utils *self, PyObject *args, PyObject *kwds)
@@ -111,6 +129,7 @@ static PyMethodDef Utils_methods[] = {
     {"regex_destroy", (PyCFunction)Utils_regex_destroy, METH_VARARGS, "Frees internal regex cache"},
     {"startup", (PyCFunction)Utils_startup, METH_VARARGS, "Prep the module internally"},
     {"shutdown", (PyCFunction)Utils_shutdown, METH_VARARGS, "Cleanup the module internally"},
+    {"to_bson", (PyCFunction)Utils_to_bson, METH_VARARGS, "convert a json document to bson document"},
     {"haversine_distance", (PyCFunction)Utils_haversine_distance, METH_VARARGS, "Haversine distance using radians"},
     {"haversine_distance_degrees", (PyCFunction)Utils_haversine_distance_degrees, METH_VARARGS, "Haversine distance using degrees"},
     {"crossarc_degrees", (PyCFunction)Utils_crossarc_degrees, METH_VARARGS, "Crossarc"},
@@ -166,10 +185,18 @@ Document_get_value(Document *self, PyObject *Py_UNUSED(ignored))
     return PyLong_FromLong(self->value);
 }
 
+static PyObject *
+Document_as_bson(Document *self, PyObject *Py_UNUSED(ignored))
+{
+    const uint8_t *doc_bson = bson_get_data(self->document);
+    PyObject * result =  Py_BuildValue("y#", doc_bson, self->document->len);
+    return result;
+}
+
 // Method definitions for Matcher
 static PyMethodDef Document_methods[] = {
-    {"get_value", (PyCFunction)Document_get_value, METH_NOARGS,
-        "Return the value of the Document instance."},
+    {"get_value", (PyCFunction)Document_get_value, METH_NOARGS, "Return the value of the Document instance."},
+    {"as_bson", (PyCFunction)Document_as_bson, METH_NOARGS, "Return the BSON bytes"},
     {NULL}  /* Sentinel */
 };
 
@@ -189,13 +216,40 @@ Document_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 Document_init(Document *self, PyObject *args, PyObject *kwds)
 {
+    PyObject* input_obj;
+    if (!PyArg_ParseTuple(args, "O", &input_obj)) {
+        return 0; // Error handling done by PyArg_ParseTuple
+    }
+    if (PyUnicode_Check(input_obj)) {
+        const char* buffer = PyUnicode_AsUTF8AndSize(input_obj, &self->value);
+        if (buffer == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Expected a JSON string");
+            return 0; // Error
+        }
+        self->document = generate_doc_from_json((const uint8_t *)buffer, (uint32_t)self->value);
+        if (self->document == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Expected valid JSON string");
+            return 0;
+        }
+
+    } else if (PyBytes_Check(input_obj)) {
+        Py_ssize_t length;
+        const char* buffer = NULL;
+        PyBytes_AsStringAndSize(input_obj, &buffer, &length);
+        self->document = bson_new_from_data((const uint8_t*)buffer, (uint32_t)length);
+        if (self->document == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Expected a valid BSON document");
+            return 0;
+        }
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected string or bytes");
+        return 0;
+    }
+
     if (!PyArg_ParseTuple(args, "s#", &self->json, &self->value)) {
         return -1;
     }
-    self->document = generate_doc_from_json((const uint8_t *)self->json, (uint32_t)self->value);
-    if (self->document == NULL) {
-        return -2;
-    }
+
     return 0;
 }
 
@@ -275,12 +329,18 @@ Matcher_project_json(Matcher *self, PyObject *args, PyObject *kwds)
     return returnable;
 }
 
-
+static PyObject *
+Matcher_as_bson(Matcher *self, PyObject *Py_UNUSED(ignored))
+{
+    const uint8_t *doc_bson = bson_get_data(&self->matcher->query);
+    PyObject * result =  Py_BuildValue("y#", doc_bson, self->matcher->query.len);
+    return result;
+}
 
 // Method definitions for Matcher
 static PyMethodDef Matcher_methods[] = {
-    {"get_value", (PyCFunction)Matcher_get_value, METH_NOARGS,
-        "Return the value of the Matcher instance."},
+    {"get_value", (PyCFunction)Matcher_get_value, METH_NOARGS, "Return the value of the Matcher instance."},
+    {"as_bson", (PyCFunction)Matcher_as_bson, METH_NOARGS, "gets the BSON representation of the matcher."},
     {"match_json", (PyCFunction)Matcher_match_json, METH_VARARGS, "Returns whether the doc matches the spec"},
     {"match_doc", (PyCFunction)Matcher_match_doc, METH_VARARGS, "Returns whether the doc matches the spec"},
     {"project_json", (PyCFunction)Matcher_project_json, METH_VARARGS, "projects data into a json document"},
@@ -303,12 +363,32 @@ Matcher_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 static int
 Matcher_init(Matcher *self, PyObject *args, PyObject *kwds)
 {
-    if (!PyArg_ParseTuple(args, "s#", &self->json, &self->value)) {
-        return -1;
+    PyObject* input_obj;
+    if (!PyArg_ParseTuple(args, "O", &input_obj)) {
+        return 0; // Error handling done by PyArg_ParseTuple
     }
-    self->matcher = generate_matcher_from_json((const uint8_t *)self->json, (uint32_t)self->value);
-    if (self->matcher == NULL) {
-        return -2;
+    if (PyUnicode_Check(input_obj)) {
+        self->json = PyUnicode_AsUTF8AndSize(input_obj, &self->value);
+        if (self->json == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Expected a JSON string");
+            return 0; // Error
+        }
+        self->matcher = generate_matcher_from_json((const uint8_t *)self->json, (uint32_t)self->value);
+        if (self->matcher == NULL) {
+            return -2;
+        }
+    } else if (PyBytes_Check(input_obj)) {
+        Py_ssize_t length;
+        const char* buffer = NULL;
+        PyBytes_AsStringAndSize(input_obj, &buffer, &length);
+        self->matcher = generate_matcher((const uint8_t*)buffer, (uint32_t)length);
+        if (self->matcher == NULL) {
+            PyErr_SetString(PyExc_TypeError, "Expected a valid BSON document");
+            return 0;
+        }
+    } else {
+        PyErr_SetString(PyExc_TypeError, "Expected string or bytes");
+        return 0;
     }
     return 0;
 }

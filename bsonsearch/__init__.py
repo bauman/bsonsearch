@@ -1,14 +1,9 @@
 """
-thin ctypes wrapper to libbsoncompare
-
-can work with either the full version or the lite version
+wrapper for bsonsearch
 """
+
 from .matcher_module import Matcher, Document, Utils
 
-try:
-    from bsonsearch import bsonhelper
-except ImportError:
-    pass
 
 try:
     import yara
