@@ -12,8 +12,8 @@ int compare_rgx_good(){
 
     const char *json = "{\"hello\": \"world\"}";
     const char *jsonspec = "{\"hello\": {\"$options\": \"\", \"$regex\": \"orl\"}}";
-    doc = bson_new_from_json (json, -1, &error);
-    spec = bson_new_from_json (jsonspec, -1, &error2);
+    doc = bson_new_from_json ((const uint8_t *)json, -1, &error);
+    spec = bson_new_from_json ((const uint8_t *)jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
     const uint8_t *doc_bson = bson_get_data(doc);
     int yes = compare(spec_bson, spec->len, doc_bson, doc->len);
@@ -30,8 +30,8 @@ int compare_rgx_good_case_insensitive(){
 
     const char *json = "{\"hello\": \"world\"}";
     const char *jsonspec = "{\"hello\": {\"$options\": \"i\", \"$regex\": \"ld\"}}";
-    doc = bson_new_from_json (json, -1, &error);
-    spec = bson_new_from_json (jsonspec, -1, &error2);
+    doc = bson_new_from_json ((const uint8_t *)json, -1, &error);
+    spec = bson_new_from_json ((const uint8_t *)jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
     const uint8_t *doc_bson = bson_get_data(doc);
     int yes = compare(spec_bson, spec->len, doc_bson, doc->len);
@@ -48,8 +48,8 @@ int complex_search(){
 
     const char *json = "{\"a\": [{\"b\": [1, 2]}, {\"b\": [3, 5]}], \"c\": {\"d\": \"56b2cd28e138237eb96ff936\"}}";
     const char *jsonspec = "{\"$and\": [{\"$or\": [{\"c.d\": \"56b2cd28e138237eb96ff936\"}]}, {\"$or\": [{\"a.0.b\": {\"$in\": [5, 30, 99]}}, {\"a.1.b\": {\"$in\": [5, 30, 99]}}]}]}";
-    doc = bson_new_from_json (json, -1, &error);
-    spec = bson_new_from_json (jsonspec, -1, &error2);
+    doc = bson_new_from_json ((const uint8_t *)json, -1, &error);
+    spec = bson_new_from_json ((const uint8_t *)jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
     const uint8_t *doc_bson = bson_get_data(doc);
     int yes = compare(spec_bson, spec->len, doc_bson, doc->len);
@@ -69,7 +69,7 @@ int check_precompiled_regex(){
     }
     regex_destroy();
 
-
+    return 1;
 }
 int
 main (int   argc,

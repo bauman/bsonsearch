@@ -18,7 +18,7 @@
 #include <stddef.h>
 #include "mongoc-matcher-op-private.h"
 #include <pcre.h>
-#include <bson.h>
+#include <bson/bson.h>
 #include <math.h>
 #include <bson/bson.h>
 #include "bsoncompare.h"

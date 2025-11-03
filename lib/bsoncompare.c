@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <stddef.h>
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher.h"
 #include "bsoncompare.h"
 #include <uthash.h>
@@ -95,7 +95,7 @@ bsonsearch_project_json(mongoc_matcher_t *matcher,     //in
             break;
     }
     char * str;
-    str = bson_as_json(projected, NULL);
+    str = bson_as_legacy_extended_json(projected, NULL);
     bson_destroy(projected);
     bson_free(projected);
     return str;

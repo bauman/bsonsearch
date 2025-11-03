@@ -1,7 +1,7 @@
 #ifdef WITH_MODULES
 #ifdef WITH_DUKJS
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "matcher-module-duk.h"
 
 
@@ -114,7 +114,7 @@ matcher_module_duk_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void * u
         switch (btype){
             case BSON_TYPE_UTF8:{
                 binary = (const uint8_t *) bson_iter_utf8(iter, &binary_len);
-                duk_push_string(md->ctx, binary);
+                duk_push_string(md->ctx, (const char*)binary);
                 break;
             }
             case BSON_TYPE_DOCUMENT:{
@@ -123,7 +123,7 @@ matcher_module_duk_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void * u
                 bson_iter_document(iter, &document_len, &document);
                 ud->bson_data = bson_new_from_data(document, document_len);
                 size_t json_len = 0;
-                ud->json_data = bson_as_json(ud->bson_data, &json_len);
+                ud->json_data = bson_as_canonical_extended_json(ud->bson_data, &json_len);
                 duk_push_string(md->ctx, ud->json_data);
                 break;
             }

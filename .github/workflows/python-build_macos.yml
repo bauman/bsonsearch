@@ -1,0 +1,29 @@
+name: Build Wheels
+
+on:
+  push:
+    branches: [ py3, py3a ]
+  pull_request:
+    branches: [ py3, py3a ]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest] #ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.2.1
+
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+

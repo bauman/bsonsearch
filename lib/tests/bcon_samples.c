@@ -51,7 +51,7 @@ main (int   argc,
 
     size_t s;
     char * as_json;
-    as_json = bson_as_json(query, &s);
+    as_json = bson_as_canonical_extended_json(query, &s);
     printf("%s\n", as_json);
     return 0;
 }

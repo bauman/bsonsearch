@@ -17,7 +17,7 @@
 #ifndef MONGOC_MATCHER_H
 #define MONGOC_MATCHER_H
 
-#include <bson.h>
+#include <bson/bson.h>
 
 
 BSON_BEGIN_DECLS

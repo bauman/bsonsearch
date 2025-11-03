@@ -23,7 +23,7 @@
 #ifndef MONGOC_BSON_DESCENDANTS_H
 #define MONGOC_BSON_DESCENDANTS_H
 
-#include <bson.h>
+#include <bson/bson.h>
 
 
 BSON_BEGIN_DECLS

@@ -17,7 +17,7 @@
 #ifndef MONGOC_MATCHER_OP_PRIVATE_H
 #define MONGOC_MATCHER_OP_PRIVATE_H
 
-#include <bson.h>
+#include <bson/bson.h>
 #include <uthash.h>
 
 #ifdef WITH_YARA

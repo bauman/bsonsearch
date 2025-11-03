@@ -5,7 +5,7 @@
 #define MONGOC_MATCHER_OP_MODULES_H
 
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 #include "mongoc-matcher-op-modules-private.h"
 

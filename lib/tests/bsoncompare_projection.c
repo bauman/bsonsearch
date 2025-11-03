@@ -1,5 +1,5 @@
 #include <bsoncompare.h>
-#include <bson.h>
+#include <bson/bson.h>
 
 bool
 project_json(const char *json,
@@ -11,15 +11,15 @@ project_json(const char *json,
     bson_t      *spec;
     bson_t      *doc;
     bson_t      *out = bson_new();
-    doc = bson_new_from_json (json, -1, &error);
-    spec = bson_new_from_json (jsonspec, -1, &error2);
+    doc = bson_new_from_json ((const uint8_t*)json, -1, &error);
+    spec = bson_new_from_json ((const uint8_t*)jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
     const uint8_t *doc_bson = bson_get_data(doc);
     mongoc_matcher_t * matcher = generate_matcher(spec_bson, spec->len);
     project_bson(matcher, doc, out);
 
     char * str;
-    str = bson_as_json(out, NULL);
+    str = bson_as_legacy_extended_json(out, NULL);
     same = (0 == strcmp(str, expected));
     matcher_destroy(matcher);
     doc_destroy(spec);
@@ -40,8 +40,8 @@ test_json_api(const char *json,
     bson_error_t error2;
     bson_t      *spec;
     bson_t      *doc;
-    doc = bson_new_from_json (json, -1, &error);
-    spec = bson_new_from_json (jsonspec, -1, &error2);
+    doc = bson_new_from_json ((const uint8_t*)json, -1, &error);
+    spec = bson_new_from_json ((const uint8_t*)jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
 
     mongoc_matcher_t * matcher = generate_matcher(spec_bson, spec->len);
@@ -64,8 +64,8 @@ test_bson_api(const char *json,
     bson_error_t error2;
     bson_t      *spec;
     bson_t      *doc;
-    doc = bson_new_from_json (json, -1, &error);
-    spec = bson_new_from_json (jsonspec, -1, &error2);
+    doc = bson_new_from_json ((const uint8_t*)json, -1, &error);
+    spec = bson_new_from_json ((const uint8_t*)jsonspec, -1, &error2);
     const uint8_t *spec_bson = bson_get_data(spec);
 
     mongoc_matcher_t * matcher = generate_matcher(spec_bson, spec->len);
@@ -73,7 +73,7 @@ test_bson_api(const char *json,
     bson_out = bsonsearch_project_bson(matcher, doc);
 
     size_t json_len;
-    char * out = bson_as_json(bson_out, &json_len);
+    char * out = bson_as_relaxed_extended_json(bson_out, &json_len);
     same = (0 == strcmp(out, expected));
     matcher_destroy(matcher);
     bson_destroy(doc);
@@ -172,7 +172,7 @@ main (int   argc,
     {
         BSON_ASSERT(test_json_api("{\"a\":{\"aa\":[2, 33]}, \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1,\"c\":1}}",
-                             "{ \"a.aa\" : [ 2, 33 ], \"c\" : [  ] }"));
+                             "{ \"a.aa\" : [ 2, 33 ], \"c\" : [ ] }"));
     }while(false); //true to leak test
 
     //test regex
@@ -187,22 +187,22 @@ main (int   argc,
     //test complex descent
     BSON_ASSERT(project_json("{\"a\":[{\"aa\":[\"a\", 33]}, {\"aa\":999}], \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1,\"c\":1}}",
-                             "{ \"a.aa\" : [ \"a\", 33, 999 ], \"c\" : [  ] }"));
+                             "{ \"a.aa\" : [ \"a\", 33, 999 ], \"c\" : [ ] }"));
 
     //test project as
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":\"a_aa\",\"c\":1}}",
-                             "{ \"a_aa\" : [ \"a\", 33 ], \"c\" : [  ] }"));
+                             "{ \"a_aa\" : [ \"a\", 33 ], \"c\" : [ ] }"));
 
     //test direct descent
     BSON_ASSERT(project_json("{\"a\":{\"aa\":[\"a\", 33]}, \"b\":\"b\"}",
                              "{\"$project\":{\"a.aa\":1,\"c\":1}}",
-                             "{ \"a.aa\" : [ \"a\", 33 ], \"c\" : [  ] }"));
+                             "{ \"a.aa\" : [ \"a\", 33 ], \"c\" : [ ] }"));
 
     //test root keys
     BSON_ASSERT(project_json("{\"a\":\"aa\", \"b\":\"b\"}",
                              "{\"$project\":{\"a\":1,\"c\":1}}",
-                             "{ \"a\" : [ \"aa\" ], \"c\" : [  ] }"));
+                             "{ \"a\" : [ \"aa\" ], \"c\" : [ ] }"));
 
     //test date_time
 

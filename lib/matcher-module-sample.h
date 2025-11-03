@@ -1,7 +1,7 @@
 #ifdef WITH_MODULES
 #ifndef MATCHER_MODULE_SAMPLE_H
 #define MATCHER_MODULE_SAMPLE_H
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 
 #define MODULE_SAMPLE_COMMAND "sample"
@@ -18,7 +18,7 @@ matcher_module_sample_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void 
 
 typedef struct _matcher_container_sample_holder_t matcher_container_sample_holder_t;
 struct _matcher_container_sample_holder_t {
-    double_t sample;
+    double sample;
 };
 
 

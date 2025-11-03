@@ -1,0 +1,31 @@
+name: C Build on macOS
+
+on:
+  push:
+    branches: [ never ]
+  pull_request:
+    branches: [ never ]
+
+jobs:
+  build:
+    runs-on: macOS-latest
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup C/C++ build environment (optional, if specific tools are needed)
+        run: |
+          brew install cmake automake wget
+          wget http://pkgs.bauman.space/discodb/sample.ddb -O /tmp/sample.ddb;
+          wget http://pkgs.bauman.space/discodb/animals.ddb -O /tmp/animals.ddb;
+          wget http://pkgs.bauman.space/discodb/cjk.ddb -O /tmp/cjk.ddb;
+          wget http://pkgs.bauman.space/discodb/myths.ddb -O /tmp/myths.ddb;
+
+      - name: Configure and Build
+        run: |
+          mkdir cmake-build
+          cd cmake-build
+          cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/usr -DCMAKE_BUILD_TYPE=Release .. 
+          cmake --build .
+          ctest 
+          cmake --install .;

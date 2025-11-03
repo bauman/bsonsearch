@@ -1,0 +1,20 @@
+diff -ruN discodb-0.9.5-old/CMakeLists.txt discodb-0.9.5-new/CMakeLists.txt
+--- discodb-0.9.5-old/CMakeLists.txt	2025-10-28 16:23:01
++++ discodb-0.9.5-new/CMakeLists.txt	2025-10-29 16:59:41
+@@ -26,15 +26,11 @@
+ else()
+     INCLUDE_DIRECTORIES(/usr/include/  src/ )
+     LINK_DIRECTORIES(/usr/lib64/)
++    LINK_DIRECTORIES(usr/lib)
+ 
+     CHECK_INCLUDE_FILES(cmph.h HAVE_CMPH_H)
+     if(NOT HAVE_CMPH_H)
+         message(SEND_ERROR "CMPH header is required, stopping")
+-        return()
+-    endif()
+-    CHECK_LIBRARY_EXISTS(cmph cmph_config_new "" HAVE_CMPH_LIB)
+-    if(NOT HAVE_CMPH_LIB)
+-        message(SEND_ERROR "cmph library is required, stopping")
+         return()
+     endif()
+ endif ()

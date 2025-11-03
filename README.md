@@ -1,5 +1,11 @@
 [![Build Status](https://travis-ci.org/bauman/bsonsearch.svg?branch=py3)](https://travis-ci.org/bauman/bsonsearch)
 
+export LD_LIBRARY_PATH=$(pwd)/usr/lib:$(pwd)
+apk add cmake gcc g++ patch make autoconf automake python3-dev py3-build py3-pip 
+
+cd / && rm -rf build
+cd /build && rm -rf cmake-build && mkdir -p cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/usr -DCMAKE_BUILD_TYPE=Release  .. &&  cmake --build .
+
 Playground
 ================
 Plenty of examples are available with the python API within the dockerized playground

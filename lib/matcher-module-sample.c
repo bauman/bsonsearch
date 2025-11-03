@@ -2,7 +2,7 @@
 
 #include <time.h>
 #include <stdlib.h>
-#include <bson.h>
+#include <bson/bson.h>
 #include "matcher-module-sample.h"
 
 

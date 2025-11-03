@@ -21,7 +21,7 @@
  */
 
 #include <Python.h>
-#include <bson.h>
+#include <bson/bson.h>
 
 
 /*

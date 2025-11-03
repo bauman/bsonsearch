@@ -23,7 +23,7 @@
 #ifndef MONGOC_MATCHER_OP_GEOJSON_H
 #define MONGOC_MATCHER_OP_GEOJSON_H
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 
 BSON_BEGIN_DECLS

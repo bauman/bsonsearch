@@ -1,7 +1,7 @@
 #ifndef BSONCOMPARE_H
 #define BSONCOMPARE_H
 
-#include <bson.h>
+#include <bson/bson.h>
 #include <uthash.h>
 #include <pcre.h>
 #include "mongoc-matcher.h"

@@ -1,5 +1,5 @@
 #ifdef WITH_MODULES
-#include <bson.h>
+#include <bson/bson.h>
 #include <uthash.h>
 #include "mongoc-matcher-op-modules.h"
 #include "mongoc-matcher-op-private.h"
@@ -152,7 +152,7 @@ _mongoc_matcher_op_module_shutdown (){
 uint8_t
 _mongoc_matcher_op_module_startup (){
     bool result = true;
-    result &= _matcher_module_store_startup(global_module_storage_NAME);
+    result &= _matcher_module_store_startup();
     return result;
 }
 

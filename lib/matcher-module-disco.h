@@ -2,7 +2,7 @@
 #ifdef WITH_DISCO
 #ifndef MATCHER_MODULE_DISCO_H
 #define MATCHER_MODULE_DISCO_H
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 #include "discodb.h"
 

@@ -1,4 +1,4 @@
-#include <bson.h>
+#include <bson/bson.h>
 //toying around with oids.  Seems like correct function to use is oid_compare
 //https://github.com/mongodb/libbson/blob/b52fca2b0f2eb71674447b329967870096602352/tests/test-oid.c
 //gcc -I/usr/include/libbson-1.0 -lbson-1.0 -o test.out oid_test.c
