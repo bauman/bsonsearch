@@ -1,4 +1,4 @@
-name: Build Wheels for MacOS arm64
+name: Build Wheels for MacOS x86_64
 
 on:
   push:
