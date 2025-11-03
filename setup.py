@@ -6,7 +6,7 @@ include_dirs = [
     f"/opt/homebrew/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/"
 ]
 include_dirs.extend(environ.get("INCLUDE_DIR", ".").split(":"))
-lib_dirs = []
+lib_dirs = ["/opt/homebrew/lib/"]
 lib_dirs.extend(environ.get("LIB_DIR", ".").split(":"))
 setup_args = dict(
     ext_modules = [
