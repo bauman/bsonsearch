@@ -1,4 +1,4 @@
-name: Build Wheels for MacOS
+name: Build Wheels for MacOS arm64
 
 on:
   push:
@@ -22,6 +22,7 @@ jobs:
       - name: Build wheels
         uses: pypa/cibuildwheel@v3.2.1
         env:
+          CIBW_ARCHS_MACOS: arm64
           CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
             DYLD_LIBRARY_PATH=/opt/homebrew/lib delocate-listdeps {wheel} &&
             DYLD_LIBRARY_PATH=/opt/homebrew/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
