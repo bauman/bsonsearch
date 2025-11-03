@@ -23,7 +23,7 @@ build-backend = "setuptools.build_meta"
 
 
 [tool.cibuildwheel.macos]
-before-all = "brew install libtool automake autoconf && mkdir cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=/usr -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --install ."
+before-all = "brew install libtool automake autoconf && mkdir cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=/opt/homebrew -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --install ."
 archs = ["x86_64", "universal2", "arm64"]
 
 
