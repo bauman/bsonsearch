@@ -1,6 +1,6 @@
 #include <stdio.h>
 #include <bsoncompare.h>
-#include <bson.h>
+#include <bson/bson.h>
 
 int compare_json(const char *json,
                  const char *jsonspec ){

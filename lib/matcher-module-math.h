@@ -2,7 +2,7 @@
 #ifdef WITH_MATH
 #ifndef MATCHER_MODULE_MATH_H
 #define MATCHER_MODULE_MATH_H
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 
 #define MODULE_MATH_SUM_COMMAND "sum"

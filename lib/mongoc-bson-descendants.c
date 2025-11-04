@@ -21,7 +21,7 @@
  */
 
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-bson-descendants.h"
 
 

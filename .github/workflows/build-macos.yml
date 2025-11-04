@@ -1,0 +1,35 @@
+name: C Build on macOS
+
+on:
+  push:
+    branches: [ py3 ]
+  pull_request:
+    branches: [ py3 ]
+
+jobs:
+  build:
+    runs-on: macOS-latest
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Setup C/C++ build environment (optional, if specific tools are needed)
+        run: |
+          brew install automake libtool autoconf
+          ln -s /opt/homebrew/bin/aclocal-1.18 /opt/homebrew/bin/aclocal-1.16
+          python3 -m pip install build wheel --break-system-packages
+          wget http://pkgs.bauman.space/discodb/sample.ddb -O /tmp/sample.ddb;
+          wget http://pkgs.bauman.space/discodb/animals.ddb -O /tmp/animals.ddb;
+          wget http://pkgs.bauman.space/discodb/cjk.ddb -O /tmp/cjk.ddb;
+          wget http://pkgs.bauman.space/discodb/myths.ddb -O /tmp/myths.ddb;
+
+      - name: Configure and Build
+        run: |
+          mkdir cmake-build
+          cd cmake-build
+          cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/usr -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. 
+          cmake --build .
+          ctest 
+          cmake --install .;

@@ -1,0 +1,43 @@
+[project]
+name = "bsonsearch"
+version = "2.1.2"
+description = "compare BSON/JSON documents locally"
+requires-python = ">=3.11"
+dependencies = []
+authors = [
+    {name="Dan Bauman"}
+]
+maintainers = [
+    {name="Dan Bauman"}
+]
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["bsonsearch"]
+exclude =  ['*c']
+
+[build-system]
+requires = ["setuptools>=61"]
+build-backend = "setuptools.build_meta"
+
+
+
+[tool.cibuildwheel.macos]
+before-all = "brew install libtool automake autoconf && mkdir cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=/opt/homebrew -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --install ."
+archs = ["x86_64", "universal2", "arm64"]
+
+
+[[tool.cibuildwheel.overrides]]
+select = "*-musllinux*"
+before-all = "apk update && apk add cmake gcc g++ perl patch make autoconf automake python3-dev py3-build py3-pip && ln -s /usr/bin/aclocal-1.17 /usr/bin/aclocal-1.16 && ln -s  /usr/bin/automake-1.17  /usr/bin/automake-1.16 && mkdir cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=/usr -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --install ."
+archs = ["x86_64"]
+
+[[tool.cibuildwheel.overrides]]
+select = "*-manylinux*"
+before-all = "dnf -y update && dnf install -y cmake gcc gcc-c++ perl patch make autoconf automake && mkdir cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=/usr -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --install ."
+archs = ["x86_64"]
+
+[[tool.cibuildwheel.overrides]]
+select = "*-macosx_x86_64"
+before-all = "brew install libtool automake autoconf && mkdir cmake-build && cd cmake-build && cmake -DCMAKE_INSTALL_PREFIX=/usr/local -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. && cmake --build . && cmake --install ."
+

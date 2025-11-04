@@ -2,7 +2,7 @@
 #ifdef WITH_DUKJS
 #ifndef MATCHER_MODULE_DUK_H
 #define MATCHER_MODULE_DUK_H
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 #include "duktape.h"
 

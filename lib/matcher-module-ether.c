@@ -1,6 +1,6 @@
 #ifdef WITH_MODULES
 #ifdef WITH_ETHER
-#include <bson.h>
+#include <bson/bson.h>
 #include "matcher-module-ether.h"
 #include "mongoc-matcher-op-private.h"
 #include "uthash.h"

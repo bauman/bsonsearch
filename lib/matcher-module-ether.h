@@ -2,7 +2,7 @@
 #ifdef WITH_ETHER
 #ifndef MATCHER_MODULE_ETHER_H
 #define MATCHER_MODULE_ETHER_H
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 
 #include "uthash.h"

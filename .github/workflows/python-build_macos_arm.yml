@@ -1,0 +1,36 @@
+name: Build Wheels for MacOS arm64
+
+on:
+  push:
+    branches: [ py3 ]
+  pull_request:
+    branches: [ py3 ]
+
+jobs:
+  build_wheels:
+    name: Build wheels on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [macos-latest] #ubuntu-latest, ubuntu-24.04-arm, macos-15-intel, macos-latest]
+
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          lfs: true
+
+      - name: Build wheels
+        uses: pypa/cibuildwheel@v3.2.1
+        env:
+          CIBW_ARCHS_MACOS: arm64
+          CIBW_REPAIR_WHEEL_COMMAND_MACOS: >
+            DYLD_LIBRARY_PATH=/opt/homebrew/lib delocate-listdeps {wheel} &&
+            DYLD_LIBRARY_PATH=/opt/homebrew/lib delocate-wheel --require-archs {delocate_archs} -w {dest_dir} {wheel}
+
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cibw-wheels-${{ matrix.os }}-${{ strategy.job-index }}
+          path: ./wheelhouse/*.whl
+
+

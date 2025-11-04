@@ -1,7 +1,7 @@
 #ifdef WITH_MODULES
 #ifdef WITH_DISCO
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "matcher-module-disco.h"
 
 /* The below code is from the discoproject/DiscoDB project
@@ -361,7 +361,7 @@ matcher_module_disco_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void *
             int ddb_errno;
             while ((ud->ventry = ddb_next(cur, &ddb_errno))){
                 if (md->search_len == ud->ventry->length &&
-                    strncmp(md->search, ud->ventry->data, md->search_len) == 0){
+                    strncmp((const char *)md->search, ud->ventry->data, md->search_len) == 0){
                     cb = MATCHER_MODULE_CALLBACK_FOUND;
                     break; // because stop once we know it's there
                 }
@@ -379,7 +379,7 @@ matcher_module_disco_search(mongoc_matcher_op_t * op, bson_iter_t * iter, void *
             int ddb_errno;
             while ((ud->ventry = ddb_next(cur, &ddb_errno))){
                 if (md->search_len == ud->ventry->length &&
-                    strncmp(md->search, ud->ventry->data, md->search_len) == 0){
+                    strncmp((const char*)md->search, ud->ventry->data, md->search_len) == 0){
                     cb = MATCHER_MODULE_CALLBACK_FOUND;
                 } else {
                     cb = MATCHER_MODULE_CALLBACK_STOP;

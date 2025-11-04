@@ -2,8 +2,8 @@
 #include <bsoncompare.h>
 #include <time.h>
 
-int compare_json(const char *json,
-                 const char *jsonspec ){
+int compare_json(const uint8_t *json,
+                 const uint8_t *jsonspec ){
     bson_error_t error;
     bson_error_t error2;
     bson_t      *spec;
@@ -36,13 +36,17 @@ main (int   argc,
      *
      */
     /* Fail Early if you can */
-    BSON_ASSERT(!compare_json("{\"a\": [3, 4]}",
-                              "{\"$and\": [{\"a\": 1}, {\"a\": 3}, {\"a\": 4}]}"));
+    BSON_ASSERT(!compare_json((const uint8_t *)"{\"a\": [3, 4]}",
+                               (const uint8_t *)"{\"$and\": [{\"a\": 1}, {\"a\": 3}, {\"a\": 4}]}"));
 
     /* Failing late causes more comparisons. */
-    BSON_ASSERT(!compare_json("{\"a\": [3, 4]}",
-                             "{\"$and\": [{\"a\": 4}, {\"a\": 3}, {\"a\": 1}]}"));
+    BSON_ASSERT(!compare_json((const uint8_t *)"{\"a\": [3, 4]}",
+                             (const uint8_t *)"{\"$and\": [{\"a\": 4}, {\"a\": 3}, {\"a\": 1}]}"));
 
+
+    /* Failing late causes more comparisons. */
+    BSON_ASSERT(compare_json((const uint8_t *)"{\"a\": [3, 4]}",
+                             (const uint8_t *)"{\"$and\": [{\"a\": 4}, {\"a\": 3}]}"));
     //----------------------------------------------------------------------------------------------
     /*
      * first function will pass fast.  a:3 may be most likely to exist
@@ -56,10 +60,10 @@ main (int   argc,
      *       the second operand is not evaluated"
      *
      */
-    BSON_ASSERT(compare_json("{\"a\": [3, 4]}",
-                             "{\"$or\": [{\"a\": 3}, {\"a\": 1}, {\"a\": 4}]}"));
+    BSON_ASSERT(compare_json((const uint8_t *)"{\"a\": [3, 4]}",
+                             (const uint8_t *)"{\"$or\": [{\"a\": 3}, {\"a\": 1}, {\"a\": 4}]}"));
 
-    BSON_ASSERT(compare_json("{\"a\": [3, 4]}",
-                             "{\"$or\": [{\"a\": 7}, {\"a\": 1}, {\"a\": 4}]}"));
+    BSON_ASSERT(compare_json((const uint8_t *)"{\"a\": [3, 4]}",
+                             (const uint8_t *)"{\"$or\": [{\"a\": 7}, {\"a\": 1}, {\"a\": 4}]}"));
     return 0;
 }

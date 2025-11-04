@@ -133,18 +133,15 @@ _mongoc_matcher_op_unwind (mongoc_matcher_op_t *op, /* IN */
             while (bson_iter_next(&array_iter))
             {
                 bson_t * item = bson_new();
-                bson_init(item);
                 mongoc_matcher_projection_value_into_document(&array_iter, item, key, key_size);
                 matched = _mongoc_matcher_op_match(op->projection.query, (const bson_t *)item);
                 bson_destroy(item);
-                bson_free(item);
                 if (matched){
                     break;
                 }
             }
         }
         bson_destroy(projected);
-        bson_free(projected);
     }
     return matched;
 }

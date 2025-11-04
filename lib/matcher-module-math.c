@@ -1,7 +1,7 @@
 #ifdef WITH_MODULES
 #ifdef WITH_MATH
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "matcher-module-math.h"
 
 

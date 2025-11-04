@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.3)
+cmake_minimum_required(VERSION 3.22)
 project(bsonsearch)
 
 # Default cmake includes all features and modules
@@ -14,33 +14,186 @@ project(bsonsearch)
 #    2.  Library Compilation and INSTALL instructions
 #    3.  Test and Utility Compilation
 
+include_directories(
+        ${CMAKE_BINARY_DIR}/usr/include/
+        ${CMAKE_BINARY_DIR}/usr/include/bson-2.1.2
+        lib/
+        /usr/include/
+)
+list(APPEND CMAKE_REQUIRED_INCLUDES
+        ${CMAKE_BINARY_DIR}/usr/include/
+        /opt/homebrew/include/
+)
 
-INCLUDE_DIRECTORIES(/usr/include/ /usr/local/include/libbson-1.0/ /usr/include/libbson-1.0/ lib/ lib/acceleration/)
-LINK_DIRECTORIES(/usr/local/lib/ /usr/lib64/ /usr/local/lib/ lib/acceleration/)
+LINK_DIRECTORIES(
+        ${CMAKE_BINARY_DIR}/usr/lib
+        ${CMAKE_BINARY_DIR}/usr/lib64
+        /usr/local/lib/
+        /usr/lib64/
+        /usr/local/lib/
+        lib/acceleration/
+)
+
 
 ##  SECTION 1 -- COMPILE Checks
 include(CMakeDependentOption)
 INCLUDE(CheckIncludeFiles)
 INCLUDE (CheckLibraryExists)
 
+option(build-dependencies "build-dependencies" ON)
+
+option(build-python "build-python" ON)
+if (build-python)
+    add_subdirectory(bsonsearch)
+endif()
+
 option(include-projection "include-projection" ON)
 option(include-utils "include-utils" ON)
 option(include-conditional "include-conditional" ON)
 
-option(include-text "include-text" ON)
-CMAKE_DEPENDENT_OPTION(include-aspell "include-aspell" ON "include-text" OFF)
-CMAKE_DEPENDENT_OPTION(include-stemmer "include-stemmer " ON "include-text" OFF)
+option(include-text "include-text" OFF)
+#CMAKE_DEPENDENT_OPTION(include-aspell "include-aspell" ON "include-text" OFF)
+#CMAKE_DEPENDENT_OPTION(include-stemmer "include-stemmer " ON "include-text" OFF)
 
-option(include-ip "include-ip" ON)
-option(include-yara "include-yara" ON)
-option(include-crypt "include-crypt" ON)
+option(include-ip "include-ip" OFF)
+option(include-yara "include-yara" OFF)
+option(include-crypt "include-crypt" OFF)
 
 option(include-modules "include-modules" ON)
 CMAKE_DEPENDENT_OPTION(include-math "include-math" ON "include-modules" OFF)
-CMAKE_DEPENDENT_OPTION(include-ether "include-ether" ON "include-modules" OFF)
+CMAKE_DEPENDENT_OPTION(include-ether "include-ether" OFF "include-modules" OFF)
 CMAKE_DEPENDENT_OPTION(include-disco "include-disco" ON "include-modules" OFF)
 CMAKE_DEPENDENT_OPTION(include-filesystem "include-filesystem" ON "include-modules" OFF)
 CMAKE_DEPENDENT_OPTION(include-dukjs "include-dukjs" ON "include-modules" OFF)
+
+if (APPLE OR build-dependencies)
+    # apple needs to build all its own dependencies
+    if(include-modules)
+        if (include-disco)
+            message("-- requested disco with -D include-disco")
+            add_definitions(-DWITH_DISCO)
+        endif()
+        if (include-dukjs)
+            message("-- requested dukjs with -D include-dukjs")
+            add_definitions(-DWITH_DUKJS)
+        endif()
+    endif()
+
+    add_subdirectory(third-party)
+else()
+
+    CHECK_INCLUDE_FILES(uthash.h HAVE_UTHASH_H)
+    if(NOT HAVE_UTHASH_H)
+        message(SEND_ERROR "uthash is required, stopping")
+        return()
+    endif()
+    CHECK_INCLUDE_FILES(pcre.h HAVE_PCRE_H)
+    if(NOT HAVE_PCRE_H)
+        message(SEND_ERROR "PCRE is required, stopping")
+        return()
+    endif()
+    message("-- Looking for include file bson.h")
+    find_path(HAVE_BSON_H bson.h PATHS third-party/usr/include/bson-2.1.2/bson )
+    if(NOT HAVE_BSON_H)
+        message(SEND_ERROR "BSON is required, stopping")
+        return()
+    else()
+        message("-- Looking for include file bson.h - found")
+    endif()
+
+    if(include-yara)
+        message("-- requested yara with -D include-yara, checking for yara.h")
+        CHECK_INCLUDE_FILES(yara.h HAVE_YARA_H)
+        if(HAVE_YARA_H)
+            CHECK_LIBRARY_EXISTS(yara yr_rules_scan_mem "" HAVE_YARA_LIB)
+            if (HAVE_YARA_LIB)
+                message("-- -- have yara.h and library, adding -DWITH_YARA")
+                add_definitions(-DWITH_YARA)
+            else()
+                message(SEND_ERROR "-- yara enabled but cannot find libyara, is it installed?")
+                return()
+            endif()
+        else()
+            message(SEND_ERROR "-- yara enabled but cannot find yara.h, is yara-dev(el) installed?")
+            return()
+        endif()
+    endif()
+
+    if(include-text)
+        message("-- requested text with -D include-text, adding -DWITH_TEXT")
+        add_definitions(-DWITH_TEXT)
+        if (include-stemmer)
+            CHECK_INCLUDE_FILES(libstemmer.h HAVE_STEMMER_H)
+            if(HAVE_STEMMER_H)
+                CHECK_LIBRARY_EXISTS(stemmer sb_stemmer_new "" HAVE_STEMMER_LIB)
+                if (HAVE_STEMMER_LIB)
+                    message("-- -- have libstemmer.h and library, adding -DWITH_STEMMER")
+                    add_definitions(-DWITH_STEMMER)
+                else()
+                    message(SEND_ERROR "-- stemmer enabled but cannot find libstemmer, is libstemmer and -dev(el) installed?")
+                    return()
+                endif()
+            endif()
+            CHECK_INCLUDE_FILES(aspell.h HAVE_ASPELL_H)
+            if(HAVE_ASPELL_H)
+                CHECK_LIBRARY_EXISTS(aspell aspell_speller_check "" HAVE_ASPELL_LIB)
+                if (HAVE_ASPELL_LIB)
+                    message("-- -- have aspell.h, adding -DWITH_ASPELL")
+                    add_definitions(-DWITH_ASPELL)
+                else()
+                    message(SEND_ERROR "-- ASPELL enabled but cannot find libaspell, is libaspell and -dev(el) installed?")
+                    return()
+                endif()
+            endif()
+        endif()
+    endif()
+
+    if(include-crypt)
+        message("-- requested crypt with -D include-crypt")
+        CHECK_INCLUDE_FILES(sodium.h HAVE_SODIUM_H)
+        if(HAVE_SODIUM_H)
+            CHECK_LIBRARY_EXISTS(sodium crypto_box_seal_open "" HAVE_SODIUM_LIB)
+            if (HAVE_SODIUM_LIB)
+                message("-- -- have sodium.h and library, adding -DWITH_CRYPT")
+                add_definitions(-DWITH_CRYPT)
+            endif()
+        endif()
+    endif()
+
+    if(include-modules)
+        if (include-disco)
+            message("-- requested disco with -D include-disco")
+            CHECK_INCLUDE_FILES(discodb.h HAVE_DISCO_H)
+            if(HAVE_DISCO_H)
+                CHECK_LIBRARY_EXISTS(discodb ddb_getitem "${CMAKE_SOURCE_DIR}/third-party/usr/lib" HAVE_DISCO_LIB)
+                if (HAVE_DISCO_LIB)
+                    message("-- -- have discodb.h and library, adding -DWITH_DISCO")
+                    add_definitions(-DWITH_DISCO)
+                endif()
+            endif()
+        endif()
+        if (include-dukjs)
+            message("-- requested dukjs with -D include-dukjs")
+            CHECK_INCLUDE_FILES(duktape.h HAVE_DUK_H)
+            if(HAVE_DUK_H)
+                message("-- -- have duktape.h, looking for library")
+                find_library(DUKTAPE_LIB NAMES duktape HINTS "${CMAKE_SOURCE_DIR}/third-party/usr/lib")
+                if (DUKTAPE_LIB)
+                    message("-- -- have duktape library, adding -DWITH_DUKJS")
+                    message(STATUS "-- -- -- Found mylib at: ${DUKTAPE_LIB}")
+                    add_definitions(-DWITH_DUKJS)
+                else()
+                    message(SEND_ERROR "-- -- cannot find library in ${CMAKE_SOURCE_DIR}/third-party/usr/lib")
+                    return()
+                endif()
+
+            else()
+                message(SEND_ERROR "-- dukjs enabled but cannot find libduktape, is duktape-dev(el) installed?")
+                return()
+            endif()
+        endif()
+    endif()
+endif ()
 
 CHECK_INCLUDE_FILES(math.h HAVE_MATH_H)
 if(NOT HAVE_MATH_H)
@@ -51,76 +204,6 @@ CHECK_LIBRARY_EXISTS(m atan2 "" HAVE_MATH_LIB)
 if(NOT HAVE_MATH_LIB)
     message(SEND_ERROR "math library is required, stopping")
     return()
-endif()
-
-
-CHECK_INCLUDE_FILES(uthash.h HAVE_UTHASH_H)
-if(NOT HAVE_UTHASH_H)
-    message(SEND_ERROR "uthash is required, stopping")
-    return()
-endif()
-
-CHECK_INCLUDE_FILES(pcre.h HAVE_PCRE_H)
-if(NOT HAVE_PCRE_H)
-    message(SEND_ERROR "PCRE is required, stopping")
-    return()
-endif()
-
-
-message("-- Looking for include file bson.h")
-find_path(HAVE_BSON_H bson.h PATHS /usr/include/libbson-1.0 /usr/local/include/libbson-1.0/)
-if(NOT HAVE_BSON_H)
-    message(SEND_ERROR "BSON is required, stopping")
-    return()
-else()
-    message("-- Looking for include file bson.h - found")
-endif()
-
-if(include-yara)
-    message("-- requested yara with -D include-yara, checking for yara.h")
-    CHECK_INCLUDE_FILES(yara.h HAVE_YARA_H)
-    if(HAVE_YARA_H)
-        CHECK_LIBRARY_EXISTS(yara yr_rules_scan_mem "" HAVE_YARA_LIB)
-        if (HAVE_YARA_LIB)
-            message("-- -- have yara.h and library, adding -DWITH_YARA")
-            add_definitions(-DWITH_YARA)
-        else()
-            message(SEND_ERROR "-- yara enabled but cannot find libyara, is it installed?")
-            return()
-        endif()
-    else()
-        message(SEND_ERROR "-- yara enabled but cannot find yara.h, is yara-dev(el) installed?")
-        return()
-    endif()
-endif()
-
-if(include-text)
-    message("-- requested text with -D include-text, adding -DWITH_TEXT")
-    add_definitions(-DWITH_TEXT)
-    if (include-stemmer)
-        CHECK_INCLUDE_FILES(libstemmer.h HAVE_STEMMER_H)
-        if(HAVE_STEMMER_H)
-            CHECK_LIBRARY_EXISTS(stemmer sb_stemmer_new "" HAVE_STEMMER_LIB)
-            if (HAVE_STEMMER_LIB)
-                message("-- -- have libstemmer.h and library, adding -DWITH_STEMMER")
-                add_definitions(-DWITH_STEMMER)
-            else()
-                message(SEND_ERROR "-- stemmer enabled but cannot find libstemmer, is libstemmer and -dev(el) installed?")
-                return()
-            endif()
-        endif()
-        CHECK_INCLUDE_FILES(aspell.h HAVE_ASPELL_H)
-        if(HAVE_ASPELL_H)
-            CHECK_LIBRARY_EXISTS(aspell aspell_speller_check "" HAVE_ASPELL_LIB)
-            if (HAVE_ASPELL_LIB)
-                message("-- -- have aspell.h, adding -DWITH_ASPELL")
-                add_definitions(-DWITH_ASPELL)
-            else()
-                message(SEND_ERROR "-- ASPELL enabled but cannot find libaspell, is libaspell and -dev(el) installed?")
-                return()
-            endif()
-        endif()
-    endif()
 endif()
 if(include-projection)
     message("-- requested projection with -D include-projection, adding -DWITH_PROJECTION")
@@ -134,17 +217,6 @@ if(include-conditional)
     message("-- requested conditional with -D include-conditional, adding -DWITH_CONDITIONAL")
     add_definitions(-DWITH_CONDITIONAL)
 endif()
-if(include-crypt)
-    message("-- requested crypt with -D include-crypt")
-    CHECK_INCLUDE_FILES(sodium.h HAVE_SODIUM_H)
-    if(HAVE_SODIUM_H)
-        CHECK_LIBRARY_EXISTS(sodium crypto_box_seal_open "" HAVE_SODIUM_LIB)
-        if (HAVE_SODIUM_LIB)
-            message("-- -- have sodium.h and library, adding -DWITH_CRYPT")
-            add_definitions(-DWITH_CRYPT)
-        endif()
-    endif()
-endif()
 if(include-ip)
     message("-- requested ip with -D include-ip, adding -DWITH_IP")
     add_definitions(-DWITH_IP)
@@ -153,6 +225,7 @@ if (include-filesystem)
     message("-- requested filesystem access with -D include-filesystem, adding -DALLOW_FILESYSTEM")
     add_definitions(-DALLOW_FILESYSTEM)
 endif()
+
 if(include-modules)
     message("-- requested modules with -D include-modules")
     add_definitions(-DWITH_MODULES)
@@ -175,46 +248,10 @@ if(include-modules)
             return()
         endif()
     endif()
-    if (include-disco)
-        message("-- requested disco with -D include-disco")
-        CHECK_INCLUDE_FILES(discodb.h HAVE_DISCO_H)
-        if(HAVE_DISCO_H)
-            CHECK_LIBRARY_EXISTS(discodb ddb_getitem "" HAVE_DISCO_LIB)
-            if (HAVE_DISCO_LIB)
-                message("-- -- have discodb.h and library, adding -DWITH_DISCO")
-                add_definitions(-DWITH_DISCO)
-            endif()
-        endif()
-    endif()
-    if (include-dukjs)
-        message("-- requested dukjs with -D include-dukjs")
-        CHECK_INCLUDE_FILES(duktape.h HAVE_DUK_H)
-        if(HAVE_DUK_H)
-            message("-- -- have duktape.h, adding -DWITH_DUKJS")
-            add_definitions(-DWITH_DUKJS)
-        else()
-            message(SEND_ERROR "-- dukjs enabled but cannot find libduktape, is duktape-dev(el) installed?")
-            return()
-        endif()
-    endif()
-endif()
-add_definitions(-DHAVE_STDBOOL_H)    # for yara on alpine
-#add_definitions(-DWITH_YARA)
-#add_definitions(-DWITH_PROJECTION)
-#add_definitions(-DWITH_UTILS)
-#add_definitions(-DWITH_CONDITIONAL)
-#add_definitions(-DWITH_TEXT)
-#add_definitions(-DWITH_STEMMER)
-#add_definitions(-DWITH_ASPELL)
-#add_definitions(-DWITH_CRYPT)
-#add_definitions(-DWITH_IP)
-#add_definitions(-DWITH_MODULES)
-#add_definitions(-DWITH_MATH)
-#add_definitions(-DWITH_ETHER)
-#add_definitions(-DWITH_DISCO)
-#add_definitions(-DALLOW_FILESYSTEM)   # for discodb now, yara or dukjs later crypt may need it to pull secret keys
-#add_definitions(-DWITH_DUKJS)
+endif ()
 
+
+add_definitions(-DHAVE_STDBOOL_H)    # for yara on alpine
 
 ##  END SECTION 1 -- COMPILE Checks
 
@@ -273,31 +310,37 @@ set(HEADER_FILES   lib/bsoncompare.h
         )
 
 add_library(bsonsearch SHARED ${SOURCE_FILES})
-TARGET_LINK_LIBRARIES(bsonsearch bson-1.0 pcre m)  # core systems
+if (APPLE OR build-dependencies)
+    add_dependencies(bsonsearch ExternalPCRE discodbcompile mongoccompile ExternalDuktape)
+endif ()
 
+TARGET_LINK_LIBRARIES(bsonsearch PUBLIC bson2 pcre m)  # core systems
 
 
 if (include-yara)
-    TARGET_LINK_LIBRARIES(bsonsearch yara)           # if -D WITH_YARA
+    TARGET_LINK_LIBRARIES(bsonsearch PUBLIC yara)           # if -D WITH_YARA
 endif()
 if (include-stemmer)
-    TARGET_LINK_LIBRARIES(bsonsearch stemmer)        # if -D WITH_TEXT WITH_STEMMER
+    TARGET_LINK_LIBRARIES(bsonsearch PUBLIC stemmer)        # if -D WITH_TEXT WITH_STEMMER
 endif()
 if (include-aspell)
-    TARGET_LINK_LIBRARIES(bsonsearch aspell)         # if -D WITH_TEXT
+    TARGET_LINK_LIBRARIES(bsonsearch PUBLIC aspell)         # if -D WITH_TEXT
 endif()
 if (include-crypt)
-    TARGET_LINK_LIBRARIES(bsonsearch sodium)         # if -D WITH_CRYPT
+    TARGET_LINK_LIBRARIES(bsonsearch PUBLIC sodium)         # if -D WITH_CRYPT
 endif()
 if (include-disco)
-    TARGET_LINK_LIBRARIES(bsonsearch discodb)        # if -D WITH_DISCO
+    TARGET_LINK_LIBRARIES(bsonsearch PUBLIC discodb)        # if -D WITH_DISCO
 endif()
 if (include-dukjs)
-    TARGET_LINK_LIBRARIES(bsonsearch duktape)        # if -D WITH_DUKJS
+    if (APPLE)
+        add_dependencies(bsonsearch ExternalDuktapeDebuggerFix)
+    endif ()
+    target_link_libraries(bsonsearch PRIVATE duktape.so)        # if -D WITH_DUKJS
 endif()
 
 add_executable(bq ${BQ_SOURCE_FILES})
-TARGET_LINK_LIBRARIES(bq bsonsearch)
+TARGET_LINK_LIBRARIES(bq PUBLIC bsonsearch)
 
 install(TARGETS bsonsearch bq
         RUNTIME DESTINATION bin
@@ -392,4 +435,3 @@ if(include-modules)
 endif()
 
 ##  END SECTION 3 -- Test and Utility Compilation
-

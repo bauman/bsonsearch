@@ -22,7 +22,7 @@
 
 #ifdef WITH_MODULES
 #ifdef WITH_IP
-#include <bson.h>
+#include <bson/bson.h>
 #include "matcher-module-ip.h"
 
 

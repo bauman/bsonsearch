@@ -17,7 +17,7 @@
 #ifndef MONGOC_MATCHER_PRIVATE_H
 #define MONGOC_MATCHER_PRIVATE_H
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 
 

@@ -1,6 +1,6 @@
 #ifdef WITH_MODULES
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 #include "matcher-module-between.h"
 

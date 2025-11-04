@@ -308,7 +308,7 @@ mongoc_matcher_projection_execute_find(mongoc_matcher_op_t *current, /*in*/
  *
  * Requires:
  *     *projeted must already be initialized
- *     upstream must call bson_new() and bson_init()
+ *     upstream must call bson_new() or bson_init()
  *
  *     upstream is required to free the *projected allocations
  *
@@ -334,7 +334,6 @@ mongoc_matcher_projection_execute(mongoc_matcher_op_t *op,        /*in */
     BSON_ASSERT(op->base.opcode == MONGOC_MATCHER_OPCODE_PROJECTION || op->base.opcode == MONGOC_MATCHER_OPCODE_UNWIND);
     bson_t arrlist;
     bool result = true;
-    bson_init (projected);
     mongoc_matcher_op_t *current = op;
 
     do {

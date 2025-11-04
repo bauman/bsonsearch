@@ -4,7 +4,7 @@
 
 #define MODULE_BETWEEN_COMMAND "between"
 
-#include <bson.h>
+#include <bson/bson.h>
 #include "mongoc-matcher-op-private.h"
 bool
 matcher_module_between_startup(mongoc_matcher_op_t * op, bson_iter_t * config);
