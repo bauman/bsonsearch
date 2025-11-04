@@ -134,6 +134,8 @@ if (APPLE OR build-dependencies)
 
     install(DIRECTORY "${CMAKE_BINARY_DIR}/usr/lib/"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/lib")
+    install(DIRECTORY "${CMAKE_BINARY_DIR}/usr/lib64/"
+        DESTINATION "${CMAKE_INSTALL_PREFIX}/lib64")
     install(DIRECTORY "${CMAKE_BINARY_DIR}/usr/include/"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/include")
     install(DIRECTORY "${CMAKE_BINARY_DIR}/usr/bin/"
