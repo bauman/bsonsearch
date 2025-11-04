@@ -27,6 +27,7 @@ list(APPEND CMAKE_REQUIRED_INCLUDES
 
 LINK_DIRECTORIES(
         ${CMAKE_BINARY_DIR}/usr/lib
+        ${CMAKE_BINARY_DIR}/usr/lib64
         /usr/local/lib/
         /usr/lib64/
         /usr/local/lib/

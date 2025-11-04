@@ -9,7 +9,7 @@ include_dirs = [
     "/usr/local/"
 ]
 include_dirs.extend(environ.get("INCLUDE_DIR", ".").split(":"))
-lib_dirs = ["/opt/homebrew/lib/", "/usr/local/lib/"]
+lib_dirs = ["/opt/homebrew/lib/", "/usr/local/lib/", "/usr/lib64/"]
 lib_dirs.extend(environ.get("LIB_DIR", ".").split(":"))
 setup_args = dict(
     ext_modules = [

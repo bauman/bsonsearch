@@ -193,10 +193,32 @@ Document_as_bson(Document *self, PyObject *Py_UNUSED(ignored))
     return result;
 }
 
+static PyObject *
+Document_as_json(Document *self, PyObject *Py_UNUSED(ignored))
+{
+    Py_ssize_t len;
+    char * str = bson_as_legacy_extended_json(self->document, &len);
+    PyObject * result =  Py_BuildValue("s#", str, len);
+    bson_free(str);
+    return result;
+}
+
+static PyObject *
+Document_as_canonical_json(Document *self, PyObject *Py_UNUSED(ignored))
+{
+    Py_ssize_t len;
+    char * str = bson_as_canonical_extended_json(self->document, &len);
+    PyObject * result =  Py_BuildValue("s#", str, len);
+    bson_free(str);
+    return result;
+}
+
 // Method definitions for Matcher
 static PyMethodDef Document_methods[] = {
     {"get_value", (PyCFunction)Document_get_value, METH_NOARGS, "Return the value of the Document instance."},
     {"as_bson", (PyCFunction)Document_as_bson, METH_NOARGS, "Return the BSON bytes"},
+    {"as_json", (PyCFunction)Document_as_json, METH_NOARGS, "Return the JSON string"},
+    {"as_canonical_json", (PyCFunction)Document_as_canonical_json, METH_NOARGS, "Return the canonical JSON string"},
     {NULL}  /* Sentinel */
 };
 
@@ -362,10 +384,32 @@ Matcher_as_bson(Matcher *self, PyObject *Py_UNUSED(ignored))
     return result;
 }
 
+static PyObject *
+Matcher_as_json(Matcher *self, PyObject *Py_UNUSED(ignored))
+{
+    Py_ssize_t len;
+    char * str = bson_as_legacy_extended_json(&self->matcher->query, &len);
+    PyObject * result =  Py_BuildValue("s#", str, len);
+    bson_free(str);
+    return result;
+}
+
+static PyObject *
+Matcher_as_canonical_json(Matcher *self, PyObject *Py_UNUSED(ignored))
+{
+    Py_ssize_t len;
+    char * str = bson_as_canonical_extended_json(&self->matcher->query, &len);
+    PyObject * result =  Py_BuildValue("s#", str, len);
+    bson_free(str);
+    return result;
+}
+
 // Method definitions for Matcher
 static PyMethodDef Matcher_methods[] = {
     {"get_value", (PyCFunction)Matcher_get_value, METH_NOARGS, "Return the value of the Matcher instance."},
     {"as_bson", (PyCFunction)Matcher_as_bson, METH_NOARGS, "gets the BSON representation of the matcher."},
+    {"as_json", (PyCFunction)Matcher_as_json, METH_NOARGS, "gets the JSON representation of the matcher."},
+    {"as_canonical_json", (PyCFunction)Matcher_as_canonical_json, METH_NOARGS, "gets the canonical JSON representation of the matcher."},
     {"match_json", (PyCFunction)Matcher_match_json, METH_VARARGS, "Returns whether the doc matches the spec"},
     {"match_doc", (PyCFunction)Matcher_match_doc, METH_VARARGS, "Returns whether the doc matches the spec"},
     {"project_json", (PyCFunction)Matcher_project_json, METH_VARARGS, "projects data into a json document"},
