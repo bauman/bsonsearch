@@ -142,7 +142,6 @@ _mongoc_matcher_op_unwind (mongoc_matcher_op_t *op, /* IN */
             }
         }
         bson_destroy(projected);
-        bson_free(projected);
     }
     return matched;
 }

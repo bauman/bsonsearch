@@ -24,7 +24,6 @@ project_json(const char *json,
     doc_destroy(spec);
     doc_destroy(doc);
     bson_destroy(out);
-    bson_free(out);
     bson_free(str);
     return same;
 }
