@@ -221,7 +221,7 @@ Document_init(Document *self, PyObject *args, PyObject *kwds)
         return 0; // Error handling done by PyArg_ParseTuple
     }
     if (PyUnicode_Check(input_obj)) {
-        const char* buffer = PyUnicode_AsUTF8AndSize(input_obj, &self->value);
+        char* buffer = PyUnicode_AsUTF8AndSize(input_obj, &self->value);
         if (buffer == NULL) {
             PyErr_SetString(PyExc_TypeError, "Expected a JSON string");
             return -1; // Error
@@ -406,7 +406,7 @@ Matcher_init(Matcher *self, PyObject *args, PyObject *kwds)
         }
     } else if (PyBytes_Check(input_obj)) {
         Py_ssize_t length;
-        const char* buffer = NULL;
+        char* buffer = NULL;
         PyBytes_AsStringAndSize(input_obj, &buffer, &length);
         self->matcher = generate_matcher((const uint8_t*)buffer, (uint32_t)length);
         if (self->matcher == NULL) {
