@@ -18,7 +18,7 @@ jobs:
       - name: Setup C/C++ build environment (optional, if specific tools are needed)
         run: |
           brew install cmake automake wget libtool autoconf
-          python3 -m pip install build wheel 
+          python3 -m pip install build wheel --break-system-packages
           wget http://pkgs.bauman.space/discodb/sample.ddb -O /tmp/sample.ddb;
           wget http://pkgs.bauman.space/discodb/animals.ddb -O /tmp/animals.ddb;
           wget http://pkgs.bauman.space/discodb/cjk.ddb -O /tmp/cjk.ddb;
