@@ -234,7 +234,7 @@ Document_init(Document *self, PyObject *args, PyObject *kwds)
 
     } else if (PyBytes_Check(input_obj)) {
         Py_ssize_t length;
-        const char* buffer = NULL;
+        char* buffer = NULL;
         PyBytes_AsStringAndSize(input_obj, &buffer, &length);
         self->document = bson_new_from_data((const uint8_t*)buffer, (uint32_t)length);
         if (self->document == NULL) {
