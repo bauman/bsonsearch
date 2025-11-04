@@ -28,7 +28,7 @@ jobs:
         run: |
           mkdir cmake-build
           cd cmake-build
-          cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/usr -DCMAKE_BUILD_TYPE=Release .. 
+          cmake -DCMAKE_INSTALL_PREFIX=$(pwd)/usr -Dbuild-python=OFF -DCMAKE_BUILD_TYPE=Release .. 
           cmake --build .
           ctest 
           cmake --install .;
