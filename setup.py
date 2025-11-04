@@ -4,10 +4,11 @@ from os import environ
 include_dirs = [
     f"/usr/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
     f"/opt/homebrew/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
-    "/opt/homebrew/include/"
+    "/opt/homebrew/include/",
+    "/usr/local/"
 ]
 include_dirs.extend(environ.get("INCLUDE_DIR", ".").split(":"))
-lib_dirs = ["/opt/homebrew/lib/"]
+lib_dirs = ["/opt/homebrew/lib/", "/usr/local/lib/"]
 lib_dirs.extend(environ.get("LIB_DIR", ".").split(":"))
 setup_args = dict(
     ext_modules = [
