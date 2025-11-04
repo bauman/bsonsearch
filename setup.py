@@ -3,6 +3,7 @@ from os import environ
 
 include_dirs = [
     f"/usr/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
+    f"/usr/local/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
     f"/opt/homebrew/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
     "/opt/homebrew/include/",
     "/usr/local/"
