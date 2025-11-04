@@ -332,6 +332,31 @@ the coditional statement says If the key "hello" exists, the value must be "worl
 
 This is useful for validating or checking optional fields.
 
+
+```python
+import bsonsearch
+import json
+
+doc1 = bsonsearch.Document(json.dumps({"hello": "world"}))
+doc2 = bsonsearch.Document(json.dumps({"hello": "something else"}))
+doc3 = bsonsearch.Document(json.dumps({"not-hello": "doesn't matter"}))
+
+spec = bsonsearch.Matcher(json.dumps(
+    {"$cond":
+         {
+             "if": {"hello":{"$exists":True}},  # if the hello key exists 
+             "then": {"hello":"world"},   # then the value of hello MUST be true
+             "else": {"hello":{"$exists":False}}   # else (doesn't exist) return any document which does NOT have the key
+         }
+    }    
+))
+
+spec.match_doc(doc1)  # True because it has `hello` and the value equals `world`
+spec.match_doc(doc2)  # False because it has `hello` and the value DOES NOT equal `world`
+spec.match_doc(doc3)  # True because it does NOT have the key `hello`
+```
+
+
 $unwind example
 ==================
 Unwind lists and perform the compare against each unwound document individually
@@ -364,6 +389,144 @@ bsoncompare must be compiled using the WITH_PROJECTION macro for $unwind command
     ))
     correct_spec.match_doc(doc)  # False (because .a and .b didn't match in the same sub-doc)
     
+```
+
+Javascript Processor
+====================
+
+**NOTE: dukjs is a _module_ which requires a call to `Utils.startup()`**
+
+bsonsearch is linked to the [Duktape](https://duktape.org) JS processor
+
+given a document like
+
+```javascript
+{"hello": {"world":{"a": "variable"}}}
+```
+
+we can execute arbitrary javascript to determine if the document matches
+
+In this simple example, create a function `matches` which loads some data and sees if the value of the `a` key is `variable` 
+
+```javascript
+function matches(data) {
+    d = JSON.parse(data);
+    return d.a == 'variable' ;
+}
+```
+
+
+
+```python
+import bsonsearch
+from bson import json_util
+from bson import Code
+
+# call this exactly once when your program starts to configure the modules
+utils = bsonsearch.Utils()
+utils.startup()
+# if you do not do this, the matcher will compile, but the comparison will quietly return false
+
+# do NOT forget to wrap the code string with a bson.Code wrapper
+js_func = Code("""
+function matches(data) {
+    d = JSON.parse(data);
+    return d.a == 'variable' ;
+}
+""")
+
+spec = bsonsearch.Matcher(json_util.dumps(
+    {
+        "hello.world": {  # the location we'd like to apply the JS
+            "$module": {
+                "name": "dukjs",  # activate the duktape module
+                "config": {
+                    "entrypoint": "matches",  # the name of the function YOU created
+                    "code": js_func  # the bson.Code wrapped js function
+                }
+            }
+        }
+    }
+))
+
+doc = bsonsearch.Document(json_util.dumps(
+    {"hello": {"world":{"a": "variable"}}}
+))
+
+spec.match_doc(doc)  # True
+
+```
+
+summation module
+================
+**NOTE: math/sum is a _module_ which requires a call to `Utils.startup()`**
+
+This module intends to serve cases where multiple objects intend to give a running total of something.
+
+In this case, say we want to find students that have earned AT LEAST 270 of a possible 300 points.
+
+given a documents like
+
+```javascript
+{
+    "student": "their-name",
+    "grades": [
+        {"name": "assignment1", "score":94},
+        {"name": "assignment2", "score":89},
+        {"name": "assignment2", "score":98},
+    ]
+}
+```
+
+we'd set up a matcher as follows
+
+
+```python
+import bsonsearch
+from bson import json_util
+
+# call this exactly once when your program starts to configure the modules
+utils = bsonsearch.Utils()
+utils.startup()
+# if you do not do this, the matcher will compile, but the comparison will quietly return false
+
+spec = bsonsearch.Matcher(json_util.dumps(
+    {
+        "grades.score":{  # the location of the data you want to inspect
+            "$module":{
+                "name":"sum",  # `sum` is the name of this module 
+                "config":{
+                    "$gte":270  # $gte, $gt, $lte, $lt, $eq, and $not are supported 
+                }
+            }
+        }
+    }
+))
+doc1 = bsonsearch.Document(json_util.dumps(
+    {
+        "student": "their-name",
+        "grades": [
+            {"name": "assignment1", "score":94},
+            {"name": "assignment2", "score":89},
+            {"name": "assignment3", "score":98},
+        ]
+    }
+))
+
+doc2 = bsonsearch.Document(json_util.dumps(
+    {
+        "student": "their-name",
+        "grades": [
+            {"name": "assignment1", "score":77},
+            {"name": "assignment2", "score":81},
+            {"name": "assignment3", "score":100},
+        ]
+    }
+))
+
+spec.match_doc(doc1)  # true
+spec.match_doc(doc2)  # false
+
 ```
 
 

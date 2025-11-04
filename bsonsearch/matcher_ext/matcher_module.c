@@ -1,10 +1,20 @@
 #define WITH_MODULES
+
+//The modules we know to be enabled from the build
+#define WITH_DUKJS
+#define WITH_DISCO
+#define WITH_MATH
+
 #define WITH_UTILS
 #define WITH_PROJECTION
+#define ALLOW_FILESYSTEM
+#define WITH_CONDITIONAL
+
 #define PY_SSIZE_T_CLEAN
 #include <Python.h>
 #include "bsoncompare.h"
 #include "mongoc-matcher-private.h"
+#include "matcher-module-duk.h"
 
 typedef struct {
     PyObject_HEAD
