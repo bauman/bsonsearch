@@ -445,9 +445,6 @@ static PyTypeObject MatcherClassType = {
 
 
 
-
-
-
 //  ----  Module FUNCTIONS  (unlikely to need editing below here) ----
 
 
