@@ -120,6 +120,7 @@ if (APPLE OR build-dependencies)
             CMAKE_ARGS
             -DCMAKE_VERBOSE_MAKEFILE=ON
             -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
+            -DCMAKE_INSTALL_LIBDIR=lib
             -DCMAKE_BUILD_TYPE=Release
             -DENABLE_MONGODB_AWS_AUTH=OFF
             -DENABLE_CLIENT_SIDE_ENCRYPTION=OFF
@@ -139,13 +140,6 @@ if (APPLE OR build-dependencies)
     install(DIRECTORY "${CMAKE_BINARY_DIR}/usr/bin/"
             DESTINATION "${CMAKE_INSTALL_PREFIX}/bin")
 
-
-    # handle RHEL based systems
-    if(EXISTS "${CMAKE_BINARY_DIR}/usr/lib64/")
-        install(DIRECTORY "${CMAKE_BINARY_DIR}/usr/lib64/"
-                DESTINATION "${CMAKE_INSTALL_PREFIX}/lib64")
-    endif ()
-    # end handling RHEL based systems
 
 
 else ()

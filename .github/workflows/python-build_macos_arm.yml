@@ -2,9 +2,9 @@ name: Build Wheels for MacOS arm64
 
 on:
   push:
-    branches: [ py3, py3a ]
+    branches: [ py3 ]
   pull_request:
-    branches: [ py3, py3a ]
+    branches: [ py3 ]
 
 jobs:
   build_wheels:
