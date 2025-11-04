@@ -121,7 +121,7 @@ if (APPLE OR build-dependencies)
             -DCMAKE_VERBOSE_MAKEFILE=ON
             -DCMAKE_INSTALL_PREFIX=<INSTALL_DIR>
             -DCMAKE_INSTALL_LIBDIR=lib
-            -DCMAKE_BUILD_TYPE=Release
+            -DCMAKE_BUILD_TYPE=Debug
             -DENABLE_MONGODB_AWS_AUTH=OFF
             -DENABLE_CLIENT_SIDE_ENCRYPTION=OFF
             -DCMAKE_INCLUDE_PATH=${CMAKE_BINARY_DIR}/usr/include

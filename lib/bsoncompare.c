@@ -78,9 +78,8 @@ char *
 bsonsearch_project_json(mongoc_matcher_t *matcher,     //in
                         bson_t           *bson)        //in
 {
-    bson_t * projected = bsonsearch_project_bson(matcher, bson);
-    char * str;
-    str = bson_as_legacy_extended_json(projected, NULL);
+    bson_t *projected = bsonsearch_project_bson(matcher, bson);
+    char * str = bson_as_legacy_extended_json(projected, NULL);
     bson_destroy(projected);
     return str;
 }
@@ -90,8 +89,8 @@ bsonsearch_project_canonical_json(mongoc_matcher_t *matcher,     //in
                                   bson_t           *bson)        //in
 {
     bson_t * projected = bsonsearch_project_bson(matcher, bson);
-    char * str;
-    str = bson_as_canonical_extended_json(projected, NULL);
+
+    char * str = bson_as_canonical_extended_json(projected, NULL);
     bson_destroy(projected);
     return str;
 }
@@ -219,7 +218,7 @@ generate_matcher(const uint8_t *buf_spec,
   mongoc_matcher_t *matcher;
   spec = bson_new_from_data(buf_spec, (uint32_t)len_spec);
   matcher = mongoc_matcher_new (spec, NULL);
-  bson_free(spec);
+  bson_destroy(spec);
   return matcher;
 }
 
@@ -231,7 +230,7 @@ generate_matcher_from_json(const uint8_t *buf_spec,
     mongoc_matcher_t *matcher;
     spec = bson_new_from_json(buf_spec, (uint32_t)len_spec, NULL);
     matcher = mongoc_matcher_new (spec, NULL);
-    bson_free(spec);
+    bson_destroy(spec);
     return matcher;
 }
 
