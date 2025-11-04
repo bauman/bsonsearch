@@ -78,28 +78,24 @@ char *
 bsonsearch_project_json(mongoc_matcher_t *matcher,     //in
                         bson_t           *bson)        //in
 {
-    bson_t * projected = bson_new();
-    switch (matcher->optree->base.opcode){
-        case MONGOC_MATCHER_OPCODE_UNWIND:
-        case MONGOC_MATCHER_OPCODE_PROJECTION:
-        {
-            mongoc_matcher_projection_execute(matcher->optree, bson, projected);
-            break;
-        }
-        case MONGOC_MATCHER_OPCODE_REDACTION:
-        {
-            mongoc_matcher_redaction_execute(matcher->optree, bson, projected);
-            break;
-        }
-        default:
-            break;
-    }
+    bson_t * projected = bsonsearch_project_bson(matcher, bson);
     char * str;
     str = bson_as_legacy_extended_json(projected, NULL);
     bson_destroy(projected);
-    bson_free(projected);
     return str;
 }
+
+char *
+bsonsearch_project_canonical_json(mongoc_matcher_t *matcher,     //in
+                                  bson_t           *bson)        //in
+{
+    bson_t * projected = bsonsearch_project_bson(matcher, bson);
+    char * str;
+    str = bson_as_canonical_extended_json(projected, NULL);
+    bson_destroy(projected);
+    return str;
+}
+
 //call this to free the cstring from project_json
 int
 bsonsearch_free_project_str(void * ptr)
