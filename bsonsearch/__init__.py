@@ -2,7 +2,7 @@
 wrapper for bsonsearch
 """
 
-from .matcher_module import Matcher, Document, Utils
+from .module import Matcher, Document, Utils
 
 
 try:

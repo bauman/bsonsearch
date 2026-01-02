@@ -1,1 +1,1 @@
-from .matcher_module import Matcher, Document
+from .module import Matcher, Document, Utils

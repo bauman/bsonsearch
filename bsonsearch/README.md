@@ -10,3 +10,13 @@ This is the "old" ctypes wrapper
 - pcre2 library 
 - duktape library (optional) 
 - discodb library (optional)
+
+# Development Testing
+
+```shell
+ cmake-build-db % export  DYLD_LIBRARY_PATH=$(pwd)/usr/lib:$(pwd)
+```
+
+# Production
+
+The production wheels should have everything included via cibw
