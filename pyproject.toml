@@ -1,6 +1,6 @@
 [project]
 name = "bsonsearch"
-version = "2.1.2"
+version = "2.2.1"
 description = "compare BSON/JSON documents locally"
 requires-python = ">=3.11"
 dependencies = []

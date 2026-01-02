@@ -84,6 +84,17 @@ int
 main (int   argc,
       char *argv[])
 {
+
+
+    //test foundin command with deep doc
+
+    do {
+        BSON_ASSERT(test_bson_api("{\"a\": {\"x\": {\"f\":{\"i\": 1}}, \"y\": {\"f\":{\"j\": 2}}, \"z\": {\"f\":{\"k\": 3}}}}",
+            "{\"$project\":{\"a\":{\"$foundin\":[\"a.$any.f\"]}}}",
+                                  "{ \"a\" : [ { \"i\" : 1 }, { \"j\" : 2 }, { \"k\" : 3 } ] }"));
+    }while(false);//*/
+
+
     //FIXED: too many embedded dict are failing.
     do {
         //project follows at least once checking.

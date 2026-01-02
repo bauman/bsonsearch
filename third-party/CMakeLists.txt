@@ -7,7 +7,7 @@ if (APPLE OR build-dependencies)
         cmake_policy(SET CMP0135 NEW)
     endif()
 
-    include_directories(${CMAKE_BINARY_DIR}/ ${CMAKE_BINARY_DIR}/usr/include/ ${CMAKE_BINARY_DIR}/usr/include/bson-2.1.2 /usr/include/ lib/ lib/acceleration/)
+    include_directories(${CMAKE_BINARY_DIR}/ ${CMAKE_BINARY_DIR}/usr/include/ ${CMAKE_BINARY_DIR}/usr/include/bson-${MONGOC_VERSION} /usr/include/ lib/ lib/acceleration/)
     list(APPEND CMAKE_REQUIRED_INCLUDES
             ${CMAKE_BINARY_DIR}/usr/include/
             ${CMAKE_BINARY_DIR}/third-party
@@ -27,11 +27,23 @@ if (APPLE OR build-dependencies)
     move_file(${CMAKE_SOURCE_DIR}/third-party/pcre-8.45.tar.gz)
     move_file(${CMAKE_SOURCE_DIR}/third-party/duktape-2.7.0.tar.xz)
     move_file(${CMAKE_SOURCE_DIR}/third-party/discodb-0.9.5.tar.gz)
-    move_file(${CMAKE_SOURCE_DIR}/third-party/mongo-c-driver-2.1.2.tar.gz)
+    move_file(${CMAKE_SOURCE_DIR}/third-party/libsodium-1.0.20.tar.gz)
+    move_file(${CMAKE_SOURCE_DIR}/third-party/mongo-c-driver-${MONGOC_VERSION}.tar.gz)
     file(COPY "${CMAKE_SOURCE_DIR}/third-party/uthash.h" DESTINATION "${CMAKE_BINARY_DIR}/usr/include")
     file(MAKE_DIRECTORY "${CMAKE_BINARY_DIR}/third-party/discodb_build")
 
 
+    ExternalProject_Add(
+            ExternalSodium # Name for the external project
+            URL "file:///${CMAKE_SOURCE_DIR}/third-party/libsodium-1.0.20.tar.gz" # Path to your tarball
+            URL_HASH "SHA256=ebb65ef6ca439333c2bb41a0c1990587288da07f6c7fd07cb3a18cc18d30ce19"
+            SOURCE_DIR "${CMAKE_BINARY_DIR}/third-party/sodium_src"
+            BINARY_DIR "${CMAKE_BINARY_DIR}/third-party/sodium_src"
+            INSTALL_DIR "${CMAKE_BINARY_DIR}/usr"
+            CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/usr
+            BUILD_COMMAND make
+            INSTALL_COMMAND make install
+    )
 
     ExternalProject_Add(
             ExternalPCRE # Name for the external project
@@ -43,6 +55,7 @@ if (APPLE OR build-dependencies)
             CONFIGURE_COMMAND ./configure --prefix=${CMAKE_BINARY_DIR}/usr --enable-utf --enable-jit=auto --enable-pcre32 --enable-pcre16 --enable-pcre8 --disable-cpp --enable-newline-is-anycrlf --with-match-limit=100;
             BUILD_COMMAND make
             INSTALL_COMMAND make install
+            DEPENDS ExternalSodium
     )
 
 
@@ -57,6 +70,7 @@ if (APPLE OR build-dependencies)
             BUILD_COMMAND make -f Makefile.sharedlibrary INSTALL_PREFIX=${CMAKE_BINARY_DIR}/usr
             INSTALL_COMMAND make -f Makefile.sharedlibrary INSTALL_PREFIX=${CMAKE_BINARY_DIR}/usr install
             BUILD_BYPRODUCTS "${CMAKE_BINARY_DIR}/third-party/usr/libduktape.so"
+            DEPENDS ExternalSodium
     )
     add_custom_target(ExternalDuktapeDebuggerFix
             COMMAND  cp usr/lib/libduktape*.so .;
@@ -112,8 +126,8 @@ if (APPLE OR build-dependencies)
     )
     ExternalProject_Add(
             mongoccompile # Name for the external project
-            URL "file:///${CMAKE_SOURCE_DIR}/third-party/mongo-c-driver-2.1.2.tar.gz" # Path to your tarball
-            URL_HASH "SHA256=faf1666b0447b6108211a5ff74cd354d982edc9d89727cfd651b2ce6ef319531"
+            URL "file:///${CMAKE_SOURCE_DIR}/third-party/mongo-c-driver-${MONGOC_VERSION}.tar.gz" # Path to your tarball
+            URL_HASH "SHA256=bc56f9acd91454eca5121e030fc1bb236283a94f4522b749beeb55e5e30343fb"
             SOURCE_DIR "${CMAKE_BINARY_DIR}/third-party/mongoc_src"
             BINARY_DIR "${CMAKE_BINARY_DIR}/third-party/mongoc_build"
             INSTALL_DIR "${CMAKE_BINARY_DIR}/usr"

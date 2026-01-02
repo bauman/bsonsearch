@@ -2,9 +2,9 @@ from setuptools import setup, Extension
 from os import environ
 
 include_dirs = [
-    f"/usr/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
-    f"/usr/local/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
-    f"/opt/homebrew/include/bson-{environ.get('BSON_VERSION', '2.1.2')}/",
+    f"/usr/include/bson-{environ.get('BSON_VERSION', '2.2.1')}/",
+    f"/usr/local/include/bson-{environ.get('BSON_VERSION', '2.2.1')}/",
+    f"/opt/homebrew/include/bson-{environ.get('BSON_VERSION', '2.2.1')}/",
     "/opt/homebrew/include/",
     "/usr/local/"
 ]
