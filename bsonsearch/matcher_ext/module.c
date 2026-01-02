@@ -61,18 +61,76 @@ Utils_regex_destroy(Utils *self, PyObject *args, PyObject *kwds)
 static PyObject *
 Utils_to_bson(Utils *self, PyObject *args, PyObject *kwds)
 {
+    // pymongo - bson.BSON.encode({"A":1})
     const char * json = NULL;
     Py_ssize_t json_len;
     if (!PyArg_ParseTuple(args, "s#", &json, &json_len)) {
         return NULL;
     }
     bson_t  *bson_object = generate_doc_from_json((const uint8_t*)json, json_len);
-    const uint8_t *doc_bson = bson_get_data(bson_object);
-
+    const uint8_t *doc_bson = bson_get_data(bson_object);  // buffer which should not be modified or freed.
     PyObject * result =  Py_BuildValue("y#", doc_bson, bson_object->len);
     bson_destroy(bson_object);
-    bson_free((void *)doc_bson);
+    return result;
+}
 
+static PyObject *
+Utils_from_bson_canonical(Utils *self, PyObject *args, PyObject *kwds)
+{
+    // SIMILAR TO
+    // pymongo - bson.BSON.decode(b'\x0c\x00\x00\x00\x10A\x00\x01\x00\x00\x00\x00')
+    const char * bson = NULL;
+    Py_ssize_t bson_len;
+    Py_ssize_t json_len;
+    if (!PyArg_ParseTuple(args, "y#", &bson, &bson_len)) {
+        return NULL;
+    }
+    bson_t  *bson_object = generate_doc((const uint8_t*)bson, bson_len);
+
+    const char *doc_bson = bson_as_canonical_extended_json(bson_object, &json_len);
+    PyObject * result =  Py_BuildValue("s#", doc_bson, json_len);
+    bson_destroy(bson_object);
+    bson_free((void*)doc_bson);
+    return result;
+}
+
+static PyObject *
+Utils_from_bson_relaxed(Utils *self, PyObject *args, PyObject *kwds)
+{
+    // SIMILAR TO
+    // pymongo - bson.BSON.decode(b'\x0c\x00\x00\x00\x10A\x00\x01\x00\x00\x00\x00')
+    const char * bson = NULL;
+    Py_ssize_t bson_len;
+    Py_ssize_t json_len;
+    if (!PyArg_ParseTuple(args, "y#", &bson, &bson_len)) {
+        return NULL;
+    }
+    bson_t  *bson_object = generate_doc((const uint8_t*)bson, bson_len);
+
+    const char *doc_bson = bson_as_relaxed_extended_json(bson_object, &json_len);
+    PyObject * result =  Py_BuildValue("s#", doc_bson, json_len);
+    bson_destroy(bson_object);
+    bson_free((void*)doc_bson);
+    return result;
+}
+
+static PyObject *
+Utils_from_bson_legacy(Utils *self, PyObject *args, PyObject *kwds)
+{
+    // SIMILAR TO
+    // pymongo - bson.BSON.decode(b'\x0c\x00\x00\x00\x10A\x00\x01\x00\x00\x00\x00')
+    const char * bson = NULL;
+    Py_ssize_t bson_len;
+    Py_ssize_t json_len;
+    if (!PyArg_ParseTuple(args, "y#", &bson, &bson_len)) {
+        return NULL;
+    }
+    bson_t  *bson_object = generate_doc((const uint8_t*)bson, bson_len);
+
+    const char *doc_bson = bson_as_legacy_extended_json(bson_object, &json_len);
+    PyObject * result =  Py_BuildValue("s#", doc_bson, json_len);
+    bson_destroy(bson_object);
+    bson_free((void*)doc_bson);
     return result;
 }
 
@@ -128,6 +186,44 @@ Utils_crossarc_degrees(Utils *self, PyObject *args, PyObject *kwds)
 }
 
 static PyObject *
+Utils_get_monotonic_time(Utils *self, PyObject *Py_UNUSED(ignored))
+{
+    int64_t result = bson_get_monotonic_time();
+    return PyLong_FromLong(result);
+}
+
+static PyObject *
+Utils_get_version(Utils *self, PyObject *Py_UNUSED(ignored))
+{
+    PyObject * result =  Py_BuildValue("s", bson_get_version());
+    return result;
+}
+
+static PyObject *
+Utils_generate_oid(Utils *self, PyObject *Py_UNUSED(ignored))
+{
+    bson_oid_t oid;
+    bson_oid_init (&oid, NULL);
+    PyObject*  result =  Py_BuildValue("y#", oid.bytes, 12);
+    return result;
+}
+
+static PyObject *
+Utils_generate_oid_json(Utils *self, PyObject *Py_UNUSED(ignored))
+{
+    bson_oid_t oid;
+    char oid_str[25] = {0};  // 24 bytes for data + 1 null byte
+    bson_oid_init (&oid, NULL);
+    bson_oid_to_string(&oid, &oid_str[0]);
+    PyObject* my_dict = Py_BuildValue(
+            "{s#:s#}",
+                "$oid", 4,
+                oid_str, 24
+    );
+    return my_dict;
+}
+
+static PyObject *
 Utils_get_value(Utils *self, PyObject *Py_UNUSED(ignored))
 {
     return PyLong_FromLong(self->value);
@@ -136,10 +232,18 @@ Utils_get_value(Utils *self, PyObject *Py_UNUSED(ignored))
 // Method definitions for Matcher
 static PyMethodDef Utils_methods[] = {
     {"get_value", (PyCFunction)Utils_get_value, METH_NOARGS, "Return the value of the Document instance."},
+    {"get_monotonic_time", (PyCFunction)Utils_get_monotonic_time, METH_NOARGS, "The clock abstraction in Libbson provides a cross-platform way to handle timeouts within the BSON library."},
+    {"get_verson", (PyCFunction)Utils_get_version, METH_NOARGS, "A string representation of Libbson’s version"},
+    {"generate_oid", (PyCFunction)Utils_generate_oid, METH_NOARGS, "12-byte ObjectId notation defined by the BSON ObjectID specification."},
+    {"generate_oid_json", (PyCFunction)Utils_generate_oid_json, METH_NOARGS, "ObjectID as JSON"},
     {"regex_destroy", (PyCFunction)Utils_regex_destroy, METH_VARARGS, "Frees internal regex cache"},
     {"startup", (PyCFunction)Utils_startup, METH_VARARGS, "Prep the module internally"},
     {"shutdown", (PyCFunction)Utils_shutdown, METH_VARARGS, "Cleanup the module internally"},
     {"to_bson", (PyCFunction)Utils_to_bson, METH_VARARGS, "convert a json document to bson document"},
+    {"from_bson", (PyCFunction)Utils_from_bson_canonical, METH_VARARGS, "convert a bson document to canonical json document"},
+    {"from_bson_canonical", (PyCFunction)Utils_from_bson_canonical, METH_VARARGS, "convert a bson document to canonical json document"},
+    {"from_bson_relaxed", (PyCFunction)Utils_from_bson_relaxed, METH_VARARGS, "convert a bson document to relaxed json document"},
+    {"from_bson_legacy", (PyCFunction)Utils_from_bson_legacy, METH_VARARGS, "convert a bson document to legacy json document"},
     {"haversine_distance", (PyCFunction)Utils_haversine_distance, METH_VARARGS, "Haversine distance using radians"},
     {"haversine_distance_degrees", (PyCFunction)Utils_haversine_distance_degrees, METH_VARARGS, "Haversine distance using degrees"},
     {"crossarc_degrees", (PyCFunction)Utils_crossarc_degrees, METH_VARARGS, "Crossarc"},
@@ -176,7 +280,7 @@ Utils_dealloc(Document *self)
 // 6. Create the PyTypeObject
 static PyTypeObject UtilsClassType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "bsonsearch.matcher_module.Utils",
+    .tp_name = "bsonsearch.module.Utils",
     .tp_doc = "matchermodule",
     .tp_basicsize = sizeof(Utils),
     .tp_itemsize = 0,
@@ -293,7 +397,7 @@ Document_dealloc(Document *self)
 // 6. Create the PyTypeObject
 static PyTypeObject DocumentClassType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "bsonsearch.matcher_module.Document",
+    .tp_name = "bsonsearch.module.Document",
     .tp_doc = "matchermodule",
     .tp_basicsize = sizeof(Matcher),
     .tp_itemsize = 0,
@@ -486,7 +590,7 @@ Matcher_dealloc(Matcher *self)
 // 6. Create the PyTypeObject
 static PyTypeObject MatcherClassType = {
     PyVarObject_HEAD_INIT(NULL, 0)
-    .tp_name = "bsonsearch.matcher_module.Matcher",
+    .tp_name = "bsonsearch.module.Matcher",
     .tp_doc = "matchermodule",
     .tp_basicsize = sizeof(Matcher),
     .tp_itemsize = 0,
@@ -504,15 +608,16 @@ static PyTypeObject MatcherClassType = {
 
 static struct PyModuleDef matcher_module_def = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "bsonsearch.matcher_module",
+    .m_name = "bsonsearch.module",
     .m_doc = "The module.",
-    .m_size = -1
+    .m_size = -1,
+    //.m_methods = Utils_methods  // UTILS are wrapped in a utils.class
 };
 
 
 // Module initialization function
 PyMODINIT_FUNC
-PyInit_matcher_module(void)
+PyInit_module(void)
 {
     PyObject *m;
 

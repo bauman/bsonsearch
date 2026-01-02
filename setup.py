@@ -13,8 +13,8 @@ lib_dirs = ["/opt/homebrew/lib/", "/usr/local/lib/", "/usr/lib64/"]
 lib_dirs.extend(environ.get("LIB_DIR", ".").split(":"))
 setup_args = dict(
     ext_modules = [
-        Extension('bsonsearch.matcher_module',
-                  sources=['bsonsearch/matcher_ext/matcher_module.c'],
+        Extension('bsonsearch.module',
+                  sources=['bsonsearch/matcher_ext/module.c'],
                   libraries=['bson2', 'bsonsearch'],
                   library_dirs=lib_dirs,
                   include_dirs=include_dirs
