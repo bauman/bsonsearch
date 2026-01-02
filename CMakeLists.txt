@@ -1,6 +1,6 @@
 cmake_minimum_required(VERSION 3.22)
 project(bsonsearch)
-
+set(MONGOC_VERSION "2.2.1")
 # Default cmake includes all features and modules
 # Optional "lite" version available with only bson and pcre dependencies
 #   mkdir cmake-build-lite && cd cmake-build-lite
@@ -16,23 +16,39 @@ project(bsonsearch)
 
 include_directories(
         ${CMAKE_BINARY_DIR}/usr/include/
-        ${CMAKE_BINARY_DIR}/usr/include/bson-2.1.2
+        ${CMAKE_BINARY_DIR}/usr/include/bson-${MONGOC_VERSION}
         lib/
         /usr/include/
 )
 list(APPEND CMAKE_REQUIRED_INCLUDES
         ${CMAKE_BINARY_DIR}/usr/include/
-        /opt/homebrew/include/
 )
+if(EXISTS "/opt/homebrew/include")
+    message("/opt/homebrew exists, adding it to include path")
+    list(APPEND CMAKE_REQUIRED_INCLUDES
+            /opt/homebrew/include/
+    )
+endif()
 
-LINK_DIRECTORIES(
-        ${CMAKE_BINARY_DIR}/usr/lib
-        ${CMAKE_BINARY_DIR}/usr/lib64
-        /usr/local/lib/
-        /usr/lib64/
-        /usr/local/lib/
-        lib/acceleration/
-)
+# RHEL-based systems use lib64
+if(EXISTS "/usr/lib64")
+    message("---- appears to be RHEL-based system")
+    LINK_DIRECTORIES(
+            ${CMAKE_BINARY_DIR}/usr/lib
+            ${CMAKE_BINARY_DIR}/usr/lib64
+            /usr/local/lib/
+            /usr/lib64/
+            lib/acceleration/
+    )
+else()
+    LINK_DIRECTORIES(
+            ${CMAKE_BINARY_DIR}/usr/lib
+            /usr/local/lib/
+            /usr/local/lib/
+            lib/acceleration/
+    )
+endif()
+
 
 
 ##  SECTION 1 -- COMPILE Checks
@@ -57,7 +73,7 @@ option(include-text "include-text" OFF)
 
 option(include-ip "include-ip" OFF)
 option(include-yara "include-yara" OFF)
-option(include-crypt "include-crypt" OFF)
+option(include-crypt "include-crypt" ON)
 
 option(include-modules "include-modules" ON)
 CMAKE_DEPENDENT_OPTION(include-math "include-math" ON "include-modules" OFF)
@@ -77,6 +93,10 @@ if (APPLE OR build-dependencies)
             message("-- requested dukjs with -D include-dukjs")
             add_definitions(-DWITH_DUKJS)
         endif()
+        if (include-crypt)
+            message("-- requested libsodium with -D include-crypt")
+            add_definitions(-DWITH_CRYPT)
+        endif ()
     endif()
 
     add_subdirectory(third-party)
@@ -93,7 +113,7 @@ else()
         return()
     endif()
     message("-- Looking for include file bson.h")
-    find_path(HAVE_BSON_H bson.h PATHS third-party/usr/include/bson-2.1.2/bson )
+    find_path(HAVE_BSON_H bson.h PATHS third-party/usr/include/bson-${MONGOC_VERSION}/bson )
     if(NOT HAVE_BSON_H)
         message(SEND_ERROR "BSON is required, stopping")
         return()
